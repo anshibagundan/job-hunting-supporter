@@ -1,6 +1,8 @@
 package usecase
 
-import "github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
+import (
+	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
+)
 
 func NewUserUseCase(repo domain.UserRepository) *UserUseCase {
 	return &UserUseCase{

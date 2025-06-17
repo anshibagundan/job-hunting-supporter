@@ -8,8 +8,7 @@ import (
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/rollbar/rollbar-go"
-	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"log"
@@ -45,11 +44,6 @@ func main() {
 	}
 
 	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-
-	apiKey := os.Getenv("OPENAI_API_KEY")
-	if apiKey == "" {
-		log.Fatal("環境変数 OPENAI_API_KEY が設定されていません")
-	}
 
 	// DI の設定
 	userRepo := infrastructure.NewUserRepository(db)
@@ -89,41 +83,51 @@ func initDB() (*gorm.DB, error) {
 	env := os.Getenv("ENV")
 	switch env {
 	case "staging":
-		dbName = os.Getenv("DB_NAME_STAGING")
+		dbName = os.Getenv("POSTGRES_DB_STAGING")
 	case "production-migrating":
-		dbName = os.Getenv("DB_NAME_PRODUCTION")
+		dbName = os.Getenv("POSTGRES_DB_PRODUCTION")
 	default:
-		dbName = os.Getenv("DB_NAME")
+		dbName = os.Getenv("POSTGRES_DB")
 	}
 	if dbName == "" {
 		return nil, fmt.Errorf("DB_NAME is not set")
 	}
 
-	dbUser := os.Getenv("DB_USER")
-	dbPassword := os.Getenv("DB_PASSWORD")
-	dbHost := os.Getenv("DB_HOST")
-	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("POSTGRES_USER")
+	dbPassword := os.Getenv("POSTGRES_PASSWORD")
+	dbHost := os.Getenv("POSTGRES_HOST")
+	dbPort := os.Getenv("POSTGRES_PORT")
 
-	// 接続文字列の構築
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=true&multiStatements=true",
-		dbUser, dbPassword, dbHost, dbPort, dbName,
+	// 接続文字列の構築 (PostgreSQLのDSN形式)
+	// format: "host=host user=user password=password dbname=dbname port=port sslmode=disable TimeZone=Asia/Tokyo"
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Tokyo",
+		dbHost, dbUser, dbPassword, dbName, dbPort,
 	)
 
 	// データベースに接続
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
+		// GORMのロガー設定（任意）
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
-	_, err = db.DB()
+	// 実際のDB接続をテスト (Ping)
+	sqlDB, err := db.DB()
 	if err != nil {
-		rollbar.Error(err)
-		panic(err)
+		// rollbar.Error(err) // rollbarを使用している場合、ここに含める
+		return nil, fmt.Errorf("failed to get underlying sql.DB: %w", err)
+	}
+	if err = sqlDB.Ping(); err != nil {
+		// rollbar.Error(err) // rollbarを使用している場合、ここに含める
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	db.Logger = db.Logger.LogMode(logger.Info)
+	fmt.Println("Successfully connected to the database.")
 
-	fmt.Println("DB migrated")
+	// マイグレーションをここで行う場合（例）
+	// fmt.Println("DB migrated") // ここでの"migrated"は単なるメッセージ。実際のマイグレーションロジックは別途必要。
 
 	return db, nil
 }
