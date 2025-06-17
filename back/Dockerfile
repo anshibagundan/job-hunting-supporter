@@ -1,4 +1,12 @@
-FROM ubuntu:latest
-LABEL authors="zono"
+FROM golang:1.24-alpine
 
-ENTRYPOINT ["top", "-b"]
+WORKDIR /app
+
+RUN go install github.com/air-verse/air@latest
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+CMD ["air", "-c", ".air.toml"]
