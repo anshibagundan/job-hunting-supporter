@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  front:
+    build:
+      context: ./front
+      # Dockerfile へのパスを正してください
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    # ライブリロードのために、コードベースディレクトリを /app ディレクトリにバインド/マウントすることが重要です
+    volumes:
+      - ./front:/app
+      - /app/node_modules # node_modulesをホストからコンテナにマウントしないようにする
+  back:
+    build:
+      context: ./back
+      # Dockerfile へのパスを正してください
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    # ライブリロードのために、コードベースディレクトリを /app ディレクトリにバインド/マウントすることが重要です
+    volumes:
+      - ./back:/app
+
+  db:
+    image: postgres:16 # PostgreSQLのバージョンを16系最新に変更
+    container_name: job_hunting_supporter_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}          # DBユーザー名を環境変数から取得
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}  # DBパスワードを環境変数から取得
+      POSTGRES_DB: ${POSTGRES_DB}              # DB名を環境変数から取得
+    ports:
+      - "5432:5432" # コンテナの5432ポートをホストに公開
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # 永続化ボリューム
+
+volumes:
+  postgres_data:
+    driver: local
