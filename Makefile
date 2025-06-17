@@ -22,7 +22,7 @@ check_container_running:
 
 # 開発環境のビルド
 build-dev:
-	docker-compose -f docker-compose.yaml up --build
+	docker-compose -f docker-compose.yaml up --build -d
 	@echo "Waiting for Postgres container to start..."
 	sleep 5 # コンテナが完全に起動するのを待機（必要に応じて調整）
 	@echo "Applying migrations..."
@@ -59,3 +59,8 @@ create-db-schemer: create-schema
 
 # スキーマをロールバックするマイグレーション
 rollback-db-schemer: drop-schema
+
+# databaseに入る
+db-console:
+	@echo "Connecting to Postgres database..."
+	docker exec -it $(POSTGRES_CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
