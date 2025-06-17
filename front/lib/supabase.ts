@@ -1,4 +1,4 @@
-// Mock storage system for demo purposes
+// API client utilities and interfaces
 export interface Company {
   id: string
   name: string
@@ -36,7 +36,8 @@ export interface InterviewLog {
   created_at: string
 }
 
-// Local storage helpers
+// TODO: 将来のAPI実装用
+// 現在は一時的にローカルストレージを使用
 export const storage = {
   getEvents: (): Event[] => {
     if (typeof window === "undefined") return []

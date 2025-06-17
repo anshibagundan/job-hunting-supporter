@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -19,32 +17,20 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Mic, Upload, Eye, FileAudio } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { storage, type InterviewLog as InterviewLogType } from "@/lib/supabase"
 
-interface InterviewEntry {
-  id: string
-  company_name: string
-  position: string
-  interview_date: string
-  transcript: string
-  summary: string
-  feedback: string
-  created_at: string
-}
-
-export default function InterviewLog() {
-  const [entries, setEntries] = useState<InterviewEntry[]>([])
+export function InterviewLog() {
+  const [entries, setEntries] = useState<InterviewLogType[]>([])
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [selectedEntry, setSelectedEntry] = useState<InterviewEntry | null>(null)
+  const [selectedEntry, setSelectedEntry] = useState<InterviewLogType | null>(null)
   const [processing, setProcessing] = useState(false)
   const [formData, setFormData] = useState({
     company_name: "",
-    position: "",
-    interview_date: "",
-    notes: "",
+    date: "",
+    transcript: "",
   })
   const [audioFile, setAudioFile] = useState<File | null>(null)
-  const supabase = createClientComponentClient()
   const { toast } = useToast()
 
   useEffect(() => {
@@ -53,21 +39,16 @@ export default function InterviewLog() {
 
   const fetchEntries = async () => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session) return
-
-      const { data, error } = await supabase
-        .from("interview_entries")
-        .select("*")
-        .eq("user_id", session.user.id)
-        .order("created_at", { ascending: false })
-
-      if (error) throw error
-      setEntries(data || [])
+      // TODO: 後でAPIに置き換え
+      const logs = storage.getInterviewLogs()
+      setEntries(logs)
     } catch (error) {
-      console.error("Error fetching interview entries:", error)
+      console.error("Error:", error)
+      toast({
+        title: "エラー",
+        description: "データの取得に失敗しました。",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -92,7 +73,6 @@ export default function InterviewLog() {
       return {
         transcript: "音声の文字起こしに失敗しました。",
         summary: "音声処理に失敗しました。",
-        feedback: "音声処理に失敗しました。",
       }
     }
   }
@@ -102,41 +82,31 @@ export default function InterviewLog() {
     setProcessing(true)
 
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (!session) return
-
-      let transcript = ""
+      let transcript = formData.transcript
       let summary = ""
-      let feedback = ""
 
       if (audioFile) {
         // 音声ファイルを処理
         const audioResult = await processAudio(audioFile)
         transcript = audioResult.transcript
         summary = audioResult.summary
-        feedback = audioResult.feedback
-      } else if (formData.notes) {
-        // テキストのみの場合は簡単な分析
-        transcript = formData.notes
+      } else if (formData.transcript) {
+        // テキストのみの場合
         summary = "手動入力による面接記録"
-        feedback = "音声ファイルをアップロードすると、より詳細な分析が可能です。"
       }
 
-      const { error } = await supabase.from("interview_entries").insert([
-        {
-          company_name: formData.company_name,
-          position: formData.position,
-          interview_date: formData.interview_date,
-          transcript,
-          summary,
-          feedback,
-          user_id: session.user.id,
-        },
-      ])
+      const newEntry: InterviewLogType = {
+        id: Date.now().toString(),
+        company_name: formData.company_name,
+        date: formData.date,
+        transcript,
+        summary,
+        created_at: new Date().toISOString(),
+      }
 
-      if (error) throw error
+      // TODO: 後でAPIに置き換え
+      const currentLogs = storage.getInterviewLogs()
+      storage.saveInterviewLogs([newEntry, ...currentLogs])
 
       toast({
         title: "面接ログを保存しました",
@@ -145,9 +115,8 @@ export default function InterviewLog() {
 
       setFormData({
         company_name: "",
-        position: "",
-        interview_date: "",
-        notes: "",
+        date: "",
+        transcript: "",
       })
       setAudioFile(null)
       setIsDialogOpen(false)
@@ -200,33 +169,22 @@ export default function InterviewLog() {
               <DialogDescription>音声ファイルをアップロードすると、自動で文字起こしと分析を行います</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company_name">企業名</Label>
-                  <Input
-                    id="company_name"
-                    value={formData.company_name}
-                    onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="position">職種・ポジション</Label>
-                  <Input
-                    id="position"
-                    value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                    placeholder="例: エンジニア職"
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="company_name">企業名</Label>
+                <Input
+                  id="company_name"
+                  value={formData.company_name}
+                  onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                  required
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="interview_date">面接日</Label>
+                <Label htmlFor="date">面接日</Label>
                 <Input
-                  id="interview_date"
+                  id="date"
                   type="date"
-                  value={formData.interview_date}
-                  onChange={(e) => setFormData({ ...formData, interview_date: e.target.value })}
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   required
                 />
               </div>
@@ -243,11 +201,11 @@ export default function InterviewLog() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="notes">メモ・手動入力</Label>
+                <Label htmlFor="transcript">メモ・手動入力</Label>
                 <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  id="transcript"
+                  value={formData.transcript}
+                  onChange={(e) => setFormData({ ...formData, transcript: e.target.value })}
                   placeholder="面接の内容や感想を入力してください（音声ファイルがない場合）"
                   className="min-h-[100px]"
                 />
@@ -293,8 +251,7 @@ export default function InterviewLog() {
                       {entry.company_name}
                     </CardTitle>
                     <CardDescription>
-                      {entry.position && `${entry.position} • `}
-                      {new Date(entry.interview_date).toLocaleDateString("ja-JP")}
+                      {new Date(entry.date).toLocaleDateString("ja-JP")}
                     </CardDescription>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => setSelectedEntry(entry)}>
@@ -305,14 +262,18 @@ export default function InterviewLog() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">面接要約</h4>
-                    <p className="text-sm text-gray-600 line-clamp-3">{entry.summary}</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-sm text-gray-700 mb-2">フィードバック</h4>
-                    <p className="text-sm text-gray-600 line-clamp-2">{entry.feedback}</p>
-                  </div>
+                  {entry.summary && (
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-2">面接要約</h4>
+                      <p className="text-sm text-gray-600 line-clamp-3">{entry.summary}</p>
+                    </div>
+                  )}
+                  {entry.transcript && (
+                    <div>
+                      <h4 className="font-semibold text-sm text-gray-700 mb-2">内容</h4>
+                      <p className="text-sm text-gray-600 line-clamp-2">{entry.transcript}</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -326,8 +287,7 @@ export default function InterviewLog() {
           <DialogHeader>
             <DialogTitle>{selectedEntry?.company_name}</DialogTitle>
             <DialogDescription>
-              {selectedEntry?.position && `${selectedEntry.position} • `}
-              {selectedEntry && new Date(selectedEntry.interview_date).toLocaleDateString("ja-JP")}
+              {selectedEntry && new Date(selectedEntry.date).toLocaleDateString("ja-JP")}
             </DialogDescription>
           </DialogHeader>
           {selectedEntry && (
@@ -338,18 +298,26 @@ export default function InterviewLog() {
                   <p className="text-sm whitespace-pre-wrap">{selectedEntry.transcript}</p>
                 </div>
               </div>
-              <div>
-                <h4 className="font-semibold mb-2">面接要約</h4>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm">{selectedEntry.summary}</p>
+              {selectedEntry.summary && (
+                <div>
+                  <h4 className="font-semibold mb-2">面接要約</h4>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <p className="text-sm">{selectedEntry.summary}</p>
+                  </div>
                 </div>
-              </div>
-              <div>
-                <h4 className="font-semibold mb-2">フィードバック・改善点</h4>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm">{selectedEntry.feedback}</p>
+              )}
+              {selectedEntry.questions && selectedEntry.questions.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">質問一覧</h4>
+                  <div className="bg-green-50 p-4 rounded-lg">
+                    <ul className="text-sm space-y-1">
+                      {selectedEntry.questions.map((question, index) => (
+                        <li key={index}>• {question}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </DialogContent>

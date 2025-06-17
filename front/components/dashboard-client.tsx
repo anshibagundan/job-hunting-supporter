@@ -1,22 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useClerk, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Calendar, FileText, Mic, LogOut } from "lucide-react"
-import CalendarView from "@/components/calendar-view"
-import ESManager from "@/components/es-manager"
-import InterviewLog from "@/components/interview-log"
+import { CalendarView } from "@/components/calendar-view"
+import { ESManager } from "@/components/es-manager"
+import { InterviewLog } from "@/components/interview-log"
 
 export default function DashboardClient() {
   const [activeTab, setActiveTab] = useState("calendar")
-  const supabase = createClientComponentClient()
+  const { signOut } = useClerk()
+  const { user } = useUser()
   const router = useRouter()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
+    await signOut()
     router.push("/auth")
   }
 
@@ -25,7 +26,14 @@ export default function DashboardClient() {
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">就活ダッシュボード</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">就活ダッシュボード</h1>
+              {user && (
+                <p className="text-sm text-gray-600">
+                  ようこそ、{user.firstName || user.emailAddresses[0].emailAddress}さん
+                </p>
+              )}
+            </div>
             <Button variant="outline" onClick={handleSignOut}>
               <LogOut className="w-4 h-4 mr-2" />
               ログアウト
@@ -52,7 +60,9 @@ export default function DashboardClient() {
           </TabsList>
 
           <TabsContent value="calendar">
-            <CalendarView />
+            <CalendarView
+              events={[]} // ここに実際のイベントデータを渡す
+            />
           </TabsContent>
 
           <TabsContent value="es">

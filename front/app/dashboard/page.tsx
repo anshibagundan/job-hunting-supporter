@@ -1,17 +1,12 @@
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { auth } from "@clerk/nextjs/server"
 import { redirect } from "next/navigation"
 import DashboardClient from "@/components/dashboard-client"
 
 export default async function Dashboard() {
-  const supabase = createServerComponentClient({ cookies })
+  const { userId } = await auth()
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession()
-
-  if (!session) {
-    redirect("/auth")
+  if (!userId) {
+    redirect("/")
   }
 
   return <DashboardClient />
