@@ -48,13 +48,13 @@ func (c *CompanyController) GetCompany(ctx *gin.Context) {
 }
 
 func (c *CompanyController) GetAllCompanies(ctx *gin.Context) {
-	companys, err := c.useCase.GetAllCompanys()
+	companies, err := c.useCase.GetAllCompanies()
 	if err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to fetch Companys"})
+		ctx.JSON(500, gin.H{"error": "Failed to fetch Companies"})
 		return
 	}
 
-	ctx.JSON(200, companys)
+	ctx.JSON(200, companies)
 }
 
 func (c *CompanyController) UpdateCompany(ctx *gin.Context) {
