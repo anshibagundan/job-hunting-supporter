@@ -22,6 +22,7 @@ job_events ||--o{ interviews : generates
 | カラム名       | データ型     | 制約                     | 説明                     | 例                     |
 |----------------|--------------|--------------------------|--------------------------|------------------------|
 | id             | SERIAL       | PRIMARY KEY              | ユーザーの一意な識別子   | 1                      |
+| firebase_uid   | VARCHAR(255) | NOT NULL, UNIQUE         | FirebaseのUID            | 1234567890abcdef        |
 | name           | VARCHAR(255) | NOT NULL                 | ユーザーの名前           | 山田太郎               |
 | email          | VARCHAR(255) | NOT NULL, UNIQUE         | ユーザーのメールアドレス | yamada@example.com     |
 | icon           | VARCHAR(255) | NOT NULL                 | ユーザーのアイコンURL    | https://example.com/icon.png |
@@ -29,7 +30,7 @@ job_events ||--o{ interviews : generates
 | created_at     | TIMESTAMP    | NOT NULL, DEFAULT NOW()  | ユーザーの作成日時       | 2023-10-01 12:00:00    |
 | updated_at     | TIMESTAMP    | NOT NULL, DEFAULT NOW()  | ユーザーの更新日時       | 2023-10-01 12:00:00    |
 
-**注記**: Firebase Authenticationと連携するため、FirebaseのUIDをemailまたは別途firebase_uidカラムで管理することを推奨。
+[//]: # (**注記**: Firebase Authenticationと連携するため、FirebaseのUIDをemailまたは別途firebase_uidカラムで管理することを推奨。)
 
 ### 2. companies テーブル
 企業情報を管理するテーブル

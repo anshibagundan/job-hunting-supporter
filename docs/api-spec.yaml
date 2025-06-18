@@ -25,6 +25,9 @@ components:
         id:
           type: integer
           example: 1
+        firebase_uid:
+            type: string
+            example: abc123def456ghi789
         name:
           type: string
           example: 山田太郎
