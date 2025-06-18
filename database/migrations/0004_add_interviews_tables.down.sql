@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS "interviews";
+DROP TABLE IF EXISTS interviews;
