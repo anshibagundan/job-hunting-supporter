@@ -22,7 +22,7 @@ func (u *CompanyUseCase) GetCompany(id uint) (*domain.Company, error) {
 	return u.repo.FindByID(id)
 }
 
-func (u *CompanyUseCase) GetAllCompanys() ([]*domain.Company, error) {
+func (u *CompanyUseCase) GetAllCompanies() ([]*domain.Company, error) {
 	return u.repo.GetAll()
 }
 
