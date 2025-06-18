@@ -1,0 +1,1208 @@
+openapi: 3.0.0
+info:
+  title: 就活サポートサービス API
+  description: 就活サポートサービスのRESTful API仕様書
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: ローカル開発サーバー
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase IDトークンを使用
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 山田太郎
+        email:
+          type: string
+          example: yamada@example.com
+        icon:
+          type: string
+          example: https://example.com/icon.png
+        basic_es:
+          type: string
+          example: 私の強みは...
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Company:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 株式会社サンプル
+        web_url:
+          type: string
+          example: https://example.com
+        description:
+          type: string
+          example: ITソリューション企業です
+        img:
+          type: string
+          example: https://example.com/logo.png
+        industry:
+          type: string
+          example: IT・ソフトウェア
+        scrape_target_url:
+          type: string
+          example: https://example.com/jobs
+        last_scrape_time:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    JobEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        company_id:
+          type: integer
+          example: 1
+        job_title:
+          type: string
+          example: ソフトウェアエンジニア
+        job_type:
+          type: string
+          example: 正社員
+        job_description:
+          type: string
+          example: Webアプリケーション開発
+        start_date:
+          type: string
+          format: date-time
+        deadline:
+          type: string
+          format: date-time
+        event_url:
+          type: string
+          example: https://example.com/job/1
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Interview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        company_id:
+          type: integer
+          example: 1
+        job_event_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        interview_at:
+          type: string
+          format: date-time
+        stage:
+          type: string
+          example: 一次面接
+        audio_note_path:
+          type: string
+          example: /uploads/audio/001.wav
+        transcript:
+          type: string
+          example: こんにちは、よろしく...
+        audio_summary:
+          type: string
+          example: 技術的な質問が中心でした
+        text_note:
+          type: string
+          example: 緊張したが良い印象だった
+        location:
+          type: string
+          example: 東京オフィス2F会議室
+        meeting_url:
+          type: string
+          example: https://meet.google.com/abc-defg-hij
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CompanyES:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        company_id:
+          type: integer
+          example: 1
+        content:
+          type: string
+          example: 志望動機は...
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: エラーメッセージ
+
+    Success:
+      type: object
+      properties:
+        message:
+          type: string
+          example: 操作が成功しました
+
+paths:
+  # ヘルスチェック
+  /health:
+    get:
+      tags:
+        - Health
+      summary: ヘルスチェック
+      security: []
+      responses:
+        '200':
+          description: 正常
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: ok
+
+  # ユーザー関連（実装済み）
+  /users:
+    post:
+      tags:
+        - Users
+      summary: ユーザー作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+        '400':
+          description: 不正な入力
+
+    get:
+      tags:
+        - Users
+      summary: ユーザー一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+    put:
+      tags:
+        - Users
+      summary: ユーザー更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: ユーザー詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: ユーザーが見つかりません
+
+    delete:
+      tags:
+        - Users
+      summary: ユーザー削除
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+
+  # 企業関連（実装済み）
+  /companies:
+    post:
+      tags:
+        - Companies
+      summary: 企業作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Company'
+      responses:
+        '201':
+          description: 作成成功
+
+    get:
+      tags:
+        - Companies
+      summary: 企業一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+
+    put:
+      tags:
+        - Companies
+      summary: 企業更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Company'
+      responses:
+        '200':
+          description: 更新成功
+
+  /companies/{id}:
+    get:
+      tags:
+        - Companies
+      summary: 企業詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+
+    delete:
+      tags:
+        - Companies
+      summary: 企業削除
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 削除成功
+
+  # 求人イベント関連（実装済み）
+  /job-events:
+    post:
+      tags:
+        - JobEvents
+      summary: 求人イベント作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobEvent'
+      responses:
+        '201':
+          description: 作成成功
+
+    get:
+      tags:
+        - JobEvents
+      summary: 求人イベント一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobEvent'
+
+    put:
+      tags:
+        - JobEvents
+      summary: 求人イベント更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobEvent'
+      responses:
+        '200':
+          description: 更新成功
+
+  /job-events/{id}:
+    get:
+      tags:
+        - JobEvents
+      summary: 求人イベント詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobEvent'
+
+    delete:
+      tags:
+        - JobEvents
+      summary: 求人イベント削除
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 削除成功
+
+  # 面接関連（実装済み）
+  /interviews:
+    post:
+      tags:
+        - Interviews
+      summary: 面接記録作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Interview'
+      responses:
+        '201':
+          description: 作成成功
+
+    get:
+      tags:
+        - Interviews
+      summary: 面接記録一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interview'
+
+    put:
+      tags:
+        - Interviews
+      summary: 面接記録更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Interview'
+      responses:
+        '200':
+          description: 更新成功
+
+  /interviews/{id}:
+    get:
+      tags:
+        - Interviews
+      summary: 面接記録詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Interview'
+
+    delete:
+      tags:
+        - Interviews
+      summary: 面接記録削除
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 削除成功
+
+  /interviews/audio/upload:
+    post:
+      tags:
+        - Interviews
+      summary: 音声ファイルアップロード（実装済み）
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                audio:
+                  type: string
+                  format: binary
+                interview_id:
+                  type: integer
+      responses:
+        '200':
+          description: アップロード成功
+
+  # 企業ES関連（実装済み）
+  /company-es:
+    post:
+      tags:
+        - CompanyES
+      summary: 企業ES作成
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyES'
+      responses:
+        '201':
+          description: 作成成功
+
+    get:
+      tags:
+        - CompanyES
+      summary: 企業ES一覧取得
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyES'
+
+    put:
+      tags:
+        - CompanyES
+      summary: 企業ES更新
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyES'
+      responses:
+        '200':
+          description: 更新成功
+
+  /company-es/{id}:
+    get:
+      tags:
+        - CompanyES
+      summary: 企業ES詳細取得
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyES'
+
+    delete:
+      tags:
+        - CompanyES
+      summary: 企業ES削除
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 削除成功
+
+  /company-es/user/{userID}:
+    get:
+      tags:
+        - CompanyES
+      summary: ユーザー別ES取得
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyES'
+
+  /company-es/company/{companyID}:
+    get:
+      tags:
+        - CompanyES
+      summary: 企業別ES取得
+      parameters:
+        - name: companyID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyES'
+
+  /company-es/user/{userID}/company/{companyID}:
+    get:
+      tags:
+        - CompanyES
+      summary: ユーザー・企業指定ES取得
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: companyID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompanyES'
+
+  # =========================
+  # 以下、未実装のエンドポイント
+  # =========================
+
+  # 認証関連（未実装）
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: ログイン（Firebase認証）【未実装】
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                idToken:
+                  type: string
+                  description: Firebase IDトークン
+      responses:
+        '200':
+          description: ログイン成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  token:
+                    type: string
+                    description: JWTトークン
+
+  /auth/refresh:
+    post:
+      tags:
+        - Auth
+      summary: トークンリフレッシュ【未実装】
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: リフレッシュ成功
+
+  /auth/logout:
+    post:
+      tags:
+        - Auth
+      summary: ログアウト【未実装】
+      responses:
+        '200':
+          description: ログアウト成功
+
+  # ES AI添削（未実装）
+  /analyze-es:
+    post:
+      tags:
+        - AI
+      summary: ES AI添削【未実装】
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content:
+                  type: string
+                  description: ES内容
+                type:
+                  type: string
+                  enum: [自己PR, 志望動機, ガクチカ]
+      responses:
+        '200':
+          description: 添削成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  original:
+                    type: string
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                  improved:
+                    type: string
+                  score:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+
+  # 音声文字起こし・要約（未実装）
+  /interviews/{id}/transcribe:
+    post:
+      tags:
+        - AI
+      summary: 音声文字起こし【未実装】
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 文字起こし成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transcript:
+                    type: string
+                  duration:
+                    type: integer
+                    description: 音声の長さ（秒）
+
+  /interviews/{id}/summarize:
+    post:
+      tags:
+        - AI
+      summary: 面接要約生成【未実装】
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 要約生成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  summary:
+                    type: string
+                  key_points:
+                    type: array
+                    items:
+                      type: string
+                  questions:
+                    type: array
+                    items:
+                      type: string
+
+  # カレンダー・スケジュール関連（未実装）
+  /calendar/events:
+    get:
+      tags:
+        - Calendar
+      summary: カレンダーイベント取得【未実装】
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    title:
+                      type: string
+                    type:
+                      type: string
+                      enum: [interview, deadline, other]
+                    start:
+                      type: string
+                      format: date-time
+                    end:
+                      type: string
+                      format: date-time
+                    company_id:
+                      type: integer
+                    description:
+                      type: string
+
+  /calendar/reminders:
+    get:
+      tags:
+        - Calendar
+      summary: リマインダー取得【未実装】
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    type:
+                      type: string
+                      enum: [es_deadline, interview]
+                    message:
+                      type: string
+                    due_date:
+                      type: string
+                      format: date-time
+
+  # 検索・フィルター関連（未実装）
+  /search/companies:
+    get:
+      tags:
+        - Search
+      summary: 企業検索【未実装】
+      parameters:
+        - name: q
+          in: query
+          description: 検索キーワード
+          schema:
+            type: string
+        - name: industry
+          in: query
+          description: 業界
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 応募状況
+          schema:
+            type: string
+            enum: [not_applied, applied, interviewing, offered, rejected]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Company'
+
+  /search/interviews:
+    get:
+      tags:
+        - Search
+      summary: 面接記録検索【未実装】
+      parameters:
+        - name: company_name
+          in: query
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: stage
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Interview'
+
+  # ダッシュボード関連（未実装）
+  /dashboard/summary:
+    get:
+      tags:
+        - Dashboard
+      summary: ダッシュボードサマリー【未実装】
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_companies:
+                    type: integer
+                  total_interviews:
+                    type: integer
+                  upcoming_events:
+                    type: integer
+                  es_progress:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      completed:
+                        type: integer
+                      in_progress:
+                        type: integer
+
+  /dashboard/timeline:
+    get:
+      tags:
+        - Dashboard
+      summary: タイムライン取得【未実装】
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    type:
+                      type: string
+                      enum: [es_created, interview_scheduled, company_added, deadline_approaching]
+                    title:
+                      type: string
+                    description:
+                      type: string
+                    timestamp:
+                      type: string
+                      format: date-time
+
+  # エクスポート関連（未実装）
+  /export/es/{id}/pdf:
+    get:
+      tags:
+        - Export
+      summary: ES PDF出力【未実装】
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: PDF生成成功
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /export/interviews/csv:
+    get:
+      tags:
+        - Export
+      summary: 面接記録CSV出力【未実装】
+      parameters:
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: CSV生成成功
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /export/calendar/ical:
+    get:
+      tags:
+        - Export
+      summary: カレンダーiCal出力【未実装】
+      responses:
+        '200':
+          description: iCal生成成功
+          content:
+            text/calendar:
+              schema:
+                type: string
+
+  # インポート関連（未実装）
+  /import/companies/csv:
+    post:
+      tags:
+        - Import
+      summary: 企業リストCSVインポート【未実装】
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: インポート成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported:
+                    type: integer
+                  skipped:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: string
+
+  # 企業情報スクレイピング（未実装）
+  /companies/{id}/scrape:
+    post:
+      tags:
+        - Companies
+      summary: 企業情報スクレイピング【未実装】
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: スクレイピング成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_fields:
+                    type: array
+                    items:
+                      type: string
+                  new_job_events:
+                    type: integer
+
+tags:
+  - name: Health
+    description: ヘルスチェック
+  - name: Auth
+    description: 認証関連（未実装）
+  - name: Users
+    description: ユーザー管理
+  - name: Companies
+    description: 企業管理
+  - name: JobEvents
+    description: 求人イベント管理
+  - name: Interviews
+    description: 面接記録管理
+  - name: CompanyES
+    description: 企業別ES管理
+  - name: AI
+    description: AI機能（未実装）
+  - name: Calendar
+    description: カレンダー機能（未実装）
+  - name: Search
+    description: 検索機能（未実装）
+  - name: Dashboard
+    description: ダッシュボード機能（未実装）
+  - name: Export
+    description: エクスポート機能（未実装）
+  - name: Import
+    description: インポート機能（未実装）
