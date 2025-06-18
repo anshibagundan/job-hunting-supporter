@@ -1,4 +1,4 @@
-package _interface
+package controller
 
 import (
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"

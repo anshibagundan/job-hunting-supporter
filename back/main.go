@@ -3,31 +3,33 @@ package main
 
 import (
 	"fmt"
+
+	// 生成AI関連
 	genai_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/infrastructure"
 
+	user_controller "github.com/anshibagundan/job-hunting-supporter/internal/user/controller"
 	// ユーザー関連
 	user_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/user/infrastructure"
-	user_interface "github.com/anshibagundan/job-hunting-supporter/internal/user/interface"
 	user_usecase "github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
 
+	company_controller "github.com/anshibagundan/job-hunting-supporter/internal/companies/controller"
 	// 企業関連
 	company_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/companies/infrastructure"
-	company_interface "github.com/anshibagundan/job-hunting-supporter/internal/companies/interface"
 	company_usecase "github.com/anshibagundan/job-hunting-supporter/internal/companies/usecase"
 
+	interview_controller "github.com/anshibagundan/job-hunting-supporter/internal/interviews/controller"
 	// 面接関連
 	interview_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/interviews/infrastructure"
-	interview_interface "github.com/anshibagundan/job-hunting-supporter/internal/interviews/interface"
 	interview_usecase "github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
 
+	jobevent_controller "github.com/anshibagundan/job-hunting-supporter/internal/job_events/controller"
 	// ジョブイベント関連
 	jobevent_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/job_events/infrastructure"
-	jobevent_interface "github.com/anshibagundan/job-hunting-supporter/internal/job_events/interface"
 	jobevent_usecase "github.com/anshibagundan/job-hunting-supporter/internal/job_events/usecase"
 
+	companyes_controller "github.com/anshibagundan/job-hunting-supporter/internal/company_es/controller"
 	// 企業ES関連
 	companyes_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/company_es/infrastructure"
-	companyes_interface "github.com/anshibagundan/job-hunting-supporter/internal/company_es/interface"
 	companyes_usecase "github.com/anshibagundan/job-hunting-supporter/internal/company_es/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -69,27 +71,27 @@ func main() {
 	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 	// DI の設定
-	genaiClient := genai_infrastructure.NewGenAIClient(os.Getenv("GENAI_API_KEY"))
+	genAIClient := genai_infrastructure.NewGenAIClient(os.Getenv("GENAI_API_KEY"))
 
 	userRepo := user_infrastructure.NewUserRepository(db)
 	userUseCase := user_usecase.NewUserUseCase(userRepo)
-	userController := user_interface.NewUserController(userUseCase)
+	userController := user_controller.NewUserController(userUseCase)
 
 	companyRepo := company_infrastructure.NewCompanyRepository(db)
 	companyUseCase := company_usecase.NewCompanyUseCase(companyRepo)
-	companyController := company_interface.NewCompanyController(companyUseCase)
+	companyController := company_controller.NewCompanyController(companyUseCase)
 
 	interviewRepo := interview_infrastructure.NewInterviewRepository(db)
-	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, genaiClient)
-	interviewController := interview_interface.NewInterviewController(interviewUseCase)
+	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, genAIClient)
+	interviewController := interview_controller.NewInterviewController(interviewUseCase)
 
 	jobEventRepo := jobevent_infrastructure.NewJobEventRepository(db)
 	jobEventUseCase := jobevent_usecase.NewJobEventUseCase(jobEventRepo)
-	jobEventController := jobevent_interface.NewJobEventController(jobEventUseCase)
+	jobEventController := jobevent_controller.NewJobEventController(jobEventUseCase)
 
 	companyESRepo := companyes_infrastructure.NewCompanyESRepository(db)
 	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo)
-	companyESController := companyes_interface.NewCompanyESController(companyESUseCase)
+	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	router := gin.Default()
 
@@ -159,14 +161,14 @@ func main() {
 
 		companyESs := api.Group("/company-es")
 		{
-			companyESs.POST("", companyESController.CreateCompanyES)                                              // POST /api/company-es
-			companyESs.GET("/:id", companyESController.GetCompanyES)                                              // GET /api/company-es/:id
-			companyESs.GET("", companyESController.GetAllCompanyESs)                                              // GET /api/company-es
-			companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                           // GET /api/company-es/user/:userID
-			companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                  // GET /api/company-es/company/:companyID
+			companyESs.POST("", companyESController.CreateCompanyES)                                                 // POST /api/company-es
+			companyESs.GET("/:id", companyESController.GetCompanyES)                                                 // GET /api/company-es/:id
+			companyESs.GET("", companyESController.GetAllCompanyESs)                                                 // GET /api/company-es
+			companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                               // GET /api/company-es/user/:userID
+			companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                      // GET /api/company-es/company/:companyID
 			companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
-			companyESs.PUT("", companyESController.UpdateCompanyES)                                              // PUT /api/company-es
-			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                       // DELETE /api/company-es/:id
+			companyESs.PUT("", companyESController.UpdateCompanyES)                                                  // PUT /api/company-es
+			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
 		}
 	}
 

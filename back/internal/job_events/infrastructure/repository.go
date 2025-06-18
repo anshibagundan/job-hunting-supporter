@@ -13,17 +13,17 @@ func NewJobEventRepository(db *gorm.DB) *JobEventRepository {
 	return &JobEventRepository{db: db}
 }
 
-func (r *JobEventRepository) Create(jobEvents *domain.JobEvent) error {
-	return r.db.Create(jobEvents).Error
+func (r *JobEventRepository) Create(jobEvent *domain.JobEvent) error {
+	return r.db.Create(jobEvent).Error
 }
 
 func (r *JobEventRepository) FindByID(id uint) (*domain.JobEvent, error) {
-	var jobEvents domain.JobEvent
-	err := r.db.First(&jobEvents, id).Error
+	var jobEvent domain.JobEvent
+	err := r.db.First(&jobEvent, id).Error
 	if err != nil {
 		return nil, err
 	}
-	return &jobEvents, nil
+	return &jobEvent, nil
 }
 
 func (r *JobEventRepository) GetAll() ([]*domain.JobEvent, error) {
@@ -35,8 +35,8 @@ func (r *JobEventRepository) GetAll() ([]*domain.JobEvent, error) {
 	return jobEvents, nil
 }
 
-func (r *JobEventRepository) Update(jobEvents *domain.JobEvent) error {
-	return r.db.Save(jobEvents).Error
+func (r *JobEventRepository) Update(jobEvent *domain.JobEvent) error {
+	return r.db.Save(jobEvent).Error
 }
 
 func (r *JobEventRepository) Delete(id uint) error {
