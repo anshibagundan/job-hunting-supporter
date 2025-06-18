@@ -1,5 +1,6 @@
 CREATE TABLE IF NOT EXISTS "users" (
     "id" SERIAL PRIMARY KEY,
+    "firebase_uid" VARCHAR(255) NOT NULL UNIQUE,
     "name" VARCHAR(255) NOT NULL,
     "email" VARCHAR(255) NOT NULL UNIQUE,
     "icon" VARCHAR(255),
