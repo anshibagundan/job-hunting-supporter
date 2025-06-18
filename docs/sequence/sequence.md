@@ -212,8 +212,7 @@ sequenceDiagram
         B->>F: 500 Internal Server Error
         F->>U: エラーメッセージ表示
     else バリデーションエラー
-        B->>B: バリデーション失敗
-        B->>F: 400 Bad Request
+        B->>F: バリデーション失敗 (400 Bad Request)
         F->>U: 入力エラーメッセージ表示
     else 認証エラー
         B->>B: 認証失敗
