@@ -99,7 +99,7 @@ func (c *InterviewController) UploadAudio(ctx *gin.Context) {
 	fmt.Printf("File received: %s\n", file.Filename)
 
 	// 保存例: ./uploads/ に保存する
-	savePath := fmt.Sprintf("./uploads/%s", file.Filename)
+	savePath := fmt.Sprintf("../../../../uploads/%s", file.Filename)
 	if err := ctx.SaveUploadedFile(file, savePath); err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
 		return
