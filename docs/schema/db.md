@@ -102,8 +102,8 @@ job_events ||--o{ interviews : generates
 - `interviews.company_id` → `companies.id` (ON DELETE CASCADE)  
 - `interviews.job_event_id` → `job_events.id` (ON DELETE CASCADE)
 - `interviews.user_id` → `users.id` (ON DELETE CASCADE)
-- `company_es.user_id` → `users.id`
-- `company_es.company_id` → `companies.id`
+- `company_es.user_id` → `users.id` (ON DELETE CASCADE)
+- `company_es.company_id` → `companies.id` (ON DELETE CASCADE)
 
 ### ユニーク制約
 - `users.email`
