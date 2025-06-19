@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { storage, type InterviewLog } from "@/lib/supabase"
+import AudioUploader from "@/components/interview/recorder/media-recorder";
 
 export function InterviewLogger() {
   const [logs, setLogs] = useState<InterviewLog[]>([])
@@ -177,16 +178,7 @@ export function InterviewLogger() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">音声ファイル（オプション）</label>
-                  <div className="flex items-center gap-4">
-                    <Input type="file" accept="audio/*,.m4a" onChange={handleFileChange} className="flex-1" />
-                    {audioFile && (
-                      <div className="flex items-center gap-2 text-sm text-green-600">
-                        <FileAudio className="w-4 h-4" />
-                        {audioFile.name}
-                      </div>
-                    )}
-                  </div>
+                  <AudioUploader/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">メモ・手動入力</label>

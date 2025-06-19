@@ -120,11 +120,12 @@ func main() {
 	{
 		users := api.Group("/users")
 		{
-			users.POST("", userController.CreateUser)       // POST /api/users
-			users.GET("/:id", userController.GetUser)       // GET /api/users/:id
-			users.GET("", userController.GetAllUsers)       // GET /api/users
-			users.PUT("", userController.UpdateUser)        // PUT /api/users
-			users.DELETE("/:id", userController.DeleteUser) // DELETE /api/users/:id
+			users.POST("", userController.CreateUser)            // POST /api/users
+			users.POST("/sync", userController.SyncFirebaseUser) // POST /api/users/sync
+			users.GET("/:id", userController.GetUser)            // GET /api/users/:id
+			users.GET("", userController.GetAllUsers)            // GET /api/users
+			users.PUT("", userController.UpdateUser)             // PUT /api/users
+			users.DELETE("/:id", userController.DeleteUser)      // DELETE /api/users/:id
 		}
 
 		companies := api.Group("/companies")
