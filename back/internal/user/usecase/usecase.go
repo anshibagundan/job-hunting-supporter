@@ -33,3 +33,7 @@ func (u *UserUseCase) UpdateUser(user *domain.User) error {
 func (u *UserUseCase) DeleteUser(id uint) error {
 	return u.repo.Delete(id)
 }
+
+func (u *UserUseCase) GetUserByFirebaseUID(firebaseUID string) (*domain.User, error) {
+	return u.repo.FindByFirebaseUID(firebaseUID)
+}

@@ -2,15 +2,11 @@ import type React from "react"
 import "./globals.css"
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
-import {
-  ClerkProvider,
-  SignedIn,
-  SignedOut,
-} from "@clerk/nextjs"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthenticatedLayout } from "@/components/layout/authenticated-layout"
 import { Header } from "@/components/layout/header"
+import { AuthProvider } from "@/contexts/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -26,21 +22,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ClerkProvider>
-      <html lang="ja">
-        <body className={inter.className}>
+    <html lang="ja">
+      <body className={inter.className}>
+        <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
             <Header />
-            <SignedOut>
-              {children}
-            </SignedOut>
-            <SignedIn>
-              <AuthenticatedLayout>{children}</AuthenticatedLayout>
-            </SignedIn>
+            <AuthenticatedLayout>{children}</AuthenticatedLayout>
             <Toaster />
           </ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </AuthProvider>
+      </body>
+    </html>
   )
 }
