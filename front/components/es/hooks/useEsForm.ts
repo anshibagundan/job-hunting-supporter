@@ -19,11 +19,18 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
   // 事前選択された企業IDがある場合、該当する企業を設定
   useEffect(() => {
     if (preSelectedCompanyId && !entry) {
-      const companies = storage.getCompanies()
-      const preSelectedCompany = companies.find(c => c.id === preSelectedCompanyId)
-      if (preSelectedCompany) {
-        setFormData(prev => ({ ...prev, company: preSelectedCompany }))
+      const loadCompanyData = async () => {
+        try {
+          const companies = await storage.getCompanies()
+          const preSelectedCompany = companies.find(company => company.id === preSelectedCompanyId)
+          if (preSelectedCompany) {
+            setFormData(prev => ({ ...prev, company: preSelectedCompany }))
+          }
+        } catch (error) {
+          console.error('Failed to load companies:', error)
+        }
       }
+      loadCompanyData()
     }
   }, [preSelectedCompanyId, entry])
 

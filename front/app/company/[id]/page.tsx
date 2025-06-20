@@ -28,9 +28,9 @@ export default function CompanyDetailPage() {
     }
   }, [companyId])
 
-  const loadCompanyData = () => {
+  const loadCompanyData = async () => {
     try {
-      const companies = storage.getCompanies()
+      const companies = await storage.getCompanies()
       const foundCompany = companies.find(c => c.id === companyId)
 
       if (!foundCompany) {
