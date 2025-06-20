@@ -22,7 +22,7 @@ export interface Event {
 
 export interface ESEntry {
   id: string
-  company_name: string
+  company: Company
   title: string
   content: string
   summary?: string
@@ -57,7 +57,10 @@ export const storage = {
   getESEntries: (): ESEntry[] => {
     if (typeof window === "undefined") return []
     const data = localStorage.getItem("job-hunting-es")
-    return data ? JSON.parse(data) : []
+    if (data) {
+      return JSON.parse(data)
+    }
+    return []
   },
 
   saveESEntries: (entries: ESEntry[]) => {
