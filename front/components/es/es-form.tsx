@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useESForm } from "@/components/es/hooks/useEsForm"
 import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
 import { storage, type ESEntry } from "@/lib/supabase"
@@ -22,6 +25,7 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
   const { isAnalyzing, analyzeContent } = useAIAnalysis()
   const [companies, setCompanies] = useState<Company[]>([])
   const [companiesLoading, setCompaniesLoading] = useState(true)
+  const [open, setOpen] = useState(false)
 
   // 利用可能な企業リストを取得
   useEffect(() => {
@@ -65,13 +69,6 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
     updateField("advice", result.advice)
   }, [formData.content, analyzeContent, updateField])
 
-  const handleCompanyChange = useCallback((companyId: string) => {
-    const selectedCompany = companies.find(c => c.id === companyId)
-    if (selectedCompany) {
-      updateCompany(selectedCompany)
-    }
-  }, [companies, updateCompany])
-
   return (
     <Card>
       <CardHeader>
@@ -81,23 +78,48 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">企業名</label>
-            <Select
-              value={formData.company?.id || ""}
-              onValueChange={handleCompanyChange}
-              required
-              disabled={companiesLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={companiesLoading ? "企業情報を読み込み中..." : "企業を選択してください"} />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between"
+                  disabled={companiesLoading}
+                >
+                  {formData.company?.name || (companiesLoading ? "企業情報を読み込み中..." : "企業を選択してください")}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <Command>
+                  <CommandInput placeholder="企業を検索..." />
+                  <CommandEmpty>企業が見つかりません。</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup className="max-h-60 overflow-y-auto">
+                      {companies.map((company) => (
+                        <CommandItem
+                          key={company.id}
+                          value={company.name}
+                          onSelect={() => {
+                            updateCompany(company)
+                            setOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.company?.id === company.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {company.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">タイトル</label>
