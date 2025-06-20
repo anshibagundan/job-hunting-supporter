@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { storage, type Company, type ESEntry, type InterviewLog, type Event } from "@/lib/supabase"
+import { storage, type Company, type InterviewLog, type Event } from "@/lib/supabase"
 import { CompanyDetailHeader } from "@/components/company/company-detail-header"
 import { CompanyHeader } from "@/components/company/company-header"
 import { CompanyRelatedDataTabs } from "@/components/company/company-related-data-tabs"
 import { LoadingSpinner, NotFoundMessage } from "@/components/common/loading-states"
+import { useCompanyESEntries } from "@/components/company/hooks/useCompanyESEntries"
 
 export default function CompanyDetailPage() {
   const params = useParams()
@@ -14,10 +15,12 @@ export default function CompanyDetailPage() {
   const companyId = params.id as string
 
   const [company, setCompany] = useState<Company | null>(null)
-  const [esEntries, setESEntries] = useState<ESEntry[]>([])
   const [interviewLogs, setInterviewLogs] = useState<InterviewLog[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
+
+  // APIからESデータを取得
+  const { entries: esEntries, isLoading: esLoading, deleteEntry } = useCompanyESEntries(companyId)
 
   useEffect(() => {
     if (companyId) {
@@ -37,11 +40,7 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // その企業に関連するES、面接ログ、イベントを取得
-      const allESEntries = storage.getESEntries()
-      const companyESEntries = allESEntries.filter(es => es.company.id === foundCompany.id)
-      setESEntries(companyESEntries)
-
+      // 面接ログとイベントはまだローカルストレージから取得（必要に応じて後でAPI化）
       const allInterviewLogs = storage.getInterviewLogs()
       const companyInterviewLogs = allInterviewLogs.filter(log => log.company_name === foundCompany.name)
       setInterviewLogs(companyInterviewLogs)
@@ -58,11 +57,12 @@ export default function CompanyDetailPage() {
     }
   }
 
-  const handleDeleteES = (esId: string) => {
-    const allESEntries = storage.getESEntries()
-    const updatedEntries = allESEntries.filter(es => es.id !== esId)
-    storage.saveESEntries(updatedEntries)
-    setESEntries(prev => prev.filter(es => es.id !== esId))
+  const handleDeleteES = async (esId: string) => {
+    try {
+      await deleteEntry(esId)
+    } catch (error) {
+      console.error('ES削除に失敗しました:', error)
+    }
   }
 
   const handleDeleteInterviewLog = (logId: string) => {

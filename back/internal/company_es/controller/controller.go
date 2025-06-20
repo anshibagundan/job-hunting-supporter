@@ -19,16 +19,16 @@ type CompanyESController struct {
 func (c *CompanyESController) CreateCompanyES(ctx *gin.Context) {
 	var companyES domain.CompanyES
 	if err := ctx.ShouldBindJSON(&companyES); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid input"})
+		ctx.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
 		return
 	}
 
 	if err := c.useCase.CreateCompanyES(&companyES); err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to create CompanyES"})
+		ctx.JSON(500, gin.H{"error": "Failed to create CompanyES", "details": err.Error()})
 		return
 	}
 
-	ctx.JSON(201, gin.H{"message": "CompanyES created successfully"})
+	ctx.JSON(201, companyES)
 }
 
 func (c *CompanyESController) GetCompanyES(ctx *gin.Context) {
@@ -39,7 +39,7 @@ func (c *CompanyESController) GetCompanyES(ctx *gin.Context) {
 		return
 	}
 
-	companyES, err := c.useCase.GetCompanyES(uint(id))
+	companyES, err := c.useCase.GetCompanyESWithCompany(uint(id))
 	if err != nil {
 		ctx.JSON(404, gin.H{"error": "CompanyES not found"})
 		return
@@ -56,7 +56,7 @@ func (c *CompanyESController) GetCompanyESsByUserID(ctx *gin.Context) {
 		return
 	}
 
-	companyESs, err := c.useCase.GetCompanyESsByUserID(uint(userID))
+	companyESs, err := c.useCase.GetCompanyESsByUserIDWithCompany(uint(userID))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch CompanyESs"})
 		return
@@ -73,7 +73,7 @@ func (c *CompanyESController) GetCompanyESsByCompanyID(ctx *gin.Context) {
 		return
 	}
 
-	companyESs, err := c.useCase.GetCompanyESsByCompanyID(uint(companyID))
+	companyESs, err := c.useCase.GetCompanyESsByCompanyIDWithCompany(uint(companyID))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch CompanyESs"})
 		return
@@ -98,7 +98,7 @@ func (c *CompanyESController) GetCompanyESByUserIDAndCompanyID(ctx *gin.Context)
 		return
 	}
 
-	companyESs, err := c.useCase.GetCompanyESByUserIDAndCompanyID(uint(userID), uint(companyID))
+	companyESs, err := c.useCase.GetCompanyESByUserIDAndCompanyIDWithCompany(uint(userID), uint(companyID))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch CompanyESs"})
 		return
@@ -108,7 +108,7 @@ func (c *CompanyESController) GetCompanyESByUserIDAndCompanyID(ctx *gin.Context)
 }
 
 func (c *CompanyESController) GetAllCompanyESs(ctx *gin.Context) {
-	companyESs, err := c.useCase.GetAllCompanyESs()
+	companyESs, err := c.useCase.GetAllCompanyESsWithCompany()
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch CompanyESs"})
 		return

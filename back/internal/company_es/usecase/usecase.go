@@ -60,3 +60,24 @@ func (u *CompanyESUseCase) AnalyzeContent(content string) (summary string, advic
 	// GenAI クライアントを使用して実際の分析を実行
 	return u.genaiClient.AnalyzeESContent(content)
 }
+
+// Methods to get responses with Company details
+func (u *CompanyESUseCase) GetCompanyESWithCompany(id uint) (*domain.CompanyESResponse, error) {
+	return u.repo.FindByIDWithCompany(id)
+}
+
+func (u *CompanyESUseCase) GetCompanyESsByUserIDWithCompany(userID uint) ([]*domain.CompanyESResponse, error) {
+	return u.repo.FindByUserIDWithCompany(userID)
+}
+
+func (u *CompanyESUseCase) GetCompanyESsByCompanyIDWithCompany(companyID uint) ([]*domain.CompanyESResponse, error) {
+	return u.repo.FindByCompanyIDWithCompany(companyID)
+}
+
+func (u *CompanyESUseCase) GetCompanyESByUserIDAndCompanyIDWithCompany(userID, companyID uint) ([]*domain.CompanyESResponse, error) {
+	return u.repo.FindByUserIDAndCompanyIDWithCompany(userID, companyID)
+}
+
+func (u *CompanyESUseCase) GetAllCompanyESsWithCompany() ([]*domain.CompanyESResponse, error) {
+	return u.repo.GetAllWithCompany()
+}

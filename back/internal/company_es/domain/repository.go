@@ -9,4 +9,11 @@ type CompanyESRepository interface {
 	GetAll() ([]*CompanyES, error)
 	Update(companyES *CompanyES) error
 	Delete(id uint) error
+
+	// Methods to get responses with Company details
+	FindByIDWithCompany(id uint) (*CompanyESResponse, error)
+	FindByUserIDWithCompany(userID uint) ([]*CompanyESResponse, error)
+	FindByCompanyIDWithCompany(companyID uint) ([]*CompanyESResponse, error)
+	FindByUserIDAndCompanyIDWithCompany(userID, companyID uint) ([]*CompanyESResponse, error)
+	GetAllWithCompany() ([]*CompanyESResponse, error)
 }

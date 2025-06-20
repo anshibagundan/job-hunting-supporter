@@ -2,16 +2,17 @@
 
 import { useCallback, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useESEntries } from "@/components/es/hooks/useEsEntries"
 import { ESForm } from "@/components/es/es-form"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import type { ESEntry } from "@/lib/supabase"
+import { useAuth } from "@/hooks/useAuth"
+import { saveES } from "@/components/es/api"
 
 function ESNewPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { addEntry } = useESEntries()
+  const { user } = useAuth()
 
   const companyId = searchParams.get('companyId')
 
@@ -19,10 +20,20 @@ function ESNewPageContent() {
     router.push("/es")
   }, [router])
 
-  const handleSubmit = useCallback((entry: ESEntry) => {
-    addEntry(entry)
-    router.push("/es")
-  }, [addEntry, router])
+  const handleSubmit = useCallback(async (entry: ESEntry) => {
+    if (!user) return
+    
+    try {
+      const esData = {
+        ...entry,
+        user_id: user.id
+      }
+      await saveES(esData)
+      router.push("/es")
+    } catch (error) {
+      console.error('Failed to save ES:', error)
+    }
+  }, [user, router])
 
   const handleCancel = useCallback(() => {
     router.push("/es")

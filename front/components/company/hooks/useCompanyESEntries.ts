@@ -1,33 +1,29 @@
 import { useState, useEffect } from "react"
 import { type ESEntry } from "@/lib/supabase"
-import { fetchESByUserID, saveES, removeES } from '@/components/es/api';
+import { fetchESByCompanyID, saveES, removeES } from '@/components/es/api';
 
-export function useESEntries(userID: string) {
+export function useCompanyESEntries(companyID: string) {
   const [entries, setEntries] = useState<ESEntry[]>([])
-  const [selectedEntry, setSelectedEntry] = useState<ESEntry | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (!userID) {
-      setIsLoading(false)
-      return
-    }
+    const fetchCompanyESEntries = async () => {
+      if (!companyID) return
 
-    const fetchInitialEntries = async () => {
       try {
         setIsLoading(true)
-        const initialEntries = await fetchESByUserID(userID)
-        setEntries(initialEntries)
+        const companyEntries = await fetchESByCompanyID(companyID)
+        setEntries(companyEntries)
       } catch (error) {
-        console.error('Failed to fetch ES entries:', error)
+        console.error('Failed to fetch company ES entries:', error)
         setEntries([])
       } finally {
         setIsLoading(false)
       }
     }
 
-    fetchInitialEntries()
-  }, [userID])
+    fetchCompanyESEntries()
+  }, [companyID])
 
   const addEntry = async (entry: ESEntry) => {
     try {
@@ -61,17 +57,11 @@ export function useESEntries(userID: string) {
     }
   };
 
-  const selectEntry = (entry: ESEntry | null) => {
-    setSelectedEntry(entry)
-  }
-
   return {
     entries,
-    selectedEntry,
     isLoading,
     addEntry,
     updateEntry,
     deleteEntry,
-    selectEntry,
   }
 }

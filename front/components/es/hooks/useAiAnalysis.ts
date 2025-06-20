@@ -15,8 +15,8 @@ export function useAIAnalysis() {
     try {
       const response = await apiClient.post('/company-es/analyze', { content });
 
-      if (!response.ok) {
-        throw new Error(`分析エラー: ${response.status}`)
+      if (!response) {
+        throw new Error(`分析エラー: ${response}`)
       }
 
       const result = response.data;
