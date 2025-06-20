@@ -1,15 +1,15 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { 
-  User, 
-  onAuthStateChanged, 
-  signInWithPopup, 
-  GoogleAuthProvider, 
-  signOut as firebaseSignOut 
+import {
+  User,
+  onAuthStateChanged,
+  signInWithPopup,
+  GoogleAuthProvider,
+  signOut as firebaseSignOut
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import { apiClient } from '@/lib/axios'
+import apiClient  from '@/lib/api-client'
 
 interface AuthContextType {
   user: User | null
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (user) {
         // Sync user with backend
         try {
-          await apiClient.post('/api/users/sync', {
+          await apiClient.post('/users/sync', {
             firebase_uid: user.uid,
             email: user.email,
             name: user.displayName || user.email,

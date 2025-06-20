@@ -1,5 +1,5 @@
 import type React from "react"
-import { useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useESForm } from "@/components/es/hooks/useEsForm"
 import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
 import { storage, type ESEntry } from "@/lib/supabase"
+import type { Company } from "@/lib/supabase"
 
 interface ESFormProps {
   entry?: ESEntry | null
@@ -19,9 +20,24 @@ interface ESFormProps {
 export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFormProps) {
   const { formData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
   const { isAnalyzing, analyzeContent } = useAIAnalysis()
+  const [companies, setCompanies] = useState<Company[]>([])
+  const [companiesLoading, setCompaniesLoading] = useState(true)
 
   // 利用可能な企業リストを取得
-  const companies = useMemo(() => storage.getCompanies(), [])
+  useEffect(() => {
+    const loadCompanies = async () => {
+      try {
+        const companiesData = await storage.getCompanies()
+        setCompanies(companiesData)
+      } catch (error) {
+        console.error('Failed to load companies:', error)
+      } finally {
+        setCompaniesLoading(false)
+      }
+    }
+
+    loadCompanies()
+  }, [])
 
   // 編集モードかどうかを判定
   const isEditMode = useMemo(() => Boolean(entry), [entry])

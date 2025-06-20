@@ -25,9 +25,9 @@ export default function CompanyDetailPage() {
     }
   }, [companyId])
 
-  const loadCompanyData = () => {
+  const loadCompanyData = async () => {
     try {
-      const companies = storage.getCompanies()
+      const companies = await storage.getCompanies()
       const foundCompany = companies.find(c => c.id === companyId)
 
       if (!foundCompany) {
@@ -37,11 +37,7 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // その企業に関連するES、面接ログ、イベントを取得
-      const allESEntries = storage.getESEntries()
-      const companyESEntries = allESEntries.filter(es => es.company.id === foundCompany.id)
-      setESEntries(companyESEntries)
-
+      // 面接ログとイベントはまだローカルストレージから取得（必要に応じて後でAPI化）
       const allInterviewLogs = storage.getInterviewLogs()
       const companyInterviewLogs = allInterviewLogs.filter(log => log.company_name === foundCompany.name)
       setInterviewLogs(companyInterviewLogs)
