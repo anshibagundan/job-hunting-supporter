@@ -11,7 +11,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/calendar')
+      router.push('/home')
     }
   }, [loading, user, router])
 
@@ -44,12 +44,11 @@ export default function Home() {
           </div>
         </div>
       )}
-
       {!loading && user && (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">カレンダーページに移動中...</p>
+            <p className="mt-4 text-gray-600">ホームページに移動中...</p>
           </div>
         </div>
       )}

@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Calendar, FileText, Mic } from "lucide-react"
+import { Calendar, FileText, Mic, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export function Sidebar() {
@@ -13,6 +13,15 @@ export function Sidebar() {
   return (
     <div className="w-64 bg-white shadow-sm border-r">
       <nav className="mt-6">
+        <Link href="/home">
+          <Button
+            variant={isActive("/home") ? "secondary" : "ghost"}
+            className="w-full justify-start px-6 py-3"
+          >
+            <Building2 className="mr-3 h-4 w-4" />
+            企業一覧
+          </Button>
+        </Link>
         <Link href="/calendar">
           <Button
             variant={isActive("/calendar") ? "secondary" : "ghost"}
