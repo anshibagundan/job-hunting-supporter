@@ -3,6 +3,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"net/http"
+	"os"
 
 	// 生成AI関連
 	genai_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/infrastructure"
@@ -36,9 +39,6 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
-	"log"
-	"net/http"
-	"os"
 )
 
 func main() {
@@ -71,7 +71,10 @@ func main() {
 	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 	// DI の設定
-	genAIClient := genai_infrastructure.NewGenAIClient(os.Getenv("GENAI_API_KEY"))
+	// 既存の機能用（音声転写など）
+	genAIClient := genai_infrastructure.NewGenAIClient(os.Getenv("GEMINI_API_KEY"))
+	// ES分析専用
+	esAnalysisClient := genai_infrastructure.NewGenAIClient(os.Getenv("AI_ANALYZE_API_KEY"))
 
 	userRepo := user_infrastructure.NewUserRepository(db)
 	userUseCase := user_usecase.NewUserUseCase(userRepo)
@@ -90,7 +93,7 @@ func main() {
 	jobEventController := jobevent_controller.NewJobEventController(jobEventUseCase)
 
 	companyESRepo := companyes_infrastructure.NewCompanyESRepository(db)
-	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo)
+	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo, esAnalysisClient)
 	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	router := gin.Default()
@@ -170,6 +173,7 @@ func main() {
 			companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
 			companyESs.PUT("", companyESController.UpdateCompanyES)                                                  // PUT /api/company-es
 			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
+			companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
 		}
 	}
 

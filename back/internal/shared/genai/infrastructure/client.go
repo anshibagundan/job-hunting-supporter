@@ -50,3 +50,60 @@ func (g *GenAIClientImpl) GenerateTranscriptFromAudio(path string) (string, erro
 	}
 	return resp.Text(), nil
 }
+
+func (g *GenAIClientImpl) AnalyzeESContent(content string) (summary string, advice string, err error) {
+	ctx := context.Background()
+
+	// 要約を生成するプロンプト
+	summaryPrompt := fmt.Sprintf(`以下のエントリーシート内容を分析し、要約を作成してください。
+
+【分析対象】
+%s
+
+【要約の観点】
+1. 自己PRの核となる要点
+2. 具体的な実績・経験
+3. 志望動機の要点
+4. 文字数や構成について
+
+日本語で簡潔に要約してください。`, content)
+
+	summaryContents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(summaryPrompt),
+		}, genai.RoleUser),
+	}
+
+	summaryResp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", summaryContents, nil)
+	if err != nil {
+		return "", "", fmt.Errorf("summary generation failed: %w", err)
+	}
+
+	// 改善アドバイスを生成するプロンプト
+	advicePrompt := fmt.Sprintf(`以下のエントリーシート内容に対して、改善アドバイスを提供してください。
+
+【分析対象】
+%s
+
+【アドバイスの観点】
+1. 具体性の向上（数値や成果の追加）
+2. 企業との関連性の明確化
+3. 文章構成の改善提案
+4. インパクトの向上方法
+5. 読みやすさの改善
+
+建設的で具体的なアドバイスを日本語で提供してください。`, content)
+
+	adviceContents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(advicePrompt),
+		}, genai.RoleUser),
+	}
+
+	adviceResp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", adviceContents, nil)
+	if err != nil {
+		return summaryResp.Text(), "", fmt.Errorf("advice generation failed: %w", err)
+	}
+
+	return summaryResp.Text(), adviceResp.Text(), nil
+}
