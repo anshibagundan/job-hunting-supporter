@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { storage, type InterviewLog } from "@/lib/supabase"
-import AudioUploader from "@/components/interview/recorder/media-recorder";
 
 export function InterviewLogger() {
   const [logs, setLogs] = useState<InterviewLog[]>([])
@@ -176,9 +175,6 @@ export function InterviewLogger() {
                     onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
                     required
                   />
-                </div>
-                <div>
-                  <AudioUploader/>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2">メモ・手動入力</label>
