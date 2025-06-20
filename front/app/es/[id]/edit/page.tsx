@@ -1,44 +1,109 @@
 "use client"
 
-import { useMemo, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { useParams } from "next/navigation"
-import { useESEntries } from "@/components/es/hooks/useEsEntries"
 import { ESForm } from "@/components/es/es-form"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import type { ESEntry } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
+import { fetchES, updateES } from "@/components/es/api"
 
 export default function ESEditPage() {
   const router = useRouter()
   const params = useParams()
-  const { entries, updateEntry } = useESEntries()
+  const { user, loading: authLoading } = useAuth()
+  const [entry, setEntry] = useState<ESEntry | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const id = params.id as string
 
-  const entry = useMemo(() => {
-    return entries.find((e) => e.id === id) || null
-  }, [entries, id])
-
-    // エントリーが見つからない場合は一覧に戻る
+  // ESエントリをIDで取得
   useEffect(() => {
-    if (entries.length > 0 && !entry) {
+    const loadEntry = async () => {
+      if (!id) return
+
+      try {
+        setIsLoading(true)
+        setError(null)
+        const esEntry = await fetchES(id)
+        setEntry(esEntry)
+      } catch (error) {
+        console.error('Failed to fetch ES entry:', error)
+        setError('ESエントリの取得に失敗しました')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadEntry()
+  }, [id])
+
+  // 認証チェック
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login')
+    }
+  }, [user, authLoading, router])
+
+  // エントリーが見つからない場合は一覧に戻る
+  useEffect(() => {
+    if (!isLoading && !entry && !error) {
       router.push("/es")
     }
-  }, [entry, entries.length, router])
+  }, [entry, isLoading, error, router])
 
   const handleBack = useCallback(() => {
     router.push(`/es/${id}`)
   }, [router, id])
 
-  const handleSubmit = useCallback((updatedEntry: ESEntry) => {
-    updateEntry(updatedEntry)
-    router.push(`/es/${id}`)
-  }, [updateEntry, router, id])
+  const handleSubmit = useCallback(async (updatedEntry: ESEntry) => {
+    try {
+      await updateES(id, updatedEntry)
+      router.push(`/es/${id}`)
+    } catch (error) {
+      console.error('Failed to update ES entry:', error)
+      setError('ESエントリの更新に失敗しました')
+    }
+  }, [id, router])
 
   const handleCancel = useCallback(() => {
     router.push(`/es/${id}`)
   }, [router, id])
+
+  // ローディング中の表示
+  if (authLoading || isLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    )
+  }
+
+  // エラー時の表示
+  if (error) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-red-500">{error}</div>
+      </div>
+    )
+  }
+
+  // ユーザーが認証されていない場合
+  if (!user) {
+    return null
+  }
+
+  // エントリーが見つからない場合
+  if (!entry) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-gray-500">エントリーが見つかりません</div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 flex flex-col">

@@ -171,7 +171,7 @@ func main() {
 			companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                               // GET /api/company-es/user/:userID
 			companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                      // GET /api/company-es/company/:companyID
 			companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
-			companyESs.PUT("", companyESController.UpdateCompanyES)                                                  // PUT /api/company-es
+			companyESs.PUT("/:id", companyESController.UpdateCompanyES)                                              // PUT /api/company-es/:id
 			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
 			companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
 		}

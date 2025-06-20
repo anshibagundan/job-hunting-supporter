@@ -118,18 +118,35 @@ func (c *CompanyESController) GetAllCompanyESs(ctx *gin.Context) {
 }
 
 func (c *CompanyESController) UpdateCompanyES(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid CompanyES ID"})
+		return
+	}
+
 	var companyES domain.CompanyES
 	if err := ctx.ShouldBindJSON(&companyES); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid input"})
 		return
 	}
 
+	// URLパラメータのIDを設定
+	companyES.ID = uint(id)
+
 	if err := c.useCase.UpdateCompanyES(&companyES); err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to update CompanyES"})
 		return
 	}
 
-	ctx.JSON(200, gin.H{"message": "CompanyES updated successfully"})
+	// 更新されたエンティティを企業情報と一緒に返す
+	updatedCompanyES, err := c.useCase.GetCompanyESWithCompany(uint(id))
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch updated CompanyES"})
+		return
+	}
+
+	ctx.JSON(200, updatedCompanyES)
 }
 
 func (c *CompanyESController) DeleteCompanyES(ctx *gin.Context) {
