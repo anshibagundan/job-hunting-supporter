@@ -42,3 +42,12 @@ func (r *UserRepository) Update(user *domain.User) error {
 func (r *UserRepository) Delete(id uint) error {
 	return r.db.Delete(&domain.User{}, id).Error
 }
+
+func (r *UserRepository) FindByFirebaseUID(firebaseUID string) (*domain.User, error) {
+	var user domain.User
+	err := r.db.Where("firebase_uid = ?", firebaseUID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

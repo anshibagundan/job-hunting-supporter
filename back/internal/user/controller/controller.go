@@ -1,4 +1,4 @@
-package _interface
+package controller
 
 import (
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
@@ -85,4 +85,43 @@ func (c *UserController) DeleteUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, gin.H{"message": "User deleted successfully"})
+}
+
+type FirebaseUserRequest struct {
+	FirebaseUID string `json:"firebase_uid" binding:"required"`
+	Email       string `json:"email" binding:"required"`
+	Name        string `json:"name" binding:"required"`
+	PhotoURL    string `json:"photo_url"`
+}
+
+func (c *UserController) SyncFirebaseUser(ctx *gin.Context) {
+	var req FirebaseUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// Check if user already exists
+	existingUser, err := c.useCase.GetUserByFirebaseUID(req.FirebaseUID)
+	if err == nil && existingUser != nil {
+		// User already exists, return the existing user
+		ctx.JSON(200, existingUser)
+		return
+	}
+
+	// Create new user
+	user := &domain.User{
+		FirebaseUID: req.FirebaseUID,
+		Email:       req.Email,
+		Name:        req.Name,
+		Icon:        req.PhotoURL,
+		BasicES:     "",
+	}
+
+	if err := c.useCase.CreateUser(user); err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to create user"})
+		return
+	}
+
+	ctx.JSON(201, user)
 }

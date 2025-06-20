@@ -3,9 +3,34 @@ package main
 
 import (
 	"fmt"
-	"github.com/anshibagundan/job-hunting-supporter/internal/user/infrastructure"
-	_interface "github.com/anshibagundan/job-hunting-supporter/internal/user/interface"
-	"github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
+
+	// 生成AI関連
+	genai_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/infrastructure"
+
+	user_controller "github.com/anshibagundan/job-hunting-supporter/internal/user/controller"
+	// ユーザー関連
+	user_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/user/infrastructure"
+	user_usecase "github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
+
+	company_controller "github.com/anshibagundan/job-hunting-supporter/internal/companies/controller"
+	// 企業関連
+	company_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/companies/infrastructure"
+	company_usecase "github.com/anshibagundan/job-hunting-supporter/internal/companies/usecase"
+
+	interview_controller "github.com/anshibagundan/job-hunting-supporter/internal/interviews/controller"
+	// 面接関連
+	interview_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/interviews/infrastructure"
+	interview_usecase "github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
+
+	jobevent_controller "github.com/anshibagundan/job-hunting-supporter/internal/job_events/controller"
+	// ジョブイベント関連
+	jobevent_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/job_events/infrastructure"
+	jobevent_usecase "github.com/anshibagundan/job-hunting-supporter/internal/job_events/usecase"
+
+	companyes_controller "github.com/anshibagundan/job-hunting-supporter/internal/company_es/controller"
+	// 企業ES関連
+	companyes_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/company_es/infrastructure"
+	companyes_usecase "github.com/anshibagundan/job-hunting-supporter/internal/company_es/usecase"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
@@ -46,13 +71,48 @@ func main() {
 	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
 
 	// DI の設定
-	userRepo := infrastructure.NewUserRepository(db)
-	userUseCase := usecase.NewUserUseCase(userRepo)
-	userController := _interface.NewUserController(userUseCase)
+	genAIClient := genai_infrastructure.NewGenAIClient(os.Getenv("GENAI_API_KEY"))
+
+	userRepo := user_infrastructure.NewUserRepository(db)
+	userUseCase := user_usecase.NewUserUseCase(userRepo)
+	userController := user_controller.NewUserController(userUseCase)
+
+	companyRepo := company_infrastructure.NewCompanyRepository(db)
+	companyUseCase := company_usecase.NewCompanyUseCase(companyRepo)
+	companyController := company_controller.NewCompanyController(companyUseCase)
+
+	interviewRepo := interview_infrastructure.NewInterviewRepository(db)
+	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, genAIClient)
+	interviewController := interview_controller.NewInterviewController(interviewUseCase)
+
+	jobEventRepo := jobevent_infrastructure.NewJobEventRepository(db)
+	jobEventUseCase := jobevent_usecase.NewJobEventUseCase(jobEventRepo)
+	jobEventController := jobevent_controller.NewJobEventController(jobEventUseCase)
+
+	companyESRepo := companyes_infrastructure.NewCompanyESRepository(db)
+	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo)
+	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	router := gin.Default()
 
 	//router.Use(middleware.CORS())
+	// CORSの設定
+	router.Use(func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		if origin != "" {
+			// 必要に応じて複数オリジン対応も可能
+			c.Header("Access-Control-Allow-Origin", origin)
+		}
+		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
+		c.Header("Access-Control-Allow-Credentials", "true") // 認証系があるなら必須
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(http.StatusNoContent)
+			return
+		}
+		c.Next()
+	})
 
 	// ルーティングの設定
 	router.Handle("GET", "/health", health)
@@ -60,11 +120,56 @@ func main() {
 	{
 		users := api.Group("/users")
 		{
-			users.POST("", userController.CreateUser)       // POST /api/users
-			users.GET("/:id", userController.GetUser)       // GET /api/users/:id
-			users.GET("", userController.GetAllUsers)       // GET /api/users
-			users.PUT("", userController.UpdateUser)        // PUT /api/users
-			users.DELETE("/:id", userController.DeleteUser) // DELETE /api/users/:id
+			users.POST("", userController.CreateUser)            // POST /api/users
+			users.POST("/sync", userController.SyncFirebaseUser) // POST /api/users/sync
+			users.GET("/:id", userController.GetUser)            // GET /api/users/:id
+			users.GET("", userController.GetAllUsers)            // GET /api/users
+			users.PUT("", userController.UpdateUser)             // PUT /api/users
+			users.DELETE("/:id", userController.DeleteUser)      // DELETE /api/users/:id
+		}
+
+		companies := api.Group("/companies")
+		{
+			companies.POST("", companyController.CreateCompany)       // POST /api/companies
+			companies.GET("/:id", companyController.GetCompany)       // GET /api/companies/:id
+			companies.GET("", companyController.GetAllCompanies)      // GET /api/companies
+			companies.PUT("", companyController.UpdateCompany)        // PUT /api/companies
+			companies.DELETE("/:id", companyController.DeleteCompany) // DELETE /api/companies/:id
+		}
+
+		interviews := api.Group("/interviews")
+		{
+			interviews.POST("", interviewController.CreateInterview)       // POST /api/interviews
+			interviews.GET("/:id", interviewController.GetInterview)       // GET /api/interviews/:id
+			interviews.GET("", interviewController.GetAllInterviews)       // GET /api/interviews
+			interviews.PUT("", interviewController.UpdateInterview)        // PUT /api/interviews
+			interviews.DELETE("/:id", interviewController.DeleteInterview) // DELETE /api/interviews/:id
+
+			audio := interviews.Group("/audio")
+			{
+				audio.POST("/upload", interviewController.UploadAudio) // PUT /api/interviews/audio/upload
+			}
+		}
+
+		jobEvents := api.Group("/job-events")
+		{
+			jobEvents.POST("", jobEventController.CreateJobEvent)       // POST /api/job-events
+			jobEvents.GET("/:id", jobEventController.GetJobEvent)       // GET /api/job-events/:id
+			jobEvents.GET("", jobEventController.GetAllJobEvents)       // GET /api/job-events
+			jobEvents.PUT("", jobEventController.UpdateJobEvent)        // PUT /api/job-events
+			jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent) // DELETE /api/job-events/:id
+		}
+
+		companyESs := api.Group("/company-es")
+		{
+			companyESs.POST("", companyESController.CreateCompanyES)                                                 // POST /api/company-es
+			companyESs.GET("/:id", companyESController.GetCompanyES)                                                 // GET /api/company-es/:id
+			companyESs.GET("", companyESController.GetAllCompanyESs)                                                 // GET /api/company-es
+			companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                               // GET /api/company-es/user/:userID
+			companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                      // GET /api/company-es/company/:companyID
+			companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
+			companyESs.PUT("", companyESController.UpdateCompanyES)                                                  // PUT /api/company-es
+			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
 		}
 	}
 

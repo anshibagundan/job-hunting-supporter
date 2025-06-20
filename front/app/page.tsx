@@ -3,21 +3,21 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Calendar, FileText, Mic } from "lucide-react"
-import { SignedIn, SignedOut, useUser } from "@clerk/nextjs"
+import { useAuth } from "@/contexts/auth-context"
 
 export default function Home() {
   const router = useRouter()
-  const { isLoaded, isSignedIn } = useUser()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
-    if (isLoaded && isSignedIn) {
+    if (!loading && user) {
       router.push('/home')
     }
-  }, [isLoaded, isSignedIn, router])
+  }, [loading, user, router])
 
   return (
     <div>
-      <SignedOut>
+      {!loading && !user && (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">就活ダッシュボード</h1>
@@ -43,17 +43,15 @@ export default function Home() {
             </p>
           </div>
         </div>
-      </SignedOut>
-
-      <SignedIn>
-        {/* ログイン後はホームページにリダイレクト */}
+      )}
+      {!loading && user && (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
             <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">ホームページに移動中...</p>
           </div>
         </div>
-      </SignedIn>
+      )}
     </div>
   )
 }
