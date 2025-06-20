@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react"
 import { storage, type ESEntry, type Company } from "@/lib/supabase"
+import { createES, updateES, deleteES } from '@/components/es/api';
 
 export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string | null) {
   // useMemoで初期データを計算
@@ -64,6 +65,20 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
            formData.content.trim() !== ""
   }, [formData])
 
+  const saveES = useCallback(async () => {
+    if (formData.id) {
+      await updateES(formData.id, formData);
+    } else {
+      await createES(formData);
+    }
+  }, [formData]);
+
+  const removeES = useCallback(async () => {
+    if (formData.id) {
+      await deleteES(formData.id);
+    }
+  }, [formData]);
+
   return {
     formData,
     setFormData,
@@ -71,5 +86,7 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
     updateCompany,
     resetForm,
     isFormValid,
+    saveES,
+    removeES,
   }
 }

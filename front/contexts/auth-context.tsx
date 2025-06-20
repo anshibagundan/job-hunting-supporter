@@ -9,7 +9,7 @@ import {
   signOut as firebaseSignOut
 } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
-import apiClient  from '@/lib/api-client'
+import  apiClient from '@/lib/api-client'
 
 interface AuthContextType {
   user: User | null
