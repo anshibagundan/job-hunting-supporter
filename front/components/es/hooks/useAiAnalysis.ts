@@ -1,4 +1,5 @@
 import { useState } from "react"
+import apiClient from '@lib/api-client';
 
 export interface AIAnalysisResult {
   summary: string
@@ -12,19 +13,13 @@ export function useAIAnalysis() {
     setIsAnalyzing(true)
 
     try {
-      const response = await fetch('http://localhost:8080/api/company-es/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-      })
+      const response = await apiClient.post('/company-es/analyze', { content });
 
       if (!response.ok) {
         throw new Error(`分析エラー: ${response.status}`)
       }
 
-      const result = await response.json()
+      const result = response.data;
       return {
         summary: result.summary,
         advice: result.advice,

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { generateText } from "ai"
 import { openai } from "@ai-sdk/openai"
+import apiClient from '../../../lib/api-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,13 +13,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 実際のWhisper APIを使用する場合のコード例
-    // const transcriptionResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-    //   method: 'POST',
+    // const transcriptionResponse = await apiClient.post('https://api.openai.com/v1/audio/transcriptions', formData, {
     //   headers: {
     //     'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
     //   },
-    //   body: formData,
-    // })
+    // });
 
     // デモ用のモック文字起こし結果
     const mockTranscript = `面接官: 本日はお忙しい中お時間をいただき、ありがとうございます。まず自己紹介をお願いします。
