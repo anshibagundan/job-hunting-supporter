@@ -60,7 +60,7 @@ export default function ESDetailPage() {
               一覧に戻る
             </Button>
             <h2 className="text-lg font-semibold text-gray-900">
-              ES詳細 - {entry.company_name}
+              ES詳細 - {entry.company.name}
             </h2>
           </div>
 

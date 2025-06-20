@@ -9,9 +9,9 @@ interface CompanyRelatedDataTabsProps {
   esEntries: ESEntry[]
   interviewLogs: InterviewLog[]
   events: Event[]
+  companyId: string // 企業IDを追加
   onDeleteES: (esId: string) => void
   onDeleteInterviewLog: (logId: string) => void
-  onNavigateToES: () => void
   onNavigateToInterview: () => void
   onNavigateToCalendar: () => void
 }
@@ -20,9 +20,9 @@ export function CompanyRelatedDataTabs({
   esEntries,
   interviewLogs,
   events,
+  companyId,
   onDeleteES,
   onDeleteInterviewLog,
-  onNavigateToES,
   onNavigateToInterview,
   onNavigateToCalendar
 }: CompanyRelatedDataTabsProps) {
@@ -47,8 +47,7 @@ export function CompanyRelatedDataTabs({
         <ESList
           esEntries={esEntries}
           onDelete={onDeleteES}
-          onViewDetail={onNavigateToES}
-          onCreateNew={onNavigateToES}
+          companyId={companyId}
         />
       </TabsContent>
 

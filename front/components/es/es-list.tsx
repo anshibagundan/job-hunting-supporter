@@ -21,7 +21,7 @@ export function ESList({
     if (!searchTerm.trim()) return entries
 
     return entries.filter(entry =>
-      entry.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entry.company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       entry.content.toLowerCase().includes(searchTerm.toLowerCase())
     )

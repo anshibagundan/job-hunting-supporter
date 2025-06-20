@@ -1,16 +1,48 @@
-import { FileText, Eye, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { FileText, Search } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useState, useMemo, useCallback } from "react"
 import { type ESEntry } from "@/lib/supabase"
+import { ESItem } from "./es-item"
 
 interface ESListProps {
   esEntries: ESEntry[]
   onDelete: (esId: string) => void
-  onViewDetail: () => void
-  onCreateNew: () => void
+  companyId?: string // 企業IDを追加
 }
 
-export function ESList({ esEntries, onDelete, onViewDetail, onCreateNew }: ESListProps) {
+export function ESList({ esEntries, onDelete, companyId }: ESListProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const onCreateNew = () => {
+    // 企業IDがある場合はクエリパラメータとして渡す
+    if (companyId) {
+      window.location.href = `/es/new?companyId=${companyId}`
+    } else {
+      window.location.href = `/es/new`
+    }
+  }
+
+  const onViewDetail = (esId: string) => {
+    window.location.href = `/es/${esId}`
+  }
+
+  // フィルタリングされたESエントリ
+  const filteredESEntries = useMemo(() => {
+    if (!searchTerm.trim()) return esEntries
+
+    return esEntries.filter(es =>
+      es.company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      es.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      es.content.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [esEntries, searchTerm])
+
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value)
+  }, [])
+
   if (esEntries.length === 0) {
     return (
       <Card>
@@ -34,51 +66,41 @@ export function ESList({ esEntries, onDelete, onViewDetail, onCreateNew }: ESLis
 
   return (
     <div className="space-y-4">
-      {esEntries.map((es) => (
-        <Card key={es.id}>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="text-lg">{es.title}</CardTitle>
-                <CardDescription>
-                  {new Date(es.created_at).toLocaleDateString("ja-JP")}
-                </CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onViewDetail}
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  詳細表示
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(es.id)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-gray-600 line-clamp-3">
-              {es.content.slice(0, 200)}...
+      {/* 検索バーと作成ボタン */}
+      <div className="flex gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="企業名、タイトル、内容で検索..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="pl-10"
+          />
+        </div>
+        <Button onClick={onCreateNew}>
+          新しいES作成
+        </Button>
+      </div>
+
+      {/* ES一覧 */}
+      {filteredESEntries.map((es) => (
+        <ESItem
+          key={es.id}
+          es={es}
+          onViewDetail={onViewDetail}
+          onDelete={onDelete}
+        />
+      ))}
+
+      {filteredESEntries.length === 0 && searchTerm && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <p className="text-gray-500 text-center">
+              「{searchTerm}」に一致するESが見つかりません
             </p>
-            {es.summary && (
-              <div className="mt-3 p-3 bg-blue-50 rounded-md">
-                <h4 className="font-medium text-sm text-blue-900 mb-1">AI要約</h4>
-                <p className="text-sm text-blue-800 line-clamp-2">
-                  {es.summary.slice(0, 150)}...
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
-      ))}
+      )}
     </div>
   )
 }

@@ -31,7 +31,7 @@ export function ESItem({ entry, isSelected = false, onSelect, onDelete }: ESItem
     >
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <Badge variant="outline">{entry.company_name}</Badge>
+          <Badge variant="outline">{entry.company.name}</Badge>
           <Button
             variant="ghost"
             size="sm"

@@ -54,7 +54,7 @@ export default function ESEditPage() {
             詳細に戻る
           </Button>
           <h2 className="text-lg font-semibold text-gray-900">
-            ES編集 - {entry?.company_name}
+            ES編集 - {entry?.company.name}
           </h2>
         </div>
       </header>

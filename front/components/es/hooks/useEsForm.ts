@@ -1,11 +1,11 @@
-import { useState, useMemo, useCallback } from "react"
-import type { ESEntry } from "@/lib/supabase"
+import { useState, useMemo, useCallback, useEffect } from "react"
+import { storage, type ESEntry, type Company } from "@/lib/supabase"
 
-export function useESForm(entry?: ESEntry | null) {
+export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string | null) {
   // useMemoで初期データを計算
-  const initialData = useMemo(() => ({
+  const initialData = useMemo((): ESEntry => ({
     id: entry?.id || "",
-    company_name: entry?.company_name || "",
+    company: entry?.company || {} as Company,
     title: entry?.title || "",
     content: entry?.content || "",
     summary: entry?.summary || "",
@@ -14,6 +14,17 @@ export function useESForm(entry?: ESEntry | null) {
   }), [entry])
 
   const [formData, setFormData] = useState<ESEntry>(initialData)
+
+  // 事前選択された企業IDがある場合、該当する企業を設定
+  useEffect(() => {
+    if (preSelectedCompanyId && !entry) {
+      const companies = storage.getCompanies()
+      const preSelectedCompany = companies.find(c => c.id === preSelectedCompanyId)
+      if (preSelectedCompany) {
+        setFormData(prev => ({ ...prev, company: preSelectedCompany }))
+      }
+    }
+  }, [preSelectedCompanyId, entry])
 
   // entryが変更された場合にフォームデータを更新
   useMemo(() => {
@@ -24,10 +35,14 @@ export function useESForm(entry?: ESEntry | null) {
     setFormData(prev => ({ ...prev, [field]: value }))
   }, [])
 
+  const updateCompany = useCallback((company: Company) => {
+    setFormData(prev => ({ ...prev, company }))
+  }, [])
+
   const resetForm = useCallback(() => {
     setFormData({
       id: "",
-      company_name: "",
+      company: {} as Company,
       title: "",
       content: "",
       summary: "",
@@ -37,7 +52,7 @@ export function useESForm(entry?: ESEntry | null) {
   }, [])
 
   const isFormValid = useCallback(() => {
-    return formData.company_name.trim() !== "" &&
+    return formData.company?.id &&
            formData.title.trim() !== "" &&
            formData.content.trim() !== ""
   }, [formData])
@@ -46,6 +61,7 @@ export function useESForm(entry?: ESEntry | null) {
     formData,
     setFormData,
     updateField,
+    updateCompany,
     resetForm,
     isFormValid,
   }

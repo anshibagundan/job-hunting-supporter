@@ -1,16 +1,19 @@
 "use client"
 
-import { useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useCallback, Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useESEntries } from "@/components/es/hooks/useEsEntries"
 import { ESForm } from "@/components/es/es-form"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import type { ESEntry } from "@/lib/supabase"
 
-export default function ESNewPage() {
+function ESNewPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { addEntry } = useESEntries()
+
+  const companyId = searchParams.get('companyId')
 
   const handleBack = useCallback(() => {
     router.push("/es")
@@ -48,8 +51,17 @@ export default function ESNewPage() {
         <ESForm
           onSubmit={handleSubmit}
           onCancel={handleCancel}
+          preSelectedCompanyId={companyId}
         />
       </main>
     </div>
+  )
+}
+
+export default function ESNewPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ESNewPageContent />
+    </Suspense>
   )
 }

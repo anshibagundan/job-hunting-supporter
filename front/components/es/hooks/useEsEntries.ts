@@ -6,7 +6,8 @@ export function useESEntries() {
   const [selectedEntry, setSelectedEntry] = useState<ESEntry | null>(null)
 
   useEffect(() => {
-    setEntries(storage.getESEntries())
+    const initialEntries = storage.getESEntries()
+    setEntries(initialEntries)
   }, [])
 
   const addEntry = (entry: ESEntry) => {

@@ -39,7 +39,7 @@ export default function CompanyDetailPage() {
 
       // その企業に関連するES、面接ログ、イベントを取得
       const allESEntries = storage.getESEntries()
-      const companyESEntries = allESEntries.filter(es => es.company_name === foundCompany.name)
+      const companyESEntries = allESEntries.filter(es => es.company.id === foundCompany.id)
       setESEntries(companyESEntries)
 
       const allInterviewLogs = storage.getInterviewLogs()
@@ -82,7 +82,7 @@ export default function CompanyDetailPage() {
 
   return (
     <div className="flex-1 flex flex-col">
-      <CompanyDetailHeader 
+      <CompanyDetailHeader
         companyName={company.name}
         onBack={() => router.push('/home')}
       />
@@ -90,14 +90,13 @@ export default function CompanyDetailPage() {
       <main className="flex-1 p-6 overflow-auto">
         <div className="max-w-6xl mx-auto space-y-6">
           <CompanyHeader company={company} />
-          
           <CompanyRelatedDataTabs
             esEntries={esEntries}
             interviewLogs={interviewLogs}
             events={events}
+            companyId={companyId}
             onDeleteES={handleDeleteES}
             onDeleteInterviewLog={handleDeleteInterviewLog}
-            onNavigateToES={() => router.push('/es')}
             onNavigateToInterview={() => router.push('/interview')}
             onNavigateToCalendar={() => router.push('/calendar')}
           />

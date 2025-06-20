@@ -4,19 +4,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useESForm } from "@/components/es/hooks/useEsForm"
 import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
-import type { ESEntry } from "@/lib/supabase"
+import { storage, type ESEntry } from "@/lib/supabase"
 
 interface ESFormProps {
   entry?: ESEntry | null
   onSubmit: (entry: ESEntry) => void
   onCancel: () => void
+  preSelectedCompanyId?: string | null
 }
 
-export function ESForm({ entry, onSubmit, onCancel }: ESFormProps) {
-  const { formData, updateField, resetForm, isFormValid } = useESForm(entry)
+export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFormProps) {
+  const { formData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
   const { isAnalyzing, analyzeContent } = useAIAnalysis()
+
+  // 利用可能な企業リストを取得
+  const companies = useMemo(() => storage.getCompanies(), [])
 
   // 編集モードかどうかを判定
   const isEditMode = useMemo(() => Boolean(entry), [entry])
@@ -53,6 +58,13 @@ export function ESForm({ entry, onSubmit, onCancel }: ESFormProps) {
     updateField("advice", result.advice)
   }, [formData.content, analyzeContent, updateField])
 
+  const handleCompanyChange = useCallback((companyId: string) => {
+    const selectedCompany = companies.find(c => c.id === companyId)
+    if (selectedCompany) {
+      updateCompany(selectedCompany)
+    }
+  }, [companies, updateCompany])
+
   return (
     <Card>
       <CardHeader>
@@ -62,11 +74,22 @@ export function ESForm({ entry, onSubmit, onCancel }: ESFormProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">企業名</label>
-            <Input
-              value={formData.company_name}
-              onChange={(e) => updateField("company_name", e.target.value)}
+            <Select
+              value={formData.company?.id || ""}
+              onValueChange={handleCompanyChange}
               required
-            />
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="企業を選択してください" />
+              </SelectTrigger>
+              <SelectContent>
+                {companies.map((company) => (
+                  <SelectItem key={company.id} value={company.id}>
+                    {company.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">タイトル</label>
@@ -115,7 +138,7 @@ export function ESForm({ entry, onSubmit, onCancel }: ESFormProps) {
           )}
 
           <div className="flex space-x-2">
-            <Button type="submit" disabled={!isFormValid()}>
+            <Button type="submit" disabled={!isFormValid() || isAnalyzing}>
               保存
             </Button>
             <Button
@@ -124,9 +147,9 @@ export function ESForm({ entry, onSubmit, onCancel }: ESFormProps) {
               onClick={handleAnalyze}
               disabled={isAnalyzing || !formData.content.trim()}
             >
-              {isAnalyzing ? "分析中..." : isEditMode ? "再分析" : "分析"}
+              {isAnalyzing ? "分析中..." : (formData.summary || formData.advice) ? "再分析" : "分析"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isAnalyzing}>
               キャンセル
             </Button>
           </div>
