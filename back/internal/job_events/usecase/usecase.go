@@ -22,6 +22,10 @@ func (u *JobEventUseCase) GetJobEvent(id uint) (*domain.JobEvent, error) {
 	return u.repo.FindByID(id)
 }
 
+func (u *JobEventUseCase) GetJobEventsByCompanyID(companyID uint) ([]*domain.JobEvent, error) {
+	return u.repo.FindByCompanyID(companyID)
+}
+
 func (u *JobEventUseCase) GetAllJobEvents() ([]*domain.JobEvent, error) {
 	return u.repo.GetAll()
 }

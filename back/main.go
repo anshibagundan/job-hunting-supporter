@@ -157,11 +157,12 @@ func main() {
 
 		jobEvents := api.Group("/job-events")
 		{
-			jobEvents.POST("", jobEventController.CreateJobEvent)       // POST /api/job-events
-			jobEvents.GET("/:id", jobEventController.GetJobEvent)       // GET /api/job-events/:id
-			jobEvents.GET("", jobEventController.GetAllJobEvents)       // GET /api/job-events
-			jobEvents.PUT("", jobEventController.UpdateJobEvent)        // PUT /api/job-events
-			jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent) // DELETE /api/job-events/:id
+			jobEvents.POST("", jobEventController.CreateJobEvent)                            // POST /api/job-events
+			jobEvents.GET("/:id", jobEventController.GetJobEvent)                            // GET /api/job-events/:id
+			jobEvents.GET("", jobEventController.GetAllJobEvents)                            // GET /api/job-events
+			jobEvents.GET("/company/:companyID", jobEventController.GetJobEventsByCompanyID) // GET /api/job-events/company/:companyID
+			jobEvents.PUT("", jobEventController.UpdateJobEvent)                             // PUT /api/job-events
+			jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent)                      // DELETE /api/job-events/:id
 		}
 
 		companyESs := api.Group("/company-es")

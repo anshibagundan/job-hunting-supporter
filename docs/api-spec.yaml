@@ -461,6 +461,27 @@ paths:
         '200':
           description: 削除成功
 
+  /job-events/company/{companyID}:
+    get:
+      tags:
+        - JobEvents
+      summary: 企業別求人イベント取得
+      parameters:
+        - name: companyID
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobEvent'
+
   # 面接関連（実装済み）
   /interviews:
     post:

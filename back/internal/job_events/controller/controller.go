@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/anshibagundan/job-hunting-supporter/internal/job_events/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/job_events/usecase"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 func NewJobEventController(useCase *usecase.JobEventUseCase) *JobEventController {
@@ -49,6 +50,23 @@ func (c *JobEventController) GetJobEvent(ctx *gin.Context) {
 
 func (c *JobEventController) GetAllJobEvents(ctx *gin.Context) {
 	jobEvents, err := c.useCase.GetAllJobEvents()
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch JobEvents"})
+		return
+	}
+
+	ctx.JSON(200, jobEvents)
+}
+
+func (c *JobEventController) GetJobEventsByCompanyID(ctx *gin.Context) {
+	companyIDStr := ctx.Param("companyID")
+	companyID, err := strconv.Atoi(companyIDStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid Company ID"})
+		return
+	}
+
+	jobEvents, err := c.useCase.GetJobEventsByCompanyID(uint(companyID))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch JobEvents"})
 		return
