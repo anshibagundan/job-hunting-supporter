@@ -75,6 +75,23 @@ func (c *JobEventController) GetJobEventsByCompanyID(ctx *gin.Context) {
 	ctx.JSON(200, jobEvents)
 }
 
+func (c *JobEventController) GetJobEventsByUserID(ctx *gin.Context) {
+	userIDStr := ctx.Param("userID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid User ID"})
+		return
+	}
+
+	jobEvents, err := c.useCase.GetJobEventsByUserID(uint(userID))
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch JobEvents"})
+		return
+	}
+
+	ctx.JSON(200, jobEvents)
+}
+
 func (c *JobEventController) UpdateJobEvent(ctx *gin.Context) {
 	var jobEvent domain.JobEvent
 	if err := ctx.ShouldBindJSON(&jobEvent); err != nil {
