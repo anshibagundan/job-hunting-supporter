@@ -49,8 +49,7 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     try {
-      await updateUserProfile({
-        id: userProfile.id,
+      await updateUserProfile(userProfile.id, {
         name: editData.name,
         basic_es: editData.basic_es,
       });
@@ -156,15 +155,6 @@ export default function ProfilePage() {
                 )}
               </div>
             </div>
-
-            {isEditing && (
-              <div className="flex gap-2 pt-4">
-                <Button onClick={handleSave}>保存</Button>
-                <Button variant="outline" onClick={handleCancel}>
-                  キャンセル
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -209,6 +199,14 @@ export default function ProfilePage() {
             )}
           </CardContent>
         </Card>
+        {isEditing && (
+          <div className="flex gap-2 pt-4">
+            <Button onClick={handleSave}>保存</Button>
+            <Button variant="outline" onClick={handleCancel}>
+              キャンセル
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

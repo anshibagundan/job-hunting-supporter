@@ -16,8 +16,8 @@ export const fetchUserByFirebaseUID = async (firebaseUID: string): Promise<UserP
   return response.data;
 };
 
-export const updateUserProfile = async (userProfile: Partial<UserProfile>): Promise<UserProfile> => {
-  const response = await apiClient.put('/users', userProfile);
+export const updateUserProfile = async (id: number, userProfile: Partial<UserProfile>): Promise<UserProfile> => {
+  const response = await apiClient.put(`/users/${id}`, userProfile);
   return response.data;
 };
 
