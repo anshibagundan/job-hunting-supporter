@@ -10,11 +10,7 @@ import (
 	// 生成AI関連
 	genai_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/infrastructure"
 
-	// 認証関連
-	auth_controller "github.com/anshibagundan/job-hunting-supporter/internal/auth/controller"
 	user_controller "github.com/anshibagundan/job-hunting-supporter/internal/user/controller"
-	"github.com/anshibagundan/job-hunting-supporter/pkg/auth"
-	"github.com/anshibagundan/job-hunting-supporter/pkg/firebase"
 	// ユーザー関連
 	user_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/user/infrastructure"
 	user_usecase "github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
@@ -72,8 +68,6 @@ func main() {
 		os.Exit(0)
 	}
 
-	//store := sessions.NewCookieStore([]byte(os.Getenv("SESSION_KEY")))
-
 	// DI の設定
 	// 既存の機能用（音声転写など）
 	genAIClient := genai_infrastructure.NewGenAIClient(os.Getenv("GEMINI_API_KEY"))
@@ -102,15 +96,15 @@ func main() {
 	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	// JWT初期化
-	auth.InitJWT()
+	//auth.InitJWT()
 
 	// Firebase Admin SDK初期化
-	if err := firebase.InitFirebaseAdmin(); err != nil {
-		log.Printf("Firebase initialization failed: %v", err)
-	}
+	//if err := firebase.InitFirebaseAdmin(); err != nil {
+	//	log.Printf("Firebase initialization failed: %v", err)
+	//}
 
 	// 認証コントローラー初期化
-	authController := auth_controller.NewAuthController(userUseCase)
+	//authController := auth_controller.NewAuthController(userUseCase)
 
 	router := gin.Default()
 
@@ -138,29 +132,43 @@ func main() {
 	api := router.Group("/api")
 	{
 		// 認証エンドポイント（認証不要）
-		api.POST("/auth/firebase-login", authController.LoginWithFirebase)
-		api.POST("/auth/logout", authController.Logout)
+		//api.POST("/auth/firebase-login", authController.LoginWithFirebase)
+		//api.POST("/auth/logout", authController.Logout)
 
 		// 認証が必要なエンドポイント
-		protected := api.Group("")
+		//protected := api.Group("")
 		//protected.Use(middleware.AuthRequired())
-		{
-			protected.GET("/auth/me", authController.GetCurrentUser)
+		//{
+		//protected.GET("/auth/me", authController.GetCurrentUser)
 
-			// 認証が必要なエンドポイント
-			interviews := protected.Group("/interviews")
-			{
-				interviews.POST("", interviewController.CreateInterview)                     // JSON用
-				interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
-				interviews.GET("/:id", interviewController.GetInterview)
-				interviews.GET("", interviewController.GetAllInterviews)
-				interviews.PUT("/:id", interviewController.UpdateInterview)
-				interviews.DELETE("/:id", interviewController.DeleteInterview)
-				interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
-				interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
-				interviews.POST("/upload-audio", interviewController.UploadAudio)
-			}
+		// 認証が必要なエンドポイント
+		//interviews := protected.Group("/interviews")
+		//{
+		//	interviews.POST("", interviewController.CreateInterview)                     // JSON用
+		//	interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
+		//	interviews.GET("/:id", interviewController.GetInterview)
+		//	interviews.GET("", interviewController.GetAllInterviews)
+		//	interviews.PUT("/:id", interviewController.UpdateInterview)
+		//	interviews.DELETE("/:id", interviewController.DeleteInterview)
+		//	interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
+		//	interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
+		//	interviews.POST("/upload-audio", interviewController.UploadAudio)
+		//}
+		//}
+		interviews := api.Group("/interviews")
+		{
+			interviews.POST("", interviewController.CreateInterview)                     // JSON用
+			interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
+			interviews.GET("/:id", interviewController.GetInterview)
+			interviews.GET("", interviewController.GetAllInterviews)
+			interviews.PUT("/:id", interviewController.UpdateInterview)
+			interviews.PUT("/with-audio/:id", interviewController.UpdateInterviewWithAudio) // 音声付きの面接更新
+			interviews.DELETE("/:id", interviewController.DeleteInterview)
+			interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
+			interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
+			interviews.POST("/upload-audio", interviewController.UploadAudio)
 		}
+
 		users := api.Group("/users")
 		{
 			users.POST("", userController.CreateUser)                                 // POST /api/users

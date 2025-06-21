@@ -53,67 +53,116 @@ export const fetchInterviewsByCompanyID = async (companyID: string) => {
   return response.data.map(convertInterviewToFrontend)
 }
 
-export const createInterview = async (data: any) => {
+
+export const createInterview = async (data: InterviewLog) => {
+  console.log('Creating interview with data:', data)
+  
   // 音声ファイルがある場合はFormDataを使用
   if (data.audioFile) {
+    console.log('Using FormData for audio file upload')
     const formData = new FormData()
     
     // フォームデータに面接情報を追加
-    formData.append('user_id', (parseInt(data.userId || data.user_id || "1")).toString())
-    formData.append('company_id', (parseInt(data.company?.id || data.company_id || "1")).toString())
-    formData.append('job_event_id', (parseInt(data.jobEventId || data.job_event_id || "1")).toString())
+    formData.append('user_id', (parseInt(data.userId || "1")).toString())
+    formData.append('company_id', (parseInt(data.company?.id || "1")).toString())
+    formData.append('job_event_id', (parseInt(data.jobEventId || "1")).toString())
     formData.append('interview_at', data.interviewAt ? new Date(data.interviewAt).toISOString() : new Date().toISOString())
     formData.append('stage', data.stage || "")
-    formData.append('text_note', data.textNote || data.notes || "")
+    formData.append('text_note', data.textNote || "")
     formData.append('location', data.location || "")
-    formData.append('meeting_url', data.meetingUrl || data.meeting_url || "")
+    formData.append('meeting_url', data.meetingUrl || "")
     
     // 音声ファイルを追加
     formData.append('audio_file', data.audioFile)
     
+    console.log('Sending FormData to /interviews/with-audio')
     // multipart/form-dataとして送信（CreateInterviewWithAudioエンドポイントを使用）
-    const response = await apiClient.post('/interviews', formData)
+    const response = await apiClient.post('/interviews/with-audio', formData)
     return convertInterviewToFrontend(response.data)
   } else {
+    console.log('Using JSON for regular interview creation')
     // 音声ファイルがない場合は通常のJSON送信
     const backendData = {
-      user_id: parseInt(data.userId || data.user_id || "1"),
-      company_id: parseInt(data.company?.id || data.company_id || "1"),
-      job_event_id: parseInt(data.jobEventId || data.job_event_id || "1"),
+      user_id: data.userId ? parseInt(data.userId) : 1, // 固定値（JWTミドルウェアで上書きされる）
+      company_id: parseInt(data.company?.id || "1"),
+      job_event_id: 1, // 固定値（デフォルトのjob_event）
       interview_at: data.interviewAt ? new Date(data.interviewAt).toISOString() : new Date().toISOString(),
       stage: data.stage || "",
       transcript: data.transcript || "",
-      audio_summary: data.audioSummary || data.summary || "",
-      text_note: data.textNote || data.notes || "",
+      audio_summary: data.audioSummary || "",
+      text_note: data.textNote || "",
       location: data.location || "",
-      meeting_url: data.meetingUrl || data.meeting_url || "",
+      meeting_url: data.meetingUrl || "",
       audio_file: ""
     }
 
-    console.log('Sending interview data:', JSON.stringify(backendData, null, 2))
+    console.log('Sending JSON to /interviews:', JSON.stringify(backendData, null, 2))
     
-    const response = await apiClient.post('/interviews', backendData)
-    return convertInterviewToFrontend(response.data)
+    try {
+      const response = await apiClient.post('/interviews', backendData, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      console.log('Interview creation successful:', response.data)
+      return convertInterviewToFrontend(response.data)
+    } catch (error) {
+      console.error('Interview creation failed:', error)
+      throw error
+    }
   }
 }
 
-export const updateInterview = async (id: string, data: any) => {
-  // JSONデータとして更新
-  const backendData = {
-    company_id: parseInt(data.company_id || data.company?.id || "1"),
-    job_event_id: parseInt(data.job_event_id || data.jobEventId || "1"),
-    interview_at: data.interview_at || data.interviewAt ? new Date(data.interview_at || data.interviewAt).toISOString() : new Date().toISOString(),
-    stage: data.stage || "一次面接", 
-    location: data.location || "",
-    meeting_url: data.meeting_url || data.meetingUrl || "",
-    text_note: data.text_note || data.textNote || "",
-    audio_summary: data.audio_summary || data.audioSummary || "", // AI要約の更新対応
+export const updateInterview = async (id: string, data: InterviewLog) => {
+  if (data.audioFile) {
+    console.log('Updating interview with audio file using FormData')
+    const formData = new FormData()
+
+    // フォームデータに面接情報を追加
+    formData.append('user_id', (parseInt(data.userId || "1")).toString())
+    formData.append('company_id', (parseInt(data.company?.id || "1")).toString())
+    formData.append('job_event_id', (parseInt(data.jobEventId || "1")).toString())
+    formData.append('interview_at', data.interviewAt ? new Date(data.interviewAt).toISOString() : new Date().toISOString())
+    formData.append('stage', data.stage || "")
+    formData.append('text_note', data.textNote || "")
+    formData.append('location', data.location || "")
+    formData.append('meeting_url', data.meetingUrl || "")
+
+    // 音声ファイルを追加
+    formData.append('audio_file', data.audioFile)
+
+    console.log('Sending FormData to /interviews/with-audio')
+    const response = await apiClient.put(`/interviews/with-audio/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return convertInterviewToFrontend(response.data)
+  } else {
+    console.log('Updating interview without audio file using JSON')
+    // 音声ファイルがない場合は通常のJSON送信
+    const backendData = {
+      user_id: data.userId ? parseInt(data.userId) : 1, // 固定値（JWTミドルウェアで上書きされる）
+      company_id: parseInt(data.company?.id || "1"),
+      job_event_id: parseInt(data.jobEventId || "1"),
+      interview_at: data.interviewAt ? new Date(data.interviewAt).toISOString() : new Date().toISOString(),
+      stage: data.stage || "",
+      transcript: data.transcript || "",
+      audio_summary: data.audioSummary || "",
+      text_note: data.textNote || "",
+      location: data.location || "",
+      meeting_url: data.meetingUrl || ""
+    }
+
+    console.log('Sending JSON to /interviews:', JSON.stringify(backendData, null, 2))
+
+    const response = await apiClient.put(`/interviews/${id}`, backendData, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    return convertInterviewToFrontend(response.data)
   }
-
-  console.log('Updating interview:', JSON.stringify(backendData, null, 2))
-
-  const response = await apiClient.put(`/interviews/${id}`, backendData)
-  return convertInterviewToFrontend(response.data)
 }
 
 export const deleteInterview = async (id: string) => {
@@ -121,7 +170,7 @@ export const deleteInterview = async (id: string) => {
   return response.data
 }
 
-export const saveInterview = async (data: any) => {
+export const saveInterview = async (data: InterviewLog) => {
   if (data.id) {
     return updateInterview(data.id, data)
   } else {

@@ -5,11 +5,11 @@ import { useInterviewLogs } from "@/components/interview/hooks/useInterviewLogs"
 import { InterviewList } from "@/components/interview/interview-list"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useUserProfile } from "@/hooks/useAuth"
 
 export default function InterviewPage() {
   const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useUserProfile()
   const { logs, selectedLog, isLoading, deleteLog, selectLog } = useInterviewLogs()
 
   const handleSelectLog = (id: string) => {

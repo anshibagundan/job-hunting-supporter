@@ -37,24 +37,12 @@ export default function EditInterviewPage() {
   }
 
   const handleSubmit = async (data: {
-    company: any
-    interviewAt: string
-    stage: string
-    location?: string
-    meetingUrl?: string
-    textNote: string
-    audioSummary?: string
-    audioFile?: File | null
+    InterviewLog: InterviewLog
   }) => {
     try {
       await interviewApi.update(id, {
-        company_id: data.company.id,
-        interview_at: data.interviewAt,
-        stage: data.stage,
-        location: data.location,
-        meeting_url: data.meetingUrl,
-        text_note: data.textNote,
-        audio_summary: data.audioSummary, // AI要約の更新対応
+        ...data.InterviewLog,
+        id, // Ensure the ID is included in the update
       })
       router.push(`/interview/${id}`)
     } catch (error) {
