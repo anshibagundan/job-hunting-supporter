@@ -1,10 +1,11 @@
 package controller
 
 import (
+	"strconv"
+
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
 	"github.com/gin-gonic/gin"
-	"strconv"
 )
 
 func NewUserController(useCase *usecase.UserUseCase) *UserController {
@@ -124,4 +125,20 @@ func (c *UserController) SyncFirebaseUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(201, user)
+}
+
+func (c *UserController) GetUserByFirebaseUID(ctx *gin.Context) {
+	firebaseUID := ctx.Param("firebase_uid")
+	if firebaseUID == "" {
+		ctx.JSON(400, gin.H{"error": "Firebase UID is required"})
+		return
+	}
+
+	user, err := c.useCase.GetUserByFirebaseUID(firebaseUID)
+	if err != nil {
+		ctx.JSON(404, gin.H{"error": "User not found"})
+		return
+	}
+
+	ctx.JSON(200, user)
 }
