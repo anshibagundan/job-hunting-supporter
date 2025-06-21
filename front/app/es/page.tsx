@@ -9,8 +9,8 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function ESPage() {
   const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
-  const { entries, deleteEntry, isLoading } = useESEntries(user?.id || "")
+  const { user, userProfile, isLoading: authLoading } = useAuth()
+  const { entries, deleteEntry, isLoading } = useESEntries(userProfile?.id?.toString() || "")
 
   const handleSelectEntry = (id: string) => {
     router.push(`/es/${id}`)
@@ -34,7 +34,7 @@ export default function ESPage() {
     )
   }
 
-  if (!user) {
+  if (!user || !userProfile) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-center items-center h-64">
