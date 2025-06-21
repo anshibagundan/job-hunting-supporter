@@ -149,14 +149,14 @@ func (g *GenAIClientImpl) AnalyzeESContent(content string) (summary string, advi
 func parseAdviceResponse(adviceText string) []domain.AdviceItem {
 	categories := []string{
 		"具体性の向上（数値や成果の追加）",
-		"企業との関連性の明確化", 
+		"企業との関連性の明確化",
 		"文章構成の改善提案",
 		"インパクトの向上方法",
 		"読みやすさの改善",
 	}
 
 	var adviceItems []domain.AdviceItem
-	
+
 	// 各カテゴリーについてセクションごとに処理
 	for i, category := range categories {
 		// セクション番号とカテゴリー名でセクションを特定
@@ -165,7 +165,7 @@ func parseAdviceResponse(adviceText string) []domain.AdviceItem {
 		if i+1 < len(categories) {
 			nextSectionStart = fmt.Sprintf("## %d. %s", i+2, categories[i+1])
 		}
-		
+
 		// セクション全体を抽出
 		startIdx := strings.Index(adviceText, sectionStart)
 		if startIdx == -1 {
@@ -178,7 +178,7 @@ func parseAdviceResponse(adviceText string) []domain.AdviceItem {
 			})
 			continue
 		}
-		
+
 		// セクション終了位置を特定
 		endIdx := len(adviceText)
 		if nextSectionStart != "" {
@@ -186,14 +186,14 @@ func parseAdviceResponse(adviceText string) []domain.AdviceItem {
 				endIdx = startIdx + 1 + nextIdx
 			}
 		}
-		
+
 		section := adviceText[startIdx:endIdx]
-		
+
 		// デフォルト値
 		achievement := 50
 		reason := "解析中にエラーが発生しました"
 		suggestion := "詳細な分析は後ほど実施してください"
-		
+
 		// 達成度を抽出（より柔軟なパターン）
 		achievementRe := regexp.MustCompile(`\*\*達成度:\s*(\d+)%[!\*]*`)
 		if match := achievementRe.FindStringSubmatch(section); len(match) >= 2 {
@@ -201,19 +201,19 @@ func parseAdviceResponse(adviceText string) []domain.AdviceItem {
 				achievement = parsed
 			}
 		}
-		
+
 		// 評価理由を抽出
 		reasonRe := regexp.MustCompile(`\*\*評価理由:\*\*\s*([^*]+?)(?:\*\*|$)`)
 		if match := reasonRe.FindStringSubmatch(section); len(match) >= 2 {
 			reason = strings.TrimSpace(match[1])
 		}
-		
+
 		// 改善提案を抽出
 		suggestionRe := regexp.MustCompile(`\*\*改善提案:\*\*\s*([^#]+?)(?:##|$)`)
 		if match := suggestionRe.FindStringSubmatch(section); len(match) >= 2 {
 			suggestion = strings.TrimSpace(match[1])
 		}
-		
+
 		adviceItems = append(adviceItems, domain.AdviceItem{
 			Category:    category,
 			Achievement: achievement,

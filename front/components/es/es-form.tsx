@@ -187,18 +187,18 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
                           <h4 className="font-medium text-sm">{item.category}</h4>
                           <span className="text-lg font-bold text-primary">{item.achievement}%</span>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="relative">
-                            <Progress 
-                              value={item.achievement} 
+                            <Progress
+                              value={item.achievement}
                               className="h-3"
                             />
-                            <div 
+                            <div
                               className="absolute top-0 left-0 h-full rounded-full transition-all"
                               style={{
                                 width: `${item.achievement}%`,
-                                backgroundColor: item.achievement >= 80 ? '#22c55e' : 
+                                backgroundColor: item.achievement >= 80 ? '#22c55e' :
                                                item.achievement >= 60 ? '#eab308' : '#ef4444'
                               }}
                             />
