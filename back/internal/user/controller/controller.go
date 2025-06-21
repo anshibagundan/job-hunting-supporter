@@ -59,18 +59,51 @@ func (c *UserController) GetAllUsers(ctx *gin.Context) {
 }
 
 func (c *UserController) UpdateUser(ctx *gin.Context) {
-	var user domain.User
-	if err := ctx.ShouldBindJSON(&user); err != nil {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid user ID"})
+		return
+	}
+
+	// 部分更新のためのリクエスト構造体
+	var updateRequest struct {
+		Name    *string `json:"name"`
+		BasicES *string `json:"basic_es"`
+		Icon    *string `json:"icon"`
+	}
+
+	if err := ctx.ShouldBindJSON(&updateRequest); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid input"})
 		return
 	}
 
-	if err := c.useCase.UpdateUser(&user); err != nil {
+	// 更新するフィールドのマップを作成
+	updates := make(map[string]interface{})
+	if updateRequest.Name != nil {
+		updates["name"] = *updateRequest.Name
+	}
+	if updateRequest.BasicES != nil {
+		updates["basic_es"] = *updateRequest.BasicES
+	}
+	if updateRequest.Icon != nil {
+		updates["icon"] = *updateRequest.Icon
+	}
+
+	// 部分更新を実行
+	if err := c.useCase.UpdateUserPartial(uint(id), updates); err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to update user"})
 		return
 	}
 
-	ctx.JSON(200, gin.H{"message": "User updated successfully"})
+	// 更新されたユーザー情報を返す
+	updatedUser, err := c.useCase.GetUser(uint(id))
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch updated user"})
+		return
+	}
+
+	ctx.JSON(200, updatedUser)
 }
 
 func (c *UserController) DeleteUser(ctx *gin.Context) {

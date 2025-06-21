@@ -128,7 +128,7 @@ func main() {
 			users.GET("/:id", userController.GetUser)                                 // GET /api/users/:id
 			users.GET("/firebase/:firebase_uid", userController.GetUserByFirebaseUID) // GET /api/users/firebase/:firebase_uid
 			users.GET("", userController.GetAllUsers)                                 // GET /api/users
-			users.PUT("", userController.UpdateUser)                                  // PUT /api/users
+			users.PUT("/:id", userController.UpdateUser)                              // PUT /api/users/:id
 			users.DELETE("/:id", userController.DeleteUser)                           // DELETE /api/users/:id
 		}
 

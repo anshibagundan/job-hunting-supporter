@@ -6,5 +6,6 @@ type UserRepository interface {
 	FindByFirebaseUID(firebaseUID string) (*User, error)
 	GetAll() ([]*User, error)
 	Update(user *User) error
+	UpdatePartial(id uint, updates map[string]interface{}) error
 	Delete(id uint) error
 }

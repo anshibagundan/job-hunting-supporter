@@ -39,6 +39,10 @@ func (r *UserRepository) Update(user *domain.User) error {
 	return r.db.Save(user).Error
 }
 
+func (r *UserRepository) UpdatePartial(id uint, updates map[string]interface{}) error {
+	return r.db.Model(&domain.User{}).Where("id = ?", id).Updates(updates).Error
+}
+
 func (r *UserRepository) Delete(id uint) error {
 	return r.db.Delete(&domain.User{}, id).Error
 }
