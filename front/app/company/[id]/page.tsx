@@ -46,7 +46,7 @@ export default function CompanyDetailPage() {
       const foundCompany = companies.find(c => c.id.toString() === companyId)
 
       if (!foundCompany) {
-        router.push('/home')
+        router.push('/company')
         return
       }
 
@@ -59,7 +59,7 @@ export default function CompanyDetailPage() {
 
     } catch (error) {
       console.error('企業データの読み込みに失敗しました:', error)
-      router.push('/home')
+      router.push('/company')
     } finally {
       setLoading(false)
     }
@@ -92,7 +92,7 @@ export default function CompanyDetailPage() {
     <div className="flex-1 flex flex-col">
       <CompanyDetailHeader
         companyName={company.name}
-        onBack={() => router.push('/home')}
+        onBack={() => router.push('/company')}
       />
 
       <main className="flex-1 p-6 overflow-auto">
