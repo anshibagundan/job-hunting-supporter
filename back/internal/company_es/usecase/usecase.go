@@ -81,3 +81,19 @@ func (u *CompanyESUseCase) GetCompanyESByUserIDAndCompanyIDWithCompany(userID, c
 func (u *CompanyESUseCase) GetAllCompanyESsWithCompany() ([]*domain.CompanyESResponse, error) {
 	return u.repo.GetAllWithCompany()
 }
+
+// GenerateESContent - BaseESと企業情報からES内容を自動生成
+func (u *CompanyESUseCase) GenerateESContent(baseES string, companyDescription string, esTitle string) (content string, err error) {
+	if baseES == "" {
+		return "", fmt.Errorf("baseES is empty")
+	}
+	if companyDescription == "" {
+		return "", fmt.Errorf("companyDescription is empty")
+	}
+	if esTitle == "" {
+		return "", fmt.Errorf("esTitle is empty")
+	}
+
+	// GenAI クライアントを使用してES内容を自動生成
+	return u.genaiClient.GenerateESContent(baseES, companyDescription, esTitle)
+}
