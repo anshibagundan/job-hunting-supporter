@@ -1,17 +1,17 @@
 import apiClient from '@/lib/api-client';
 
-// 企業の型定義（フロントエンド用）
+// 企業の型定義（バックエンドのレスポンス形式）
 export interface CompanyResponse {
-  ID: number;
-  Name: string;
-  WebURL: string;
-  Description: string;
-  Img: string;
-  Industry: string;
-  ScrapeTargetURL: string;
-  LastScrapeTime: string;
-  CreatedAt: string;
-  UpdatedAt: string;
+  id: number;
+  name: string;
+  website: string;
+  description: string;
+  image: string;
+  industry: string;
+  scrape_target_url: string;
+  last_scrape_time: string;
+  created_at: string;
+  updated_at: string;
 }
 
 // 全ての企業を取得
@@ -42,17 +42,4 @@ export const updateCompany = async (data: CompanyResponse) => {
 export const deleteCompany = async (id: string) => {
   const response = await apiClient.delete(`/companies/${id}`);
   return response.data;
-};
-
-// バックエンドのレスポンスをフロントエンドの形式に変換
-export const convertCompanyToFrontend = (backendCompany: CompanyResponse) => {
-  return {
-    id: backendCompany.ID.toString(),
-    name: backendCompany.Name,
-    industry: backendCompany.Industry,
-    image: backendCompany.Img,
-    description: backendCompany.Description,
-    website: backendCompany.WebURL,
-    events: [] // デフォルトで空配列
-  };
 };

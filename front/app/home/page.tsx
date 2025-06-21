@@ -11,7 +11,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { storage, type Company } from "@/lib/supabase";
+import { fetchAllCompanies, type CompanyResponse } from "@/components/company/api";
+import { type Company } from "@/lib/supabase";
 
 export default function HomePage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -21,7 +22,11 @@ export default function HomePage() {
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const companiesData = await storage.getCompanies();
+        const backendCompanies: CompanyResponse[] = await fetchAllCompanies();
+        const companiesData: Company[] = backendCompanies.map(company => ({
+          ...company,
+          events: [] // デフォルトで空配列
+        }));
         setCompanies(companiesData);
       } catch (error) {
         console.error("Failed to load companies:", error);
@@ -33,8 +38,8 @@ export default function HomePage() {
     loadCompanies();
   }, []);
 
-  const handleCompanyClick = (companyId: string) => {
-    router.push(`/company/${companyId}`);
+  const handleCompanyClick = (companyId: number) => {
+    router.push(`/company/${companyId.toString()}`);
   };
 
   return (

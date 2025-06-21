@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useAuth } from "@/contexts/auth-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth()
-  const router = useRouter()
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
   if (loading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-gray-500">読み込み中...</div>
       </div>
-    )
+    );
   }
 
   if (!user) {
@@ -23,7 +23,7 @@ export default function ProfilePage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-gray-500">ユーザー情報が見つかりません</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -52,24 +52,26 @@ export default function ProfilePage() {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4">
                 <img
-                  src={user.photoURL || '/placeholder-user.jpg'}
-                  alt={user.displayName || 'User'}
+                  src={user.photoURL || "/placeholder-user.jpg"}
+                  alt={user.displayName || "User"}
                   className="h-16 w-16 rounded-full object-cover"
                 />
                 <div>
-                  <h2 className="text-lg font-semibold">{user.displayName || 'Unknown User'}</h2>
+                  <h2 className="text-lg font-semibold">
+                    {user.displayName || "Unknown User"}
+                  </h2>
                   <p className="text-gray-600">{user.email}</p>
                 </div>
               </div>
-
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     表示名
                   </label>
-                  <p className="text-gray-900">{user.displayName || 'Unknown User'}</p>
+                  <p className="text-gray-900">
+                    {user.displayName || "Unknown User"}
+                  </p>
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     メールアドレス
@@ -89,5 +91,5 @@ export default function ProfilePage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
