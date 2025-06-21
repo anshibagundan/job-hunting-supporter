@@ -89,8 +89,8 @@ func main() {
 	companyController := company_controller.NewCompanyController(companyUseCase)
 
 	interviewRepo := interview_infrastructure.NewInterviewRepository(db)
-	interviewSerevice := interview_infrastructure.NewInterviewService(db)
-	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, interviewSerevice, genAIClient)
+	interviewService := interview_infrastructure.NewInterviewService(db)
+	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, interviewService, genAIClient)
 	interviewController := interview_controller.NewInterviewController(interviewUseCase)
 
 	jobEventRepo := jobevent_infrastructure.NewJobEventRepository(db)
