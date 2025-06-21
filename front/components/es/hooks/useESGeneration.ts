@@ -23,7 +23,7 @@ export function useESGeneration() {
     } finally {
       setIsGenerating(false)
     }
-  }, [])
+  }, [generateESContent, setIsGenerating])
 
   return {
     isGenerating,
