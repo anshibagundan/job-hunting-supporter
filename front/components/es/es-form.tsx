@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import { Progress } from "@/components/ui/progress"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Check, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useESForm } from "@/components/es/hooks/useEsForm"
 import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
-import { storage, type ESEntry } from "@/lib/supabase"
+import { storage, type ESEntry, type AdviceItem } from "@/lib/supabase"
 import type { Company } from "@/lib/supabase"
 
 interface ESFormProps {
@@ -21,7 +22,7 @@ interface ESFormProps {
 }
 
 export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFormProps) {
-  const { formData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
+  const { formData, setFormData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
   const { isAnalyzing, analyzeContent } = useAIAnalysis()
   const [companies, setCompanies] = useState<Company[]>([])
   const [companiesLoading, setCompaniesLoading] = useState(true)
@@ -67,7 +68,15 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
     // 分析結果をformDataに反映
     updateField("summary", result.summary)
     updateField("advice", result.advice)
-  }, [formData.content, analyzeContent, updateField])
+    setFormData(prev => ({ ...prev, adviceItems: result.adviceItems }))
+  }, [formData.content, analyzeContent, updateField, setFormData])
+
+  // 達成度の色を決定する関数
+  const getAchievementColor = (achievement: number) => {
+    if (achievement >= 80) return "bg-green-500"
+    if (achievement >= 60) return "bg-yellow-500"
+    return "bg-red-500"
+  }
 
   return (
     <Card>
@@ -164,6 +173,50 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
                   </p>
                 </CardContent>
               </Card>
+
+              {/* 達成度表示セクション */}
+              {formData.adviceItems && formData.adviceItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">項目別達成度評価</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {formData.adviceItems.map((item, index) => (
+                      <div key={index} className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-medium text-sm">{item.category}</h4>
+                          <span className="text-lg font-bold text-primary">{item.achievement}%</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Progress
+                              value={item.achievement}
+                              className="h-3"
+                            />
+                            <div
+                              className="absolute top-0 left-0 h-full rounded-full transition-all"
+                              style={{
+                                width: `${item.achievement}%`,
+                                backgroundColor: item.achievement >= 80 ? '#22c55e' :
+                                               item.achievement >= 60 ? '#eab308' : '#ef4444'
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <div className="mb-1">
+                              <span className="font-medium">評価理由:</span> {item.reason}
+                            </div>
+                            <div>
+                              <span className="font-medium">改善提案:</span> {item.suggestion}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 

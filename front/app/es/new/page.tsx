@@ -1,43 +1,46 @@
-"use client"
+"use client";
 
-import { useCallback, Suspense } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { ESForm } from "@/components/es/es-form"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import type { ESEntry } from "@/lib/supabase"
-import { useAuth } from "@/hooks/useAuth"
-import { saveES } from "@/components/es/api"
+import { useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ESForm } from "@/components/es/es-form";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import type { ESEntry } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
+import { saveES } from "@/components/es/api";
 
 function ESNewPageContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { user } = useAuth()
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { userProfile } = useAuth();
 
-  const companyId = searchParams.get('companyId')
+  const companyId = searchParams.get("companyId");
 
   const handleBack = useCallback(() => {
-    router.push("/es")
-  }, [router])
+    router.push("/es");
+  }, [router]);
 
-  const handleSubmit = useCallback(async (entry: ESEntry) => {
-    if (!user) return
-    
-    try {
-      const esData = {
-        ...entry,
-        user_id: user.id
+  const handleSubmit = useCallback(
+    async (entry: ESEntry) => {
+      if (!userProfile) return;
+
+      try {
+        const esData = {
+          ...entry,
+          user_id: userProfile.id,
+        };
+        await saveES(esData);
+        router.push("/es");
+      } catch (error) {
+        console.error("Failed to save ES:", error);
       }
-      await saveES(esData)
-      router.push("/es")
-    } catch (error) {
-      console.error('Failed to save ES:', error)
-    }
-  }, [user, router])
+    },
+    [userProfile, router]
+  );
 
   const handleCancel = useCallback(() => {
-    router.push("/es")
-  }, [router])
+    router.push("/es");
+  }, [router]);
 
   return (
     <div className="flex-1 flex flex-col">
@@ -52,9 +55,7 @@ function ESNewPageContent() {
             <ArrowLeft className="h-4 w-4" />
             一覧に戻る
           </Button>
-          <h2 className="text-lg font-semibold text-gray-900">
-            新規ES作成
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900">新規ES作成</h2>
         </div>
       </header>
 
@@ -66,7 +67,7 @@ function ESNewPageContent() {
         />
       </main>
     </div>
-  )
+  );
 }
 
 export default function ESNewPage() {
@@ -74,5 +75,5 @@ export default function ESNewPage() {
     <Suspense fallback={<div>Loading...</div>}>
       <ESNewPageContent />
     </Suspense>
-  )
+  );
 }

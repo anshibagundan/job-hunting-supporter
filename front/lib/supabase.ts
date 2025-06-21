@@ -30,6 +30,13 @@ export interface Event {
   isJobEvent?: boolean // JobEventから来たデータかどうかを識別
 }
 
+export interface AdviceItem {
+  category: string
+  achievement: number
+  reason: string
+  suggestion: string
+}
+
 export interface ESEntry {
   id: string
   company: Company
@@ -37,6 +44,7 @@ export interface ESEntry {
   content: string
   summary?: string
   advice?: string
+  adviceItems?: AdviceItem[]
   created_at: string
 }
 
