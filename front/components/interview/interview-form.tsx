@@ -16,14 +16,7 @@ import type { InterviewLog, Company } from "@/lib/supabase"
 
 interface InterviewFormProps {
   onSubmit: (data: {
-    company: Company
-    interviewAt: string
-    stage: string
-    location?: string
-    meetingUrl?: string
-    textNote: string
-    audioSummary?: string
-    audioFile?: File | null
+    InterviewLog: InterviewLog
   }) => Promise<void>
   onCancel: () => void
   initialData?: Partial<InterviewLog>
@@ -53,6 +46,7 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
       try {
         const backendCompanies = await fetchAllCompanies()
         const companiesData = backendCompanies.map(convertCompanyToFrontend)
+        console.log("Loaded companies:", companiesData)
         setCompanies(companiesData)
       } catch (error) {
         console.error('Failed to load companies:', error)
@@ -80,14 +74,21 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
     
     try {
       await onSubmit({
-        company: formData.company,
-        interviewAt: formData.interviewAt,
-        stage: formData.stage,
-        location: formData.location,
-        meetingUrl: formData.meetingUrl,
-        textNote: formData.textNote,
-        audioSummary: formData.audioSummary,
-        audioFile,
+        InterviewLog: {
+          id: initialData?.id || "",
+          userId: initialData?.userId || "1", // 固定値（JWTミドルウェアで上書きされる）
+          company: formData.company,
+          jobEventId: initialData?.jobEventId || "1", // 固定値
+          interviewAt: formData.interviewAt ? new Date(formData.interviewAt).toISOString() : new Date().toISOString(),
+          stage: formData.stage,
+          location: formData.location,
+          meetingUrl: formData.meetingUrl,
+          textNote: formData.textNote,
+          audioSummary: formData.audioSummary,
+          audioFile: audioFile || null, // 音声ファイルはオプション
+          createdAt: initialData?.createdAt || new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
       })
     } catch (error) {
       console.error("Form submission error:", error)

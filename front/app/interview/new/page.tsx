@@ -5,14 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { InterviewForm } from "@/components/interview/interview-form"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
-import { useInterviewForm } from "@/components/interview/hooks/useInterviewForm"
 import { interviewApi } from "@/components/interview/api"
-import { useAuth } from "@/hooks/useAuth"
+import { useUserProfile} from "@/hooks/useAuth";
+import { InterviewLog} from "@lib/supabase";
 
 function NewInterviewContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { user } = useAuth()
+  const { user } = useUserProfile()
   const companyId = searchParams.get("companyId")
 
   const handleBack = () => {
@@ -20,16 +20,10 @@ function NewInterviewContent() {
   }
 
   const handleSubmit = async (data: {
-    company: any
-    interviewAt: string
-    stage: string
-    location?: string
-    meetingUrl?: string
-    textNote: string
-    audioFile?: File | null
+    InterviewLog: InterviewLog
   }) => {
     try {
-      const createdLog = await interviewApi.create(data)
+      const createdLog = await interviewApi.create(data.InterviewLog)
       router.push(`/interview/${createdLog.id}`)
     } catch (error) {
       console.error("Failed to create interview log:", error)
