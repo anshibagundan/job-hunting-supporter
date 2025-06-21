@@ -2,14 +2,15 @@ package controller
 
 import (
 	"fmt"
-	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/domain"
-	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/domain"
+	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
+	"github.com/gin-gonic/gin"
 )
 
 func NewInterviewController(useCase *usecase.InterviewUseCase) *InterviewController {
@@ -127,6 +128,7 @@ func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
 
 	// JSONリクエストボディを読み取り
 	var req struct {
+		UserID       uint   `json:"user_id"`
 		CompanyID    uint   `json:"company_id"`
 		JobEventID   uint   `json:"job_event_id"`
 		InterviewAt  string `json:"interview_at"`
@@ -142,12 +144,6 @@ func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
 			"error":   "Invalid input",
 			"details": err.Error(),
 		})
-		return
-	}
-
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid User-ID"})
 		return
 	}
 
@@ -170,7 +166,7 @@ func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
 		ID:           uint(id),
 		CompanyID:    req.CompanyID,
 		JobEventID:   req.JobEventID,
-		UserID:       uint(userID),
+		UserID:       req.UserID,
 		InterviewAt:  interviewAt,
 		Stage:        req.Stage,
 		TextNote:     req.TextNote,

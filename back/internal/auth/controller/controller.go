@@ -40,11 +40,11 @@ func (a *AuthController) LoginWithFirebase(c *gin.Context) {
 		return
 	}
 
-	// FirebaseユーザーIDでユーザーを検索または作成
-	user, err := a.userUseCase.GetOrCreateUserByFirebaseUID(firebaseToken.UID)
+	// FirebaseユーザーIDでユーザーを検索
+	user, err := a.userUseCase.GetUserByFirebaseUID(firebaseToken.UID)
 	if err != nil {
-		fmt.Printf("Error getting/creating user: %v\n", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user"})
+		fmt.Printf("Error getting user: %v\n", err)
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
 		return
 	}
 
@@ -58,13 +58,13 @@ func (a *AuthController) LoginWithFirebase(c *gin.Context) {
 	// Cookieにトークンを設定
 	c.SetSameSite(http.SameSiteLaxMode) // CSRF対策
 	c.SetCookie(
-		"auth_token",                   // name
-		token,                          // value
-		int(24*time.Hour/time.Second),  // maxAge (24時間)
-		"/",                            // path
-		"",                             // domain
-		false,                          // secure (本番ではtrue)
-		true,                           // httpOnly
+		"auth_token",                  // name
+		token,                         // value
+		int(24*time.Hour/time.Second), // maxAge (24時間)
+		"/",                           // path
+		"",                            // domain
+		false,                         // secure (本番ではtrue)
+		true,                          // httpOnly
 	)
 
 	c.JSON(http.StatusOK, gin.H{
@@ -83,7 +83,7 @@ func (a *AuthController) Logout(c *gin.Context) {
 	c.SetCookie(
 		"auth_token",
 		"",
-		-1,    // 即座に期限切れ
+		-1, // 即座に期限切れ
 		"/",
 		"",
 		false,

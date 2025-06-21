@@ -15,6 +15,7 @@ import (
 	user_controller "github.com/anshibagundan/job-hunting-supporter/internal/user/controller"
 	"github.com/anshibagundan/job-hunting-supporter/pkg/auth"
 	"github.com/anshibagundan/job-hunting-supporter/pkg/firebase"
+
 	// ユーザー関連
 	user_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/user/infrastructure"
 	user_usecase "github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
@@ -203,6 +204,7 @@ func main() {
 			companyESs.PUT("/:id", companyESController.UpdateCompanyES)                                              // PUT /api/company-es/:id
 			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
 			companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
+			companyESs.POST("/generate", companyESController.GenerateESContent)                                      // POST /api/company-es/generate
 		}
 	}
 

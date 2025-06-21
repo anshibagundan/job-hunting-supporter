@@ -11,25 +11,25 @@ import (
 
 // CreateCompanyESRequest represents the request payload for creating CompanyES
 type CreateCompanyESRequest struct {
-	UserID      uint                        `json:"user_id" binding:"required"`
-	CompanyID   uint                        `json:"company_id" binding:"required"`
-	Title       string                      `json:"title" binding:"required"`
-	Content     string                      `json:"content" binding:"required"`
-	Summary     string                      `json:"summary"`
-	Advice      string                      `json:"advice"`
-	AdviceItems []genaidomain.AdviceItem    `json:"advice_items"`
+	UserID      uint                     `json:"user_id" binding:"required"`
+	CompanyID   uint                     `json:"company_id" binding:"required"`
+	Title       string                   `json:"title" binding:"required"`
+	Content     string                   `json:"content" binding:"required"`
+	Summary     string                   `json:"summary"`
+	Advice      string                   `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem `json:"advice_items"`
 }
 
 // UpdateCompanyESRequest represents the request payload for updating CompanyES
 type UpdateCompanyESRequest struct {
-	ID          uint                        `json:"id" binding:"required"`
-	UserID      uint                        `json:"user_id" binding:"required"`
-	CompanyID   uint                        `json:"company_id" binding:"required"`
-	Title       string                      `json:"title" binding:"required"`
-	Content     string                      `json:"content" binding:"required"`
-	Summary     string                      `json:"summary"`
-	Advice      string                      `json:"advice"`
-	AdviceItems []genaidomain.AdviceItem    `json:"advice_items"`
+	ID          uint                     `json:"id" binding:"required"`
+	UserID      uint                     `json:"user_id" binding:"required"`
+	CompanyID   uint                     `json:"company_id" binding:"required"`
+	Title       string                   `json:"title" binding:"required"`
+	Content     string                   `json:"content" binding:"required"`
+	Summary     string                   `json:"summary"`
+	Advice      string                   `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem `json:"advice_items"`
 }
 
 func NewCompanyESController(useCase *usecase.CompanyESUseCase) *CompanyESController {
@@ -236,6 +236,37 @@ func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
 		Summary:     summary,
 		Advice:      advice,
 		AdviceItems: adviceItems,
+	}
+
+	ctx.JSON(200, response)
+}
+
+type GenerateESRequest struct {
+	BaseES             string `json:"base_es" binding:"required"`
+	CompanyDescription string `json:"company_description" binding:"required"`
+	ESTitle            string `json:"es_title" binding:"required"`
+}
+
+type GenerateESResponse struct {
+	Content string `json:"content"`
+}
+
+// GenerateESContent - ES内容の自動生成エンドポイント
+func (c *CompanyESController) GenerateESContent(ctx *gin.Context) {
+	var req GenerateESRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
+		return
+	}
+
+	content, err := c.useCase.GenerateESContent(req.BaseES, req.CompanyDescription, req.ESTitle)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to generate ES content", "details": err.Error()})
+		return
+	}
+
+	response := GenerateESResponse{
+		Content: content,
 	}
 
 	ctx.JSON(200, response)
