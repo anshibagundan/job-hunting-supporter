@@ -4,10 +4,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Progress } from "@/components/ui/progress"
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Check, ChevronsUpDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useESForm } from "@/components/es/hooks/useEsForm"
 import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
-import { storage, type ESEntry } from "@/lib/supabase"
+import { storage, type ESEntry, type AdviceItem } from "@/lib/supabase"
 import type { Company } from "@/lib/supabase"
 
 interface ESFormProps {
@@ -18,10 +22,11 @@ interface ESFormProps {
 }
 
 export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFormProps) {
-  const { formData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
+  const { formData, setFormData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
   const { isAnalyzing, analyzeContent } = useAIAnalysis()
   const [companies, setCompanies] = useState<Company[]>([])
   const [companiesLoading, setCompaniesLoading] = useState(true)
+  const [open, setOpen] = useState(false)
 
   // 利用可能な企業リストを取得
   useEffect(() => {
@@ -63,14 +68,15 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
     // 分析結果をformDataに反映
     updateField("summary", result.summary)
     updateField("advice", result.advice)
-  }, [formData.content, analyzeContent, updateField])
+    setFormData(prev => ({ ...prev, adviceItems: result.adviceItems }))
+  }, [formData.content, analyzeContent, updateField, setFormData])
 
-  const handleCompanyChange = useCallback((companyId: string) => {
-    const selectedCompany = companies.find(c => c.id === companyId)
-    if (selectedCompany) {
-      updateCompany(selectedCompany)
-    }
-  }, [companies, updateCompany])
+  // 達成度の色を決定する関数
+  const getAchievementColor = (achievement: number) => {
+    if (achievement >= 80) return "bg-green-500"
+    if (achievement >= 60) return "bg-yellow-500"
+    return "bg-red-500"
+  }
 
   return (
     <Card>
@@ -81,23 +87,48 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">企業名</label>
-            <Select
-              value={formData.company?.id || ""}
-              onValueChange={handleCompanyChange}
-              required
-              disabled={companiesLoading}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={companiesLoading ? "企業情報を読み込み中..." : "企業を選択してください"} />
-              </SelectTrigger>
-              <SelectContent>
-                {companies.map((company) => (
-                  <SelectItem key={company.id} value={company.id}>
-                    {company.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={open}
+                  className="w-full justify-between"
+                  disabled={companiesLoading}
+                >
+                  {formData.company?.name || (companiesLoading ? "企業情報を読み込み中..." : "企業を選択してください")}
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+                <Command>
+                  <CommandInput placeholder="企業を検索..." />
+                  <CommandEmpty>企業が見つかりません。</CommandEmpty>
+                  <CommandList>
+                    <CommandGroup className="max-h-60 overflow-y-auto">
+                      {companies.map((company) => (
+                        <CommandItem
+                          key={company.id}
+                          value={company.name}
+                          onSelect={() => {
+                            updateCompany(company)
+                            setOpen(false)
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              formData.company?.id === company.id ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {company.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">タイトル</label>
@@ -142,6 +173,50 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
                   </p>
                 </CardContent>
               </Card>
+
+              {/* 達成度表示セクション */}
+              {formData.adviceItems && formData.adviceItems.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">項目別達成度評価</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {formData.adviceItems.map((item, index) => (
+                      <div key={index} className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <h4 className="font-medium text-sm">{item.category}</h4>
+                          <span className="text-lg font-bold text-primary">{item.achievement}%</span>
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="relative">
+                            <Progress
+                              value={item.achievement}
+                              className="h-3"
+                            />
+                            <div
+                              className="absolute top-0 left-0 h-full rounded-full transition-all"
+                              style={{
+                                width: `${item.achievement}%`,
+                                backgroundColor: item.achievement >= 80 ? '#22c55e' :
+                                               item.achievement >= 60 ? '#eab308' : '#ef4444'
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            <div className="mb-1">
+                              <span className="font-medium">評価理由:</span> {item.reason}
+                            </div>
+                            <div>
+                              <span className="font-medium">改善提案:</span> {item.suggestion}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
 

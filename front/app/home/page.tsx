@@ -1,45 +1,54 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Building2, Globe, ArrowRight } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { storage, type Company } from "@/lib/supabase"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Building2, Globe, ArrowRight } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { fetchAllCompanies, type CompanyResponse } from "@/components/company/api";
+import { type Company } from "@/lib/supabase";
 
 export default function HomePage() {
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const companiesData = await storage.getCompanies()
-        setCompanies(companiesData)
+        const backendCompanies: CompanyResponse[] = await fetchAllCompanies();
+        const companiesData: Company[] = backendCompanies.map(company => ({
+          ...company,
+          events: [] // デフォルトで空配列
+        }));
+        setCompanies(companiesData);
       } catch (error) {
-        console.error('Failed to load companies:', error)
+        console.error("Failed to load companies:", error);
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    loadCompanies()
-  }, [])
+    loadCompanies();
+  }, []);
 
-  const handleCompanyClick = (companyId: string) => {
-    router.push(`/company/${companyId}`)
-  }
+  const handleCompanyClick = (companyId: number) => {
+    router.push(`/company/${companyId.toString()}`);
+  };
 
   return (
-    <div className="flex-1 flex flex-col">
-      <header className="bg-white shadow-sm border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">企業一覧</h2>
-        </div>
-      </header>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-semibold text-gray-900">企業一覧</h1>
+      </div>
 
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="overflow-auto">
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-gray-500">企業データを読み込み中...</div>
@@ -110,5 +119,5 @@ export default function HomePage() {
         )}
       </main>
     </div>
-  )
+  );
 }

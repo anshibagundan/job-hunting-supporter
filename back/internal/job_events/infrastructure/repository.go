@@ -26,6 +26,24 @@ func (r *JobEventRepository) FindByID(id uint) (*domain.JobEvent, error) {
 	return &jobEvent, nil
 }
 
+func (r *JobEventRepository) FindByCompanyID(companyID uint) ([]*domain.JobEvent, error) {
+	var jobEvents []*domain.JobEvent
+	err := r.db.Where("company_id = ?", companyID).Find(&jobEvents).Error
+	if err != nil {
+		return nil, err
+	}
+	return jobEvents, nil
+}
+
+func (r *JobEventRepository) FindByUserID(userID uint) ([]*domain.JobEvent, error) {
+	var jobEvents []*domain.JobEvent
+	err := r.db.Where("user_id = ?", userID).Find(&jobEvents).Error
+	if err != nil {
+		return nil, err
+	}
+	return jobEvents, nil
+}
+
 func (r *JobEventRepository) GetAll() ([]*domain.JobEvent, error) {
 	var jobEvents []*domain.JobEvent
 	err := r.db.Find(&jobEvents).Error

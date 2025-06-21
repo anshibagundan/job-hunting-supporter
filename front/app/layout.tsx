@@ -11,9 +11,13 @@ import { AuthProvider } from "@/contexts/auth-context"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "就活ダッシュボード",
+  title: "就活サポーター",
   description: "ES管理・面接予定・振り返りを一元管理",
-    generator: 'v0.dev'
+  generator: 'v0.dev',
+  icons: {
+    icon: '/job-hunting-logo-circle.png',
+    apple: '/job-hunting-logo-circle.png',
+  },
 }
 
 export default function RootLayout({
@@ -22,7 +26,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body className={inter.className}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>

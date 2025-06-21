@@ -8,6 +8,8 @@ import { CompanyHeader } from "@/components/company/company-header"
 import { CompanyRelatedDataTabs } from "@/components/company/company-related-data-tabs"
 import { LoadingSpinner, NotFoundMessage } from "@/components/common/loading-states"
 import { useCompanyESEntries } from "@/components/company/hooks/useCompanyESEntries"
+import { useCompanyJobEvents } from "@/components/company/hooks/useCompanyJobEvents"
+import { jobEventToEvent } from "@/lib/job-event-utils"
 
 export default function CompanyDetailPage() {
   const params = useParams()
@@ -21,6 +23,9 @@ export default function CompanyDetailPage() {
 
   // APIからESデータを取得
   const { entries: esEntries, isLoading: esLoading, deleteEntry } = useCompanyESEntries(companyId)
+  
+  // APIからJobEventsデータを取得
+  const { jobEvents, isLoading: jobEventsLoading } = useCompanyJobEvents(companyId)
 
   useEffect(() => {
     if (companyId) {
@@ -28,10 +33,17 @@ export default function CompanyDetailPage() {
     }
   }, [companyId])
 
+  useEffect(() => {
+    if (jobEvents.length > 0 && company) {
+      const convertedEvents = jobEvents.map(jobEvent => jobEventToEvent(jobEvent, company.name))
+      setEvents(prevEvents => [...prevEvents, ...convertedEvents])
+    }
+  }, [jobEvents, company])
+
   const loadCompanyData = async () => {
     try {
       const companies = await storage.getCompanies()
-      const foundCompany = companies.find(c => c.id === companyId)
+      const foundCompany = companies.find(c => c.id.toString() === companyId)
 
       if (!foundCompany) {
         router.push('/home')
@@ -40,14 +52,10 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // 面接ログとイベントはまだローカルストレージから取得（必要に応じて後でAPI化）
+      // 面接ログはまだローカルストレージから取得（必要に応じて後でAPI化）
       const allInterviewLogs = storage.getInterviewLogs()
       const companyInterviewLogs = allInterviewLogs.filter(log => log.company_name === foundCompany.name)
       setInterviewLogs(companyInterviewLogs)
-
-      const allEvents = storage.getEvents()
-      const companyEvents = allEvents.filter(event => event.company_name === foundCompany.name)
-      setEvents(companyEvents)
 
     } catch (error) {
       console.error('企業データの読み込みに失敗しました:', error)

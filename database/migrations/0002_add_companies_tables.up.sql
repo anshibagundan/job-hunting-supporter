@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS companies (
     description TEXT NOT NULL,
     img VARCHAR(255),
     industry VARCHAR(255) NOT NULL,
-    scrape_target_url VARCHAR(255) NOT NULL UNIQUE,
+    scrape_target_url VARCHAR(255) NOT NULL,
     last_scrape_time TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

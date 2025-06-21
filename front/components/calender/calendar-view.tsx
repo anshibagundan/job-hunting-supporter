@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +13,7 @@ interface CalendarViewProps {
 }
 
 export function CalendarView({ events }: CalendarViewProps) {
+  const router = useRouter()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<"month" | "week">("month")
 
@@ -63,6 +65,12 @@ export function CalendarView({ events }: CalendarViewProps) {
         return "bg-green-100 text-green-800"
       default:
         return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const handleEventClick = (event: Event) => {
+    if (event.isJobEvent && event.id) {
+      router.push(`/calendar/${event.id}`)
     }
   }
 
@@ -126,8 +134,9 @@ export function CalendarView({ events }: CalendarViewProps) {
                     {dayEvents.slice(0, 2).map((event) => (
                       <div
                         key={event.id}
-                        className={`text-xs px-2 py-1 rounded truncate ${getEventTypeColor(event.type)}`}
+                        className={`text-xs px-2 py-1 rounded truncate cursor-pointer hover:opacity-80 ${getEventTypeColor(event.type)}`}
                         title={`${event.company_name} - ${event.title}`}
+                        onClick={() => handleEventClick(event)}
                       >
                         {event.company_name}
                       </div>
@@ -153,15 +162,36 @@ export function CalendarView({ events }: CalendarViewProps) {
               .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
               .slice(0, 5)
               .map((event) => (
-                <div key={event.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div 
+                  key={event.id} 
+                  className={`flex items-center justify-between p-3 bg-gray-50 rounded-lg ${
+                    event.isJobEvent ? 'cursor-pointer hover:bg-gray-100' : ''
+                  }`}
+                  onClick={() => handleEventClick(event)}
+                >
                   <div>
                     <div className="font-medium">{event.company_name}</div>
                     <div className="text-sm text-gray-600">{event.title}</div>
                     <div className="text-sm text-gray-500">
                       {event.date} {event.time && `${event.time}`}
                     </div>
+                    {event.isJobEvent && event.event_url && (
+                      <a 
+                        href={event.event_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        詳細を見る
+                      </a>
+                    )}
                   </div>
-                  <Badge className={getEventTypeColor(event.type)}>{event.type}</Badge>
+                  <div className="flex flex-col items-end space-y-1">
+                    <Badge className={getEventTypeColor(event.type)}>{event.type}</Badge>
+                    {event.isJobEvent && (
+                      <div className="text-xs text-gray-500">求人イベント</div>
+                    )}
+                  </div>
                 </div>
               ))}
             {events.filter((event) => new Date(event.date) >= today).length === 0 && (

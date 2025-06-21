@@ -5,8 +5,32 @@ import (
 
 	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/usecase"
+	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 	"github.com/gin-gonic/gin"
 )
+
+// CreateCompanyESRequest represents the request payload for creating CompanyES
+type CreateCompanyESRequest struct {
+	UserID      uint                        `json:"user_id" binding:"required"`
+	CompanyID   uint                        `json:"company_id" binding:"required"`
+	Title       string                      `json:"title" binding:"required"`
+	Content     string                      `json:"content" binding:"required"`
+	Summary     string                      `json:"summary"`
+	Advice      string                      `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem    `json:"advice_items"`
+}
+
+// UpdateCompanyESRequest represents the request payload for updating CompanyES
+type UpdateCompanyESRequest struct {
+	ID          uint                        `json:"id" binding:"required"`
+	UserID      uint                        `json:"user_id" binding:"required"`
+	CompanyID   uint                        `json:"company_id" binding:"required"`
+	Title       string                      `json:"title" binding:"required"`
+	Content     string                      `json:"content" binding:"required"`
+	Summary     string                      `json:"summary"`
+	Advice      string                      `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem    `json:"advice_items"`
+}
 
 func NewCompanyESController(useCase *usecase.CompanyESUseCase) *CompanyESController {
 	return &CompanyESController{useCase: useCase}
@@ -17,10 +41,21 @@ type CompanyESController struct {
 }
 
 func (c *CompanyESController) CreateCompanyES(ctx *gin.Context) {
-	var companyES domain.CompanyES
-	if err := ctx.ShouldBindJSON(&companyES); err != nil {
+	var req CreateCompanyESRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
 		return
+	}
+
+	// DTOからドメインエンティティに変換
+	companyES := domain.CompanyES{
+		UserID:      req.UserID,
+		CompanyID:   req.CompanyID,
+		Title:       req.Title,
+		Content:     req.Content,
+		AISummary:   req.Summary,
+		AIAdvice:    req.Advice,
+		AdviceItems: domain.AdviceItemsJSON(req.AdviceItems),
 	}
 
 	if err := c.useCase.CreateCompanyES(&companyES); err != nil {
@@ -118,18 +153,44 @@ func (c *CompanyESController) GetAllCompanyESs(ctx *gin.Context) {
 }
 
 func (c *CompanyESController) UpdateCompanyES(ctx *gin.Context) {
-	var companyES domain.CompanyES
-	if err := ctx.ShouldBindJSON(&companyES); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid input"})
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid CompanyES ID"})
 		return
+	}
+
+	var req UpdateCompanyESRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
+		return
+	}
+
+	// DTOからドメインエンティティに変換
+	companyES := domain.CompanyES{
+		ID:          uint(id),
+		UserID:      req.UserID,
+		CompanyID:   req.CompanyID,
+		Title:       req.Title,
+		Content:     req.Content,
+		AISummary:   req.Summary,
+		AIAdvice:    req.Advice,
+		AdviceItems: domain.AdviceItemsJSON(req.AdviceItems),
 	}
 
 	if err := c.useCase.UpdateCompanyES(&companyES); err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to update CompanyES"})
+		ctx.JSON(500, gin.H{"error": "Failed to update CompanyES", "details": err.Error()})
 		return
 	}
 
-	ctx.JSON(200, gin.H{"message": "CompanyES updated successfully"})
+	// 更新されたエンティティを企業情報と一緒に返す
+	updatedCompanyES, err := c.useCase.GetCompanyESWithCompany(uint(id))
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch updated CompanyES"})
+		return
+	}
+
+	ctx.JSON(200, updatedCompanyES)
 }
 
 func (c *CompanyESController) DeleteCompanyES(ctx *gin.Context) {
@@ -153,8 +214,9 @@ type AnalyzeRequest struct {
 }
 
 type AnalyzeResponse struct {
-	Summary string `json:"summary"`
-	Advice  string `json:"advice"`
+	Summary     string                   `json:"summary"`
+	Advice      string                   `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem `json:"adviceItems"`
 }
 
 func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
@@ -164,15 +226,16 @@ func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
 		return
 	}
 
-	summary, advice, err := c.useCase.AnalyzeContent(req.Content)
+	summary, advice, adviceItems, err := c.useCase.AnalyzeContent(req.Content)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
 		return
 	}
 
 	response := AnalyzeResponse{
-		Summary: summary,
-		Advice:  advice,
+		Summary:     summary,
+		Advice:      advice,
+		AdviceItems: adviceItems,
 	}
 
 	ctx.JSON(200, response)

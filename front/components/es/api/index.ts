@@ -34,11 +34,12 @@ export const createES = async (data: any) => {
   // フロントエンドのデータ構造をバックエンドの期待する形式に変換
   const backendData = {
     user_id: parseInt(data.user_id || "1"), // 現在はハードコーディング、認証実装後に変更
-    company_id: parseInt(data.company.id),
+    company_id: data.company.id, // 既にnumber型なのでparseIntは不要
     title: data.title || "",
     content: data.content,
     summary: data.summary || "",
-    advice: data.advice || ""
+    advice: data.advice || "",
+    advice_items: data.adviceItems || []
   };
 
   const response = await apiClient.post('/company-es', backendData);
@@ -50,11 +51,12 @@ export const updateES = async (id: string, data: any) => {
   const backendData = {
     id: parseInt(id),
     user_id: parseInt(data.user_id || "1"), // 現在はハードコーディング、認証実装後に変更
-    company_id: parseInt(data.company.id),
+    company_id: data.company.id, // 既にnumber型なのでparseIntは不要
     title: data.title || "",
     content: data.content,
     summary: data.summary || "",
-    advice: data.advice || ""
+    advice: data.advice || "",
+    advice_items: data.adviceItems || []
   };
 
   const response = await apiClient.put(`/company-es/${id}`, backendData);
