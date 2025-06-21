@@ -28,18 +28,16 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <header className="bg-white shadow-sm border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">カレンダー</h2>
-          <Button onClick={() => setShowEventForm(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            予定追加
-          </Button>
-        </div>
-      </header>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-semibold text-gray-900">カレンダー</h1>
+        <Button onClick={() => setShowEventForm(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          予定追加
+        </Button>
+      </div>
 
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="overflow-auto">
         <CalendarView events={events} />
       </main>
 
