@@ -6,7 +6,10 @@ import (
 	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
+	"time"
 )
 
 func NewInterviewController(useCase *usecase.InterviewUseCase) *InterviewController {
@@ -18,18 +21,36 @@ type InterviewController struct {
 }
 
 func (c *InterviewController) CreateInterview(ctx *gin.Context) {
+	fmt.Printf("Creating interview...\n")
+
 	var interview domain.Interview
 	if err := ctx.ShouldBindJSON(&interview); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid input"})
+		fmt.Printf("Error binding JSON: %v\n", err)
+		ctx.JSON(400, gin.H{"error": fmt.Sprintf("Invalid input: %v", err)})
 		return
 	}
 
+	// 認証ミドルウェアから UserID を取得
+	if userID, exists := ctx.Get("userID"); exists {
+		interview.UserID = userID.(uint)
+	} else if interview.UserID == 0 {
+		// 開発用フォールバック（JWT実装後は削除）
+		interview.UserID = 1
+	}
+
+	// デバッグ: 受信したデータを確認
+	fmt.Printf("Received interview data: %+v\n", interview)
+
+	// 音声ファイルは後で別エンドポイントでアップロード可能
+	// 今は音声ファイル無しでも面接記録を作成できるようにする
+
 	if err := c.useCase.CreateInterview(&interview); err != nil {
+		fmt.Printf("Error creating interview: %v\n", err)
 		ctx.JSON(500, gin.H{"error": "Failed to create Interview"})
 		return
 	}
 
-	ctx.JSON(201, gin.H{"message": "Interview created successfully"})
+	ctx.JSON(201, gin.H{"message": "Interview created successfully", "id": interview.ID})
 }
 
 func (c *InterviewController) GetInterview(ctx *gin.Context) {
@@ -40,7 +61,8 @@ func (c *InterviewController) GetInterview(ctx *gin.Context) {
 		return
 	}
 
-	interview, err := c.useCase.GetInterview(uint(id))
+	// Return interview with company information
+	interview, err := c.useCase.GetInterviewWithCompany(uint(id))
 	if err != nil {
 		ctx.JSON(404, gin.H{"error": "Interview not found"})
 		return
@@ -50,7 +72,42 @@ func (c *InterviewController) GetInterview(ctx *gin.Context) {
 }
 
 func (c *InterviewController) GetAllInterviews(ctx *gin.Context) {
-	interviews, err := c.useCase.GetAllInterviews()
+	// Return interviews with company information
+	interviews, err := c.useCase.GetAllInterviewsWithCompany()
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch Interviews"})
+		return
+	}
+	fmt.Println("Fetched interviews:", interviews)
+	ctx.JSON(200, interviews)
+}
+
+func (c *InterviewController) GetInterviewsByUserID(ctx *gin.Context) {
+	userIDStr := ctx.Param("userID")
+	userID, err := strconv.Atoi(userIDStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid User ID"})
+		return
+	}
+
+	interviews, err := c.useCase.GetInterviewsByUserIDWithCompany(uint(userID))
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to fetch Interviews"})
+		return
+	}
+
+	ctx.JSON(200, interviews)
+}
+
+func (c *InterviewController) GetInterviewsByCompanyID(ctx *gin.Context) {
+	companyIDStr := ctx.Param("companyID")
+	companyID, err := strconv.Atoi(companyIDStr)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid Company ID"})
+		return
+	}
+
+	interviews, err := c.useCase.GetInterviewsByCompanyIDWithCompany(uint(companyID))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch Interviews"})
 		return
@@ -60,18 +117,80 @@ func (c *InterviewController) GetAllInterviews(ctx *gin.Context) {
 }
 
 func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
-	var interview domain.Interview
-	if err := ctx.ShouldBindJSON(&interview); err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid input"})
+	// URLパラメータからIDを取得
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid Interview ID"})
 		return
 	}
 
+	// JSONリクエストボディを読み取り
+	var req struct {
+		CompanyID    uint   `json:"company_id"`
+		JobEventID   uint   `json:"job_event_id"`
+		InterviewAt  string `json:"interview_at"`
+		Stage        string `json:"stage"`
+		TextNote     string `json:"text_note"`
+		Location     string `json:"location"`
+		MeetingURL   string `json:"meeting_url"`
+		AudioSummary string `json:"audio_summary"` // AI要約の編集対応
+	}
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{
+			"error":   "Invalid input",
+			"details": err.Error(),
+		})
+		return
+	}
+
+	userID, err := strconv.ParseUint(userIDStr, 10, 32)
+	if err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid User-ID"})
+		return
+	}
+
+	// 日時のパース
+	interviewAt, err := time.Parse(time.RFC3339, req.InterviewAt)
+	if err != nil {
+		// 別のフォーマットも試す
+		interviewAt, err = time.Parse("2006-01-02T15:04", req.InterviewAt)
+		if err != nil {
+			ctx.JSON(400, gin.H{
+				"error":   "Invalid interview_at format",
+				"details": err.Error(),
+			})
+			return
+		}
+	}
+
+	// Interview構造体を作成
+	interview := domain.Interview{
+		ID:           uint(id),
+		CompanyID:    req.CompanyID,
+		JobEventID:   req.JobEventID,
+		UserID:       uint(userID),
+		InterviewAt:  interviewAt,
+		Stage:        req.Stage,
+		TextNote:     req.TextNote,
+		Location:     req.Location,
+		MeetingURL:   req.MeetingURL,
+		AudioSummary: req.AudioSummary, // AI要約の更新対応
+	}
+
+	fmt.Printf("Updating interview ID %d with data: %+v\n", id, interview)
+
+	// 面接を更新
 	if err := c.useCase.UpdateInterview(&interview); err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to update Interview"})
 		return
 	}
 
-	ctx.JSON(200, gin.H{"message": "Interview updated successfully"})
+	ctx.JSON(200, gin.H{
+		"message": "Interview updated successfully",
+		"id":      interview.ID,
+	})
 }
 
 func (c *InterviewController) DeleteInterview(ctx *gin.Context) {
@@ -89,6 +208,85 @@ func (c *InterviewController) DeleteInterview(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{"message": "Interview deleted successfully"})
 }
 
+// CreateInterviewWithAudio creates a new interview with audio file upload
+func (c *InterviewController) CreateInterviewWithAudio(ctx *gin.Context) {
+	fmt.Printf("Creating interview with audio...\n")
+
+	// Parse multipart form
+	if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
+		return
+	}
+
+	// Get interview data from form
+	var interview domain.Interview
+	interview.UserID = parseUintFromForm(ctx, "user_id", 5)
+	interview.CompanyID = parseUintFromForm(ctx, "company_id", 5)
+	interview.JobEventID = parseUintFromForm(ctx, "job_event_id", 5)
+	interview.Stage = ctx.PostForm("stage")
+	interview.TextNote = ctx.PostForm("text_note")
+	interview.Location = ctx.PostForm("location")
+	interview.MeetingURL = ctx.PostForm("meeting_url")
+
+	// デバッグ: 受信したデータを確認
+	fmt.Printf("Received interview data: %+v\n", interview)
+
+	// Parse interview date
+	if interviewAt := ctx.PostForm("interview_at"); interviewAt != "" {
+		if t, err := time.Parse(time.RFC3339, interviewAt); err == nil {
+			interview.InterviewAt = t
+		} else {
+			interview.InterviewAt = time.Now()
+		}
+	} else {
+		interview.InterviewAt = time.Now()
+	}
+
+	// Handle audio file
+	file, err := ctx.FormFile("audio_file")
+	if err == nil {
+		savePath := filepath.Join(os.TempDir(), file.Filename)
+		if err := ctx.SaveUploadedFile(file, savePath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "file save failed"})
+			return
+		}
+
+		// Process audio file
+		transcript, err := c.useCase.Transcribe(savePath)
+		if err != nil {
+			fmt.Printf("Error transcribing audio: %v\n", err)
+			// Continue without transcript
+		} else {
+			interview.Transcript = transcript
+
+			audioSummary, err := c.useCase.AnalyzeInterviewContent(transcript)
+			if err != nil {
+				fmt.Printf("Error analyzing interview content: %v\n", err)
+				// Continue without audio summary
+			} else {
+				interview.AudioSummary = audioSummary
+			}
+		}
+		interview.AudioFile = savePath
+	}
+
+	if err := c.useCase.CreateInterview(&interview); err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to create Interview"})
+		return
+	}
+
+	ctx.JSON(201, gin.H{"message": "Interview created successfully", "id": interview.ID})
+}
+
+func parseUintFromForm(ctx *gin.Context, key string, defaultValue uint) uint {
+	if val := ctx.PostForm(key); val != "" {
+		if parsed, err := strconv.ParseUint(val, 10, 32); err == nil {
+			return uint(parsed)
+		}
+	}
+	return defaultValue
+}
+
 func (c *InterviewController) UploadAudio(ctx *gin.Context) {
 	fmt.Printf("Uploading audio file...\n")
 	file, err := ctx.FormFile("file")
@@ -98,13 +296,11 @@ func (c *InterviewController) UploadAudio(ctx *gin.Context) {
 	}
 	fmt.Printf("File received: %s\n", file.Filename)
 
-	// 保存例: ./uploads/ に保存する
-	savePath := fmt.Sprintf("../../../../uploads/%s", file.Filename)
+	savePath := filepath.Join(os.TempDir(), file.Filename)
 	if err := ctx.SaveUploadedFile(file, savePath); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "file save failed"})
 		return
 	}
-	fmt.Printf("File saved to: %s\n", savePath)
 
 	// ここで音声ファイルの処理を行う
 	transcript, err := c.useCase.Transcribe(savePath)

@@ -14,3 +14,13 @@ type Company struct {
 	CreatedAt       time.Time `gorm:"autoCreateTime"`
 	UpdatedAt       time.Time `gorm:"autoUpdateTime"`
 }
+
+// CompanyResponse represents the response structure for a company
+type CompanyResponse struct {
+	ID          uint   `json:"id"`
+	Name        string `json:"name"`
+	WebURL      string `json:"website"`
+	Description string `json:"description"`
+	Img         string `json:"image"`
+	Industry    string `json:"industry"`
+}
