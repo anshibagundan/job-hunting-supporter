@@ -6,13 +6,13 @@ import { ESForm } from "@/components/es/es-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import type { ESEntry } from "@/lib/supabase";
-import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAuth";
 import { saveES } from "@/components/es/api";
 
 function ESNewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { userProfile } = useAuth();
+  const { userProfile } = useUserProfile();
 
   const companyId = searchParams.get("companyId");
 
