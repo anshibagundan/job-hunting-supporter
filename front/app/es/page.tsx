@@ -9,8 +9,8 @@ import { useAuth } from "@/hooks/useAuth"
 
 export default function ESPage() {
   const router = useRouter()
-  const { user, isLoading: authLoading } = useAuth()
-  const { entries, deleteEntry, isLoading } = useESEntries(user?.id || "")
+  const { user, userProfile, isLoading: authLoading } = useAuth()
+  const { entries, deleteEntry, isLoading } = useESEntries(userProfile?.id?.toString() || "")
 
   const handleSelectEntry = (id: string) => {
     router.push(`/es/${id}`)
@@ -26,46 +26,45 @@ export default function ESPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-muted-foreground">読み込み中...</div>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-muted-foreground">読み込み中...</div>
+        </div>
       </div>
     )
   }
 
-  if (!user) {
+  if (!user || !userProfile) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-muted-foreground">ユーザー情報を取得できませんでした</div>
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-muted-foreground">ユーザー情報を取得できませんでした</div>
+        </div>
       </div>
     )
   }
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex flex-col">
-        <header className="bg-white shadow-sm border-b px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">ES一覧</h2>
-        </header>
-        <main className="flex-1 p-6 flex items-center justify-center">
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-center items-center h-64">
           <div>読み込み中...</div>
-        </main>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 flex flex-col">
-      <header className="bg-white shadow-sm border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">ES一覧</h2>
-          <Button onClick={handleCreateNew} className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            新規作成
-          </Button>
-        </div>
-      </header>
+    <div className="container mx-auto px-4 py-6">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-semibold text-gray-900">ES一覧</h1>
+        <Button onClick={handleCreateNew} className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          新規作成
+        </Button>
+      </div>
 
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="overflow-auto">
         <ESList
           entries={entries}
           onSelectEntry={handleSelectEntry}

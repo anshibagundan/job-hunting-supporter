@@ -1,42 +1,32 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
+import { useUserProfile } from "@/hooks/useAuth"
+import { useAuth as useFirebaseAuth } from "@/contexts/auth-context"
+import { SignInButton } from "./header/signin-button"
+import { UserIcon } from "./header/user-icon"
+import { HamburgerMenu } from "./hamburger-menu"
+import { Logo } from "@/components/common/logo"
+import Link from "next/link"
 
 export function Header() {
-  const { user, loading, signInWithGoogle, signOut } = useAuth()
+  const { signInWithGoogle } = useFirebaseAuth()
+  const { user, userProfile, isLoading } = useUserProfile()
 
   return (
-    <header className="border-b px-4 py-3">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <h1 className="text-xl font-semibold">就活サポーター</h1>
-        <div className="flex items-center gap-4">
-          {!loading && !user && (
-            <>
-              <button 
-                onClick={signInWithGoogle}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-              >
-                Googleでサインイン
-              </button>
-            </>
+    <header className="border-b px-8 py-3 bg-white shadow-sm">
+      <div className="mx-auto flex justify-between items-center">
+        <Link href="/home" className="hover:opacity-80 transition-opacity">
+          <Logo size="md" />
+        </Link>
+        <div className="flex items-center gap-6">
+          {!isLoading && !user && (
+            <SignInButton onSignIn={signInWithGoogle} />
           )}
-          {!loading && user && (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <img 
-                  src={user.photoURL || ''} 
-                  alt={user.displayName || ''} 
-                  className="w-8 h-8 rounded-full"
-                />
-                <span className="text-sm">{user.displayName}</span>
-              </div>
-              <button 
-                onClick={signOut}
-                className="border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-md transition-colors"
-              >
-                サインアウト
-              </button>
-            </div>
+          {!isLoading && user && (
+            <>
+              <UserIcon user={user} userProfile={userProfile} />
+              <HamburgerMenu />
+            </>
           )}
         </div>
       </div>

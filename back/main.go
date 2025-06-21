@@ -163,12 +163,13 @@ func main() {
 		}
 		users := api.Group("/users")
 		{
-			users.POST("", userController.CreateUser)            // POST /api/users
-			users.POST("/sync", userController.SyncFirebaseUser) // POST /api/users/sync
-			users.GET("/:id", userController.GetUser)            // GET /api/users/:id
-			users.GET("", userController.GetAllUsers)            // GET /api/users
-			users.PUT("", userController.UpdateUser)             // PUT /api/users
-			users.DELETE("/:id", userController.DeleteUser)      // DELETE /api/users/:id
+			users.POST("", userController.CreateUser)                                 // POST /api/users
+			users.POST("/sync", userController.SyncFirebaseUser)                      // POST /api/users/sync
+			users.GET("/:id", userController.GetUser)                                 // GET /api/users/:id
+			users.GET("/firebase/:firebase_uid", userController.GetUserByFirebaseUID) // GET /api/users/firebase/:firebase_uid
+			users.GET("", userController.GetAllUsers)                                 // GET /api/users
+			users.PUT("/:id", userController.UpdateUser)                              // PUT /api/users/:id
+			users.DELETE("/:id", userController.DeleteUser)                           // DELETE /api/users/:id
 		}
 
 		companies := api.Group("/companies")
@@ -182,11 +183,13 @@ func main() {
 
 		jobEvents := api.Group("/job-events")
 		{
-			jobEvents.POST("", jobEventController.CreateJobEvent)       // POST /api/job-events
-			jobEvents.GET("/:id", jobEventController.GetJobEvent)       // GET /api/job-events/:id
-			jobEvents.GET("", jobEventController.GetAllJobEvents)       // GET /api/job-events
-			jobEvents.PUT("", jobEventController.UpdateJobEvent)        // PUT /api/job-events
-			jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent) // DELETE /api/job-events/:id
+			jobEvents.POST("", jobEventController.CreateJobEvent)                            // POST /api/job-events
+			jobEvents.GET("/:id", jobEventController.GetJobEvent)                            // GET /api/job-events/:id
+			jobEvents.GET("", jobEventController.GetAllJobEvents)                            // GET /api/job-events
+			jobEvents.GET("/company/:companyID", jobEventController.GetJobEventsByCompanyID) // GET /api/job-events/company/:companyID
+			jobEvents.GET("/user/:userID", jobEventController.GetJobEventsByUserID)          // GET /api/job-events/user/:userID
+			jobEvents.PUT("", jobEventController.UpdateJobEvent)                             // PUT /api/job-events
+			jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent)                      // DELETE /api/job-events/:id
 		}
 
 		companyESs := api.Group("/company-es")
@@ -197,7 +200,7 @@ func main() {
 			companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                               // GET /api/company-es/user/:userID
 			companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                      // GET /api/company-es/company/:companyID
 			companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
-			companyESs.PUT("", companyESController.UpdateCompanyES)                                                  // PUT /api/company-es
+			companyESs.PUT("/:id", companyESController.UpdateCompanyES)                                              // PUT /api/company-es/:id
 			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
 			companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
 		}

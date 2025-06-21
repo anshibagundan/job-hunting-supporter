@@ -1,25 +1,40 @@
-import { fetchAllCompanies, convertCompanyToFrontend } from '@/components/company/api';
+import { fetchAllCompanies, type CompanyResponse } from '@/components/company/api';
 
 // API client utilities and interfaces
 export interface Company {
-  id: string
+  id: number
   name: string
   industry: string
-  image?: string
-  description?: string
-  website?: string
+  image: string
+  description: string
+  website: string
   events: Event[]
 }
 
 export interface Event {
   id: string
-  company_id: string
+  company_id: number
   company_name: string
   type: "ES締切" | "面接" | "説明会" | "その他"
   title: string
   date: string
   time?: string
   notes?: string
+  // JobEventから来るデータ用の追加フィールド
+  job_title?: string
+  job_type?: string
+  job_description?: string
+  start_date?: string
+  deadline?: string
+  event_url?: string
+  isJobEvent?: boolean // JobEventから来たデータかどうかを識別
+}
+
+export interface AdviceItem {
+  category: string
+  achievement: number
+  reason: string
+  suggestion: string
 }
 
 export interface ESEntry {
@@ -29,6 +44,7 @@ export interface ESEntry {
   content: string
   summary?: string
   advice?: string
+  adviceItems?: AdviceItem[]
   created_at: string
 }
 
@@ -42,34 +58,18 @@ export interface InterviewLog {
   created_at: string
 }
 
+export interface UserDetails {
+  id: string
+  name: string
+  email: string
+  photo_url?: string
+  created_at: string
+  updated_at: string
+}
+
 // TODO: 将来のAPI実装用
-// 現在は一時的にローカルストレージを使用
+// 現在はJobEvent APIを使用してイベントを管理
 export const storage = {
-  getEvents: (): Event[] => {
-    if (typeof window === "undefined") return []
-    const data = localStorage.getItem("job-hunting-events")
-    return data ? JSON.parse(data) : []
-  },
-
-  saveEvents: (events: Event[]) => {
-    if (typeof window === "undefined") return
-    localStorage.setItem("job-hunting-events", JSON.stringify(events))
-  },
-
-  getESEntries: (): ESEntry[] => {
-    if (typeof window === "undefined") return []
-    const data = localStorage.getItem("job-hunting-es")
-    if (data) {
-      return JSON.parse(data)
-    }
-    return []
-  },
-
-  saveESEntries: (entries: ESEntry[]) => {
-    if (typeof window === "undefined") return
-    localStorage.setItem("job-hunting-es", JSON.stringify(entries))
-  },
-
   getInterviewLogs: (): InterviewLog[] => {
     if (typeof window === "undefined") return []
     const data = localStorage.getItem("job-hunting-interviews")
@@ -86,10 +86,10 @@ export const storage = {
     try {
       // APIから企業データを取得
       const backendCompanies = await fetchAllCompanies();
-      const companies = backendCompanies.map(convertCompanyToFrontend);
-
-      // ローカルストレージにキャッシュとして保存
-      localStorage.setItem("job-hunting-companies", JSON.stringify(companies));
+      const companies: Company[] = backendCompanies.map(company => ({
+        ...company,
+        events: [] // デフォルトで空配列
+      }));
       return companies;
     } catch (error) {
       console.error('Failed to fetch companies from API:', error);

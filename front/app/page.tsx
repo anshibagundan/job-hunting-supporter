@@ -4,6 +4,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Calendar, FileText, Mic } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { Logo } from "@/components/common/logo"
 
 export default function Home() {
   const router = useRouter()
@@ -20,6 +21,9 @@ export default function Home() {
       {!loading && !user && (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
           <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="flex justify-center mb-6">
+              <Logo size="xl" showText={false} />
+            </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">就活ダッシュボード</h1>
             <p className="text-gray-600 mb-8">
               ES管理・面接予定・振り返りを一元管理して、効率的な就職活動をサポートします。
