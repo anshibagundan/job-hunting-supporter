@@ -50,12 +50,22 @@ export interface ESEntry {
 
 export interface InterviewLog {
   id: string
-  company_name: string
-  date: string
+  company: Company
+  jobEventId: string
+  userId: string
+  interviewAt: string
+  stage?: string
+  location?: string
+  meetingUrl?: string
+
+  audioFile?: File
   transcript?: string
-  summary?: string
-  questions?: string[]
-  created_at: string
+
+  audioSummary?: string
+  textNote?: string
+
+  createdAt: string
+  updatedAt: string
 }
 
 export interface UserDetails {
@@ -70,17 +80,6 @@ export interface UserDetails {
 // TODO: 将来のAPI実装用
 // 現在はJobEvent APIを使用してイベントを管理
 export const storage = {
-  getInterviewLogs: (): InterviewLog[] => {
-    if (typeof window === "undefined") return []
-    const data = localStorage.getItem("job-hunting-interviews")
-    return data ? JSON.parse(data) : []
-  },
-
-  saveInterviewLogs: (logs: InterviewLog[]) => {
-    if (typeof window === "undefined") return
-    localStorage.setItem("job-hunting-interviews", JSON.stringify(logs))
-  },
-
   getCompanies: async (): Promise<Company[]> => {
     if (typeof window === "undefined") return []
     try {

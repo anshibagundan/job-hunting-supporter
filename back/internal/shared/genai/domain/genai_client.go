@@ -9,5 +9,6 @@ type AdviceItem struct {
 
 type GenAIClient interface {
 	GenerateTranscriptFromAudio(path string) (string, error)
+	AnalyzeInterviewContent(content string) (summary string, err error)
 	AnalyzeESContent(content string) (summary string, advice string, adviceItems []AdviceItem, err error)
 }

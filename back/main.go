@@ -10,7 +10,11 @@ import (
 	// 生成AI関連
 	genai_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/infrastructure"
 
+	// 認証関連
+	auth_controller "github.com/anshibagundan/job-hunting-supporter/internal/auth/controller"
 	user_controller "github.com/anshibagundan/job-hunting-supporter/internal/user/controller"
+	"github.com/anshibagundan/job-hunting-supporter/pkg/auth"
+	"github.com/anshibagundan/job-hunting-supporter/pkg/firebase"
 	// ユーザー関連
 	user_infrastructure "github.com/anshibagundan/job-hunting-supporter/internal/user/infrastructure"
 	user_usecase "github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
@@ -85,7 +89,8 @@ func main() {
 	companyController := company_controller.NewCompanyController(companyUseCase)
 
 	interviewRepo := interview_infrastructure.NewInterviewRepository(db)
-	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, genAIClient)
+	interviewService := interview_infrastructure.NewInterviewService(db)
+	interviewUseCase := interview_usecase.NewInterviewUseCase(interviewRepo, interviewService, genAIClient)
 	interviewController := interview_controller.NewInterviewController(interviewUseCase)
 
 	jobEventRepo := jobevent_infrastructure.NewJobEventRepository(db)
@@ -95,6 +100,17 @@ func main() {
 	companyESRepo := companyes_infrastructure.NewCompanyESRepository(db)
 	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo, esAnalysisClient)
 	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
+
+	// JWT初期化
+	auth.InitJWT()
+
+	// Firebase Admin SDK初期化
+	if err := firebase.InitFirebaseAdmin(); err != nil {
+		log.Printf("Firebase initialization failed: %v", err)
+	}
+
+	// 認証コントローラー初期化
+	authController := auth_controller.NewAuthController(userUseCase)
 
 	router := gin.Default()
 
@@ -121,6 +137,30 @@ func main() {
 	router.Handle("GET", "/health", health)
 	api := router.Group("/api")
 	{
+		// 認証エンドポイント（認証不要）
+		api.POST("/auth/firebase-login", authController.LoginWithFirebase)
+		api.POST("/auth/logout", authController.Logout)
+
+		// 認証が必要なエンドポイント
+		protected := api.Group("")
+		//protected.Use(middleware.AuthRequired())
+		{
+			protected.GET("/auth/me", authController.GetCurrentUser)
+
+			// 認証が必要なエンドポイント
+			interviews := protected.Group("/interviews")
+			{
+				interviews.POST("", interviewController.CreateInterview)                     // JSON用
+				interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
+				interviews.GET("/:id", interviewController.GetInterview)
+				interviews.GET("", interviewController.GetAllInterviews)
+				interviews.PUT("/:id", interviewController.UpdateInterview)
+				interviews.DELETE("/:id", interviewController.DeleteInterview)
+				interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
+				interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
+				interviews.POST("/upload-audio", interviewController.UploadAudio)
+			}
+		}
 		users := api.Group("/users")
 		{
 			users.POST("", userController.CreateUser)                                 // POST /api/users
@@ -139,20 +179,6 @@ func main() {
 			companies.GET("", companyController.GetAllCompanies)      // GET /api/companies
 			companies.PUT("", companyController.UpdateCompany)        // PUT /api/companies
 			companies.DELETE("/:id", companyController.DeleteCompany) // DELETE /api/companies/:id
-		}
-
-		interviews := api.Group("/interviews")
-		{
-			interviews.POST("", interviewController.CreateInterview)       // POST /api/interviews
-			interviews.GET("/:id", interviewController.GetInterview)       // GET /api/interviews/:id
-			interviews.GET("", interviewController.GetAllInterviews)       // GET /api/interviews
-			interviews.PUT("", interviewController.UpdateInterview)        // PUT /api/interviews
-			interviews.DELETE("/:id", interviewController.DeleteInterview) // DELETE /api/interviews/:id
-
-			audio := interviews.Group("/audio")
-			{
-				audio.POST("/upload", interviewController.UploadAudio) // PUT /api/interviews/audio/upload
-			}
 		}
 
 		jobEvents := api.Group("/job-events")

@@ -31,8 +31,11 @@ func NewGenAIClient(apiKey string) domain.GenAIClient {
 func (g *GenAIClientImpl) GenerateTranscriptFromAudio(path string) (string, error) {
 	fmt.Println("Generating transcript from audio file:", path)
 	ctx := context.Background()
-	uploadedFile, err := g.client.Files.UploadFromPath(ctx, path, nil)
+	uploadedFile, err := g.client.Files.UploadFromPath(ctx, path, &genai.UploadFileConfig{
+		MIMEType: "audio/wav",
+	})
 	if err != nil {
+		log.Printf("upload failed: %v", err) // ← ここ
 		return "", fmt.Errorf("upload failed: %w", err)
 	}
 
@@ -49,9 +52,45 @@ func (g *GenAIClientImpl) GenerateTranscriptFromAudio(path string) (string, erro
 
 	resp, err := g.client.Models.GenerateContent(ctx, "gemini-2.0-flash", contents, nil)
 	if err != nil {
+		log.Printf("generate content failed: %v", err)
 		return "", fmt.Errorf("generate content failed: %w", err)
 	}
+
 	return resp.Text(), nil
+}
+
+func (g *GenAIClientImpl) AnalyzeInterviewContent(content string) (summary string, err error) {
+	ctx := context.Background()
+
+	// 要約を生成するプロンプト
+	summaryPrompt := fmt.Sprintf(`
+	以下のテキストは、ある候補者との面接内容を文字起こししたものです。
+	
+	この内容を読み取り、以下の観点に基づいて要約してください：
+	
+	- 面接全体の流れ（質問→回答など）
+	- 候補者の話した経験やスキル
+	- 強み・弱み、アピールポイント
+	- 面接官からのフィードバック（あれば）
+	- 総合的な印象（面接の手応えなど）
+	
+	【面接文字起こし】
+	%s
+	`, content)
+
+	summaryContents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(summaryPrompt),
+		}, genai.RoleUser),
+	}
+
+	summaryResp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", summaryContents, nil)
+	if err != nil {
+		return "", fmt.Errorf("summary generation failed: %w", err)
+	}
+
+	return summaryResp.Text(), nil
+
 }
 
 func (g *GenAIClientImpl) AnalyzeESContent(content string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
