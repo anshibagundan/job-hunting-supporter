@@ -64,3 +64,8 @@ rollback-db-schemer: drop-schema
 db-console:
 	@echo "Connecting to Postgres database..."
 	docker exec -it $(POSTGRES_CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB)
+
+# seedを実行
+seed:
+	@echo "Seeding the database..."
+	docker exec -i $(POSTGRES_CONTAINER) psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) < database/seeds/001_initial_seed.sql
