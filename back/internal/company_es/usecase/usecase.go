@@ -52,9 +52,9 @@ func (u *CompanyESUseCase) DeleteCompanyES(id uint) error {
 }
 
 // AnalyzeContent - 内容を分析するがDBには保存しない
-func (u *CompanyESUseCase) AnalyzeContent(content string) (summary string, advice string, err error) {
+func (u *CompanyESUseCase) AnalyzeContent(content string) (summary string, advice string, adviceItems []genaidomain.AdviceItem, err error) {
 	if content == "" {
-		return "", "", fmt.Errorf("content is empty")
+		return "", "", nil, fmt.Errorf("content is empty")
 	}
 
 	// GenAI クライアントを使用して実際の分析を実行

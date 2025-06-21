@@ -5,6 +5,7 @@ import (
 
 	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/usecase"
+	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -170,8 +171,9 @@ type AnalyzeRequest struct {
 }
 
 type AnalyzeResponse struct {
-	Summary string `json:"summary"`
-	Advice  string `json:"advice"`
+	Summary     string                        `json:"summary"`
+	Advice      string                        `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem      `json:"adviceItems"`
 }
 
 func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
@@ -181,15 +183,16 @@ func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
 		return
 	}
 
-	summary, advice, err := c.useCase.AnalyzeContent(req.Content)
+	summary, advice, adviceItems, err := c.useCase.AnalyzeContent(req.Content)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
 		return
 	}
 
 	response := AnalyzeResponse{
-		Summary: summary,
-		Advice:  advice,
+		Summary:     summary,
+		Advice:      advice,
+		AdviceItems: adviceItems,
 	}
 
 	ctx.JSON(200, response)

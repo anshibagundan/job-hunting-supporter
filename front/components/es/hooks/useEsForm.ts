@@ -11,6 +11,7 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
     content: entry?.content || "",
     summary: entry?.summary || "",
     advice: entry?.advice || "",
+    adviceItems: entry?.adviceItems || [],
     created_at: entry?.created_at || "",
   }), [entry])
 
@@ -55,6 +56,7 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
       content: "",
       summary: "",
       advice: "",
+      adviceItems: [],
       created_at: "",
     })
   }, [])
