@@ -26,8 +26,18 @@ export const fetchCompanyById = async (id: string): Promise<CompanyResponse> => 
   return response.data;
 };
 
+// 企業作成用の型定義
+export interface CreateCompanyRequest {
+  name: string;
+  website: string;
+  description: string;
+  image: string;
+  industry: string;
+  scrape_target_url: string;
+}
+
 // 企業作成
-export const createCompany = async (data: Omit<CompanyResponse, 'ID' | 'CreatedAt' | 'UpdatedAt' | 'LastScrapeTime'>) => {
+export const createCompany = async (data: CreateCompanyRequest) => {
   const response = await apiClient.post('/companies', data);
   return response.data;
 };
