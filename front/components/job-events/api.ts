@@ -2,6 +2,7 @@ import { api } from '@/lib/api-client';
 
 export interface JobEventResponse {
   id: number;
+  user_id: number;
   company_id: number;
   job_title: string;
   job_type: string;
@@ -14,6 +15,7 @@ export interface JobEventResponse {
 }
 
 export interface JobEventRequest {
+  user_id: number;
   company_id: number;
   job_title: string;
   job_type: string;
@@ -25,6 +27,10 @@ export interface JobEventRequest {
 
 export const fetchJobEventsByCompanyID = async (companyID: string): Promise<JobEventResponse[]> => {
   return api.get(`/job-events/company/${companyID}`);
+};
+
+export const fetchJobEventsByUserID = async (userID: string): Promise<JobEventResponse[]> => {
+  return api.get(`/job-events/user/${userID}`);
 };
 
 export const fetchAllJobEvents = async (): Promise<JobEventResponse[]> => {

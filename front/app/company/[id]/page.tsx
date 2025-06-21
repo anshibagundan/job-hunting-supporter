@@ -52,15 +52,10 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // 面接ログとイベントはまだローカルストレージから取得（必要に応じて後でAPI化）
+      // 面接ログはまだローカルストレージから取得（必要に応じて後でAPI化）
       const allInterviewLogs = storage.getInterviewLogs()
       const companyInterviewLogs = allInterviewLogs.filter(log => log.company_name === foundCompany.name)
       setInterviewLogs(companyInterviewLogs)
-
-      // ローカルストレージのイベントのみ取得（JobEventsは別途APIから取得）
-      const allEvents = storage.getEvents()
-      const companyEvents = allEvents.filter(event => event.company_name === foundCompany.name)
-      setEvents(companyEvents)
 
     } catch (error) {
       console.error('企業データの読み込みに失敗しました:', error)

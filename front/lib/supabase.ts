@@ -60,19 +60,8 @@ export interface UserDetails {
 }
 
 // TODO: 将来のAPI実装用
-// 現在は一時的にローカルストレージを使用
+// 現在はJobEvent APIを使用してイベントを管理
 export const storage = {
-  getEvents: (): Event[] => {
-    if (typeof window === "undefined") return []
-    const data = localStorage.getItem("job-hunting-events")
-    return data ? JSON.parse(data) : []
-  },
-
-  saveEvents: (events: Event[]) => {
-    if (typeof window === "undefined") return
-    localStorage.setItem("job-hunting-events", JSON.stringify(events))
-  },
-
   getInterviewLogs: (): InterviewLog[] => {
     if (typeof window === "undefined") return []
     const data = localStorage.getItem("job-hunting-interviews")

@@ -24,6 +24,8 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
     date: "",
     time: "",
     notes: "",
+    start_date: "",
+    event_url: "",
   })
 
   const [companies, setCompanies] = useState<Company[]>([])
@@ -52,6 +54,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
       date: formData.date,
       time: formData.time || undefined,
       notes: formData.notes || undefined,
+      start_date: formData.start_date || undefined,
+      event_url: formData.event_url || undefined,
+      isJobEvent: true, // JobEvent として作成
     })
   }
 
@@ -133,6 +138,26 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
               onChange={(e) => setFormData((prev) => ({ ...prev, time: e.target.value }))}
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">応募開始日</label>
+          <Input
+            type="date"
+            value={formData.start_date}
+            onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
+            placeholder="応募開始日"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2">イベントURL</label>
+          <Input
+            type="url"
+            value={formData.event_url}
+            onChange={(e) => setFormData((prev) => ({ ...prev, event_url: e.target.value }))}
+            placeholder="https://example.com/event"
+          />
         </div>
 
         <div>
