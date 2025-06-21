@@ -2,14 +2,15 @@ package controller
 
 import (
 	"fmt"
-	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/domain"
-	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/domain"
+	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
+	"github.com/gin-gonic/gin"
 )
 
 func NewInterviewController(useCase *usecase.InterviewUseCase) *InterviewController {
@@ -133,7 +134,7 @@ func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
 	}
 
 	// IDを設定
-	interview.ID = uint(id)
+	interview.ID = uint(id)	
 
 	// 面接を更新
 	if err := c.useCase.UpdateInterview(&interview); err != nil {

@@ -3,7 +3,7 @@
 import React from "react"
 import { usePathname, useRouter } from "next/navigation"
 import Link from "next/link"
-import { X, Menu, Calendar, FileText, Mic, Building2, Settings, LogOut } from "lucide-react"
+import { X, Menu, Calendar, FileText, Mic, Building2, Settings, LogOut, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -20,7 +20,8 @@ export function HamburgerMenu() {
   const { signOut } = useAuth()
 
   const menuItems = [
-    { href: "/home", label: "企業一覧", icon: Building2 },
+    { href: "/home", label: "ホーム", icon: Home },
+    { href: "/company", label: "企業一覧", icon: Building2 },
     { href: "/calendar", label: "カレンダー", icon: Calendar },
     { href: "/es", label: "ES管理", icon: FileText },
     { href: "/interview", label: "面接ログ", icon: Mic },

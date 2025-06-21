@@ -79,3 +79,15 @@ export const saveES = async (data: any) => {
 export const removeES = async (id: string) => {
   return deleteES(id);
 };
+
+// ES自動生成
+export const generateESContent = async (baseES: string, companyDescription: string, esTitle: string) => {
+  const requestData = {
+    base_es: baseES,
+    company_description: companyDescription,
+    es_title: esTitle
+  };
+
+  const response = await apiClient.post('/company-es/generate', requestData);
+  return response.data;
+};
