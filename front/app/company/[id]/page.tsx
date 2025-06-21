@@ -31,7 +31,7 @@ export default function CompanyDetailPage() {
   const loadCompanyData = async () => {
     try {
       const companies = await storage.getCompanies()
-      const foundCompany = companies.find(c => c.id === companyId)
+      const foundCompany = companies.find(c => c.id.toString() === companyId)
 
       if (!foundCompany) {
         router.push('/home')
