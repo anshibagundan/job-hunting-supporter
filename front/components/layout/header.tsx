@@ -1,6 +1,7 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
+import { useAuth } from "@/hooks/useAuth"
+import { useAuth as useFirebaseAuth } from "@/contexts/auth-context"
 import { SignInButton } from "./header/signin-button"
 import { UserIcon } from "./header/user-icon"
 import { HamburgerMenu } from "./hamburger-menu"
@@ -8,7 +9,8 @@ import { Logo } from "@/components/common/logo"
 import Link from "next/link"
 
 export function Header() {
-  const { user, loading, signInWithGoogle } = useAuth()
+  const { signInWithGoogle } = useFirebaseAuth()
+  const { user, userProfile, isLoading } = useAuth()
 
   return (
     <header className="border-b px-8 py-3 bg-white shadow-sm">
@@ -17,12 +19,12 @@ export function Header() {
           <Logo size="md" />
         </Link>
         <div className="flex items-center gap-6">
-          {!loading && !user && (
+          {!isLoading && !user && (
             <SignInButton onSignIn={signInWithGoogle} />
           )}
-          {!loading && user && (
+          {!isLoading && user && (
             <>
-              <UserIcon user={user} />
+              <UserIcon user={user} userProfile={userProfile} />
               <HamburgerMenu />
             </>
           )}
