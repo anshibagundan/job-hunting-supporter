@@ -30,6 +30,10 @@ func (u *UserUseCase) UpdateUser(user *domain.User) error {
 	return u.repo.Update(user)
 }
 
+func (u *UserUseCase) UpdateUserPartial(id uint, updates map[string]interface{}) error {
+	return u.repo.UpdatePartial(id, updates)
+}
+
 func (u *UserUseCase) DeleteUser(id uint) error {
 	return u.repo.Delete(id)
 }
