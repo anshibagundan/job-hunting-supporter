@@ -2,12 +2,13 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Event } from "@/lib/supabase"
+import type { Event, Company } from "@/lib/supabase"
+import { storage } from "@/lib/supabase"
 
 interface EventFormProps {
   onSubmit: (event: Omit<Event, "id">) => void
@@ -16,6 +17,7 @@ interface EventFormProps {
 
 export function EventForm({ onSubmit, onCancel }: EventFormProps) {
   const [formData, setFormData] = useState({
+    company_id: "",
     company_name: "",
     type: "" as Event["type"],
     title: "",
@@ -24,10 +26,26 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
     notes: "",
   })
 
+  const [companies, setCompanies] = useState<Company[]>([])
+
+  useEffect(() => {
+    // 企業リストを取得
+    const fetchCompanies = async () => {
+      try {
+        const companiesData = await storage.getCompanies()
+        setCompanies(companiesData)
+      } catch (error) {
+        console.error('Failed to load companies:', error)
+      }
+    }
+
+    fetchCompanies()
+  }, [])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onSubmit({
-      company_id: "", // Not used in current implementation
+      company_id: parseInt(formData.company_id) || 0, // 数値に変換
       company_name: formData.company_name,
       type: formData.type,
       title: formData.title,
@@ -43,11 +61,30 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2">企業名</label>
-          <Input
-            value={formData.company_name}
-            onChange={(e) => setFormData((prev) => ({ ...prev, company_name: e.target.value }))}
-            required
-          />
+          <Select
+            value={formData.company_id}
+            onValueChange={(value) => {
+              const company = companies.find((c) => c.id.toString() === value)
+              if (company) {
+                setFormData((prev) => ({ 
+                  ...prev, 
+                  company_id: value,
+                  company_name: company.name 
+                }))
+              }
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="企業を選択" />
+            </SelectTrigger>
+            <SelectContent>
+              {companies.map((company) => (
+                <SelectItem key={company.id} value={company.id.toString()}>
+                  {company.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>

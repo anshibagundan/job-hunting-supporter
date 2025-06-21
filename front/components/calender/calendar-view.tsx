@@ -160,8 +160,23 @@ export function CalendarView({ events }: CalendarViewProps) {
                     <div className="text-sm text-gray-500">
                       {event.date} {event.time && `${event.time}`}
                     </div>
+                    {event.isJobEvent && event.event_url && (
+                      <a 
+                        href={event.event_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-blue-600 hover:underline"
+                      >
+                        詳細を見る
+                      </a>
+                    )}
                   </div>
-                  <Badge className={getEventTypeColor(event.type)}>{event.type}</Badge>
+                  <div className="flex flex-col items-end space-y-1">
+                    <Badge className={getEventTypeColor(event.type)}>{event.type}</Badge>
+                    {event.isJobEvent && (
+                      <div className="text-xs text-gray-500">求人イベント</div>
+                    )}
+                  </div>
                 </div>
               ))}
             {events.filter((event) => new Date(event.date) >= today).length === 0 && (

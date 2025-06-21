@@ -20,6 +20,14 @@ export interface Event {
   date: string
   time?: string
   notes?: string
+  // JobEventから来るデータ用の追加フィールド
+  job_title?: string
+  job_type?: string
+  job_description?: string
+  start_date?: string
+  deadline?: string
+  event_url?: string
+  isJobEvent?: boolean // JobEventから来たデータかどうかを識別
 }
 
 export interface ESEntry {

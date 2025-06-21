@@ -6,14 +6,41 @@ import { Button } from "@/components/ui/button"
 import { CalendarView } from "@/components/calender/calendar-view"
 import { EventForm } from "@/components/calender/event-form"
 import { storage, type Event } from "@/lib/supabase"
+import { fetchAllJobEvents } from "@/components/job-events/api"
+import { jobEventToEvent } from "@/lib/job-event-utils"
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [showEventForm, setShowEventForm] = useState(false)
 
   useEffect(() => {
-    // Load initial data
-    setEvents(storage.getEvents())
+    const loadAllEvents = async () => {
+      try {
+        // ローカルストレージのイベントを取得
+        const localEvents = storage.getEvents()
+        
+        // APIからJobEventsを取得して変換
+        const jobEvents = await fetchAllJobEvents()
+        const companies = await storage.getCompanies()
+        
+        const convertedJobEvents: Event[] = []
+        jobEvents.forEach(jobEvent => {
+          const company = companies.find(c => c.id === jobEvent.company_id)
+          if (company) {
+            convertedJobEvents.push(jobEventToEvent(jobEvent, company.name))
+          }
+        })
+        
+        // 両方のイベントを統合
+        setEvents([...localEvents, ...convertedJobEvents])
+      } catch (error) {
+        console.error('Failed to load events:', error)
+        // エラー時はローカルストレージのイベントのみ表示
+        setEvents(storage.getEvents())
+      }
+    }
+
+    loadAllEvents()
   }, [])
 
   const handleAddEvent = (event: Omit<Event, "id">) => {
