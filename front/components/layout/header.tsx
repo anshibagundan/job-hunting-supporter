@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/hooks/useAuth"
+import { useUserProfile } from "@/hooks/useAuth"
 import { useAuth as useFirebaseAuth } from "@/contexts/auth-context"
 import { SignInButton } from "./header/signin-button"
 import { UserIcon } from "./header/user-icon"
@@ -10,7 +10,7 @@ import Link from "next/link"
 
 export function Header() {
   const { signInWithGoogle } = useFirebaseAuth()
-  const { user, userProfile, isLoading } = useAuth()
+  const { user, userProfile, isLoading } = useUserProfile()
 
   return (
     <header className="border-b px-8 py-3 bg-white shadow-sm">

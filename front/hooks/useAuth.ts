@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth as useFirebaseAuth } from '@/contexts/auth-context';
 import { fetchUserByFirebaseUID, type UserProfile } from '@/components/user/api';
 
-export function useAuth() {
+export function useUserProfile() {
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -28,9 +28,9 @@ export function useAuth() {
     }
   }, [firebaseUser, firebaseLoading]);
 
-  return { 
-    user: firebaseUser, 
-    userProfile, 
-    isLoading: firebaseLoading || isLoading 
+  return {
+    user: firebaseUser,
+    userProfile,
+    isLoading: firebaseLoading || isLoading
   };
 }

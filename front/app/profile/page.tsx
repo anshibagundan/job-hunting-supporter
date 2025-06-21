@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { useState } from "react";
 import { updateUserProfile } from "@/components/user/api";
 
 export default function ProfilePage() {
-  const { user, userProfile, isLoading } = useAuth();
+  const { user, userProfile, isLoading } = useUserProfile();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
