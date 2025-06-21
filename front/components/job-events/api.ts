@@ -29,6 +29,10 @@ export const fetchJobEventsByCompanyID = async (companyID: string): Promise<JobE
   return api.get(`/job-events/company/${companyID}`);
 };
 
+export const fetchJobEvent = async (id: string): Promise<JobEventResponse> => {
+  return api.get(`/job-events/${id}`);
+};
+
 export const fetchJobEventsByUserID = async (userID: string): Promise<JobEventResponse[]> => {
   return api.get(`/job-events/user/${userID}`);
 };
@@ -42,7 +46,12 @@ export const createJobEvent = async (jobEvent: JobEventRequest): Promise<JobEven
 };
 
 export const updateJobEvent = async (id: string, jobEvent: JobEventRequest): Promise<JobEventResponse> => {
-  return api.put(`/job-events/${id}`, jobEvent);
+  // バックエンドではリクエストボディにIDを含める必要がある
+  const updateData = {
+    id: parseInt(id),
+    ...jobEvent
+  };
+  return api.put('/job-events', updateData);
 };
 
 export const deleteJobEvent = async (id: string): Promise<void> => {
