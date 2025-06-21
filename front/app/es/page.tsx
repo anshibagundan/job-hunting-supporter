@@ -5,11 +5,11 @@ import { useESEntries } from "@/components/es/hooks/useEsEntries"
 import { ESList } from "@/components/es/es-list"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { useAuth } from "@/hooks/useAuth"
+import { useUserProfile } from "@/hooks/useAuth"
 
 export default function ESPage() {
   const router = useRouter()
-  const { user, userProfile, isLoading: authLoading } = useAuth()
+  const { user, userProfile, isLoading: authLoading } = useUserProfile()
   const { entries, deleteEntry, isLoading } = useESEntries(userProfile?.id?.toString() || "")
 
   const handleSelectEntry = (id: string) => {
