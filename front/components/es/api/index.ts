@@ -34,7 +34,7 @@ export const createES = async (data: any) => {
   // フロントエンドのデータ構造をバックエンドの期待する形式に変換
   const backendData = {
     user_id: parseInt(data.user_id || "1"), // 現在はハードコーディング、認証実装後に変更
-    company_id: parseInt(data.company.id || "1"), // 既にnumber型なのでparseIntは不要
+    company_id: parseInt(data.company.id || "1"),
     title: data.title || "",
     content: data.content,
     summary: data.summary || "",
@@ -51,7 +51,7 @@ export const updateES = async (id: string, data: any) => {
   const backendData = {
     id: parseInt(id),
     user_id: parseInt(data.user_id || "1"), // 現在はハードコーディング、認証実装後に変更
-    company_id: parseInt(data.company.id || "1"), // 既にnumber型なのでparseIntは不要
+    company_id: parseInt(data.company.id || "1"),
     title: data.title || "",
     content: data.content,
     summary: data.summary || "",
