@@ -46,11 +46,33 @@ func (u *CompanyESUseCase) GetAllCompanyESs() ([]*domain.CompanyES, error) {
 	return u.repo.GetAll()
 }
 
-func (u *CompanyESUseCase) UpdateCompanyES(companyES *domain.CompanyES) error {
+func (u *CompanyESUseCase) UpdateCompanyES(companyES *domain.CompanyES, requestUserID uint) error {
+	// 既存のESを取得して権限チェック
+	existing, err := u.repo.FindByID(companyES.ID)
+	if err != nil {
+		return err
+	}
+	
+	// 権限チェック：自分のESのみ更新可能
+	if existing.UserID != requestUserID {
+		return fmt.Errorf("access denied: you can only update your own ES")
+	}
+	
 	return u.repo.Update(companyES)
 }
 
-func (u *CompanyESUseCase) DeleteCompanyES(id uint) error {
+func (u *CompanyESUseCase) DeleteCompanyES(id uint, requestUserID uint) error {
+	// 既存のESを取得して権限チェック
+	existing, err := u.repo.FindByID(id)
+	if err != nil {
+		return err
+	}
+	
+	// 権限チェック：自分のESのみ削除可能
+	if existing.UserID != requestUserID {
+		return fmt.Errorf("access denied: you can only delete your own ES")
+	}
+	
 	return u.repo.Delete(id)
 }
 
@@ -65,24 +87,36 @@ func (u *CompanyESUseCase) AnalyzeContent(content string) (summary string, advic
 }
 
 // Methods to get responses with Company details
-func (u *CompanyESUseCase) GetCompanyESWithCompany(id uint) (*domain.CompanyESResponse, error) {
-	return u.repo.FindByIDWithCompany(id)
+func (u *CompanyESUseCase) GetCompanyESWithCompany(id uint, requestUserID uint) (*domain.CompanyESResponse, error) {
+	companyES, err := u.repo.FindByIDWithCompany(id)
+	if err != nil {
+		return nil, err
+	}
+	
+	// 権限チェック：自分のESデータのみアクセス可能
+	if companyES.UserID != requestUserID {
+		return nil, fmt.Errorf("access denied: you can only view your own ES")
+	}
+	
+	return companyES, nil
 }
 
 func (u *CompanyESUseCase) GetCompanyESsByUserIDWithCompany(userID uint) ([]*domain.CompanyESResponse, error) {
 	return u.repo.FindByUserIDWithCompany(userID)
 }
 
-func (u *CompanyESUseCase) GetCompanyESsByCompanyIDWithCompany(companyID uint) ([]*domain.CompanyESResponse, error) {
-	return u.repo.FindByCompanyIDWithCompany(companyID)
+func (u *CompanyESUseCase) GetCompanyESsByCompanyIDWithCompany(companyID uint, requestUserID uint) ([]*domain.CompanyESResponse, error) {
+	// ユーザーIDと企業IDで絞り込んで取得
+	return u.repo.FindByUserIDAndCompanyIDWithCompany(requestUserID, companyID)
 }
 
 func (u *CompanyESUseCase) GetCompanyESByUserIDAndCompanyIDWithCompany(userID, companyID uint) ([]*domain.CompanyESResponse, error) {
 	return u.repo.FindByUserIDAndCompanyIDWithCompany(userID, companyID)
 }
 
-func (u *CompanyESUseCase) GetAllCompanyESsWithCompany() ([]*domain.CompanyESResponse, error) {
-	return u.repo.GetAllWithCompany()
+func (u *CompanyESUseCase) GetAllCompanyESsWithCompany(requestUserID uint) ([]*domain.CompanyESResponse, error) {
+	// 自分のESデータのみ取得
+	return u.repo.FindByUserIDWithCompany(requestUserID)
 }
 
 // GenerateESContent - BaseESと企業情報からES内容を自動生成
