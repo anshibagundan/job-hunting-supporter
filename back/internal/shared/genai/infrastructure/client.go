@@ -65,15 +65,15 @@ func (g *GenAIClientImpl) AnalyzeInterviewContent(content string) (summary strin
 	// 要約を生成するプロンプト
 	summaryPrompt := fmt.Sprintf(`
 	以下のテキストは、ある候補者との面接内容を文字起こししたものです。
-	
+
 	この内容を読み取り、以下の観点に基づいて要約してください：
-	
+
 	- 面接全体の流れ（質問→回答など）
 	- 候補者の話した経験やスキル
 	- 強み・弱み、アピールポイント
 	- 面接官からのフィードバック（あれば）
 	- 総合的な印象（面接の手応えなど）
-	
+
 	【面接文字起こし】
 	%s
 	`, content)
@@ -307,4 +307,107 @@ func (g *GenAIClientImpl) GenerateESContent(baseES string, companyDescription st
 	}
 
 	return resp.Text(), nil
+}
+
+// AnalyzeESContentWithCompany は企業情報を含めたES内容の分析を行います
+func (g *GenAIClientImpl) AnalyzeESContentWithCompany(content string, companyName string, companyDescription string, industry string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
+	ctx := context.Background()
+
+	// 企業情報を含めた要約を生成するプロンプト
+	summaryPrompt := fmt.Sprintf(`以下のエントリーシート内容を企業情報と照らし合わせて分析し、要約を作成してください。
+
+【分析対象ES】
+%s
+
+【企業情報】
+企業名: %s
+業界: %s
+企業説明: %s
+
+【要約の観点】
+1. 自己PRの核となる要点
+2. 具体的な実績・経験
+3. 志望動機の要点
+4. 企業との適合性
+5. 文字数や構成について
+
+企業の特色や求める人材像との関連性も含めて日本語で簡潔に要約してください。`, content, companyName, industry, companyDescription)
+
+	summaryContents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(summaryPrompt),
+		}, genai.RoleUser),
+	}
+
+	summaryResp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", summaryContents, nil)
+	if err != nil {
+		return "", "", nil, fmt.Errorf("summary generation failed: %w", err)
+	}
+
+	// 企業情報を含めた改善アドバイスを生成するプロンプト
+	advicePrompt := fmt.Sprintf(`以下のエントリーシート内容を企業情報と照らし合わせて分析し、各項目の達成度を%%で評価し、企業に特化した改善アドバイスを提供してください。
+
+【分析対象ES】
+%s
+
+【企業情報】
+企業名: %s
+業界: %s
+企業説明: %s
+
+【評価・アドバイス項目】
+以下の各項目について、企業の特色を踏まえた現在の達成度を0-100%%で評価し、その理由と具体的な改善提案を提供してください。
+
+1. 企業理解と志望動機の明確化
+2. 企業文化・価値観との適合性
+3. 業界知識と関連性の表現
+4. 具体的な貢献可能性の提示
+5. 企業が求める人材像との一致度
+
+【出力形式】
+各項目について以下の形式で出力してください：
+
+## 1. 企業理解と志望動機の明確化
+**達成度: XX%%**
+**評価理由:** [企業の特色を踏まえた現在の状況の説明]
+**改善提案:** [企業に特化した具体的な改善アドバイス]
+
+## 2. 企業文化・価値観との適合性
+**達成度: XX%%**
+**評価理由:** [企業の特色を踏まえた現在の状況の説明]
+**改善提案:** [企業に特化した具体的な改善アドバイス]
+
+## 3. 業界知識と関連性の表現
+**達成度: XX%%**
+**評価理由:** [企業の特色を踏まえた現在の状況の説明]
+**改善提案:** [企業に特化した具体的な改善アドバイス]
+
+## 4. 具体的な貢献可能性の提示
+**達成度: XX%%**
+**評価理由:** [企業の特色を踏まえた現在の状況の説明]
+**改善提案:** [企業に特化した具体的な改善アドバイス]
+
+## 5. 企業が求める人材像との一致度
+**達成度: XX%%**
+**評価理由:** [企業の特色を踏まえた現在の状況の説明]
+**改善提案:** [企業に特化した具体的な改善アドバイス]
+
+企業の特色を活かした建設的で具体的なアドバイスを日本語で提供してください。`, content, companyName, industry, companyDescription)
+
+	adviceContents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(advicePrompt),
+		}, genai.RoleUser),
+	}
+
+	adviceResp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", adviceContents, nil)
+	if err != nil {
+		return summaryResp.Text(), "", nil, fmt.Errorf("advice generation failed: %w", err)
+	}
+
+	// アドバイステキストから構造化データを抽出
+	adviceText := adviceResp.Text()
+	adviceItemsList := parseAdviceResponse(adviceText)
+
+	return summaryResp.Text(), adviceText, adviceItemsList, nil
 }
