@@ -1,10 +1,13 @@
 import type React from "react";
-import { Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { ESEntry } from "@/lib/supabase";
-import { Progress } from "@/components/ui/progress";
+import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
 
 interface ESDetailProps {
   entry: ESEntry;
@@ -44,7 +47,7 @@ export function ESDetail({ entry, onDelete }: ESDetailProps) {
         </CardHeader>
         {entry.summary ? (
           <CardContent>
-            <div className="whitespace-pre-wrap text-sm">{entry.summary}</div>
+            <MarkdownRenderer content={entry.summary} />
           </CardContent>
         ) : (
           <CardContent>
@@ -60,75 +63,73 @@ export function ESDetail({ entry, onDelete }: ESDetailProps) {
         )}
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">改善アドバイス</CardTitle>
-        </CardHeader>
-        {entry.advice ? (
-          <CardContent>
-            <div className="whitespace-pre-wrap text-sm">{entry.advice}</div>
-          </CardContent>
-        ) : (
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-8 text-center">
-              <p className="text-gray-500 text-sm mb-2">
-                まだ改善アドバイスが生成されていません
-              </p>
-              <p className="text-gray-400 text-xs">
-                編集画面で「分析」ボタンを押すと、AIによる改善アドバイスを生成できます
-              </p>
-            </div>
-          </CardContent>
-        )}
-      </Card>
-      {/* 達成度表示セクション */}
+      {/* 項目別達成度評価セクション */}
       {entry.adviceItems && entry.adviceItems.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">項目別達成度評価</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8">
             {entry.adviceItems.map((item, index) => (
-              <div key={index} className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-medium text-sm">{item.category}</h4>
-                  <span className="text-lg font-bold text-primary">
-                    {item.achievement}%
-                  </span>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="relative">
-                    <Progress value={item.achievement} className="h-3" />
-                    <div
-                      className="absolute top-0 left-0 h-full rounded-full transition-all"
-                      style={{
-                        width: `${item.achievement}%`,
-                        backgroundColor:
-                          item.achievement >= 80
-                            ? "#22c55e"
-                            : item.achievement >= 60
-                            ? "#eab308"
-                            : "#ef4444",
-                      }}
-                    />
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    <div className="mb-1">
-                      <span className="font-medium">評価理由:</span>{" "}
-                      {item.reason}
-                    </div>
-                    <div>
-                      <span className="font-medium">改善提案:</span>{" "}
-                      {item.suggestion}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <AdviceItemCard key={index} item={item} />
             ))}
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+interface AdviceItemCardProps {
+  item: {
+    category: string;
+    achievement: number;
+    reason: string;
+    suggestion: string;
+  };
+}
+
+function AdviceItemCard({ item }: AdviceItemCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      {/* 達成度表示部分 */}
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h4 className="font-medium text-base mb-2">{item.category}</h4>
+        </div>
+        <div className="flex items-center gap-4">
+          <SemiCircleProgress value={item.achievement} size={100} strokeWidth={6} />
+        </div>
+      </div>
+
+      {/* 詳細情報（クリックで表示/非表示） */}
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button 
+            variant="ghost" 
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-50"
+          >
+            <span className="text-sm text-gray-600">
+              {isOpen ? "詳細を閉じる" : "詳細を表示"}
+            </span>
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-2">
+          <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">評価理由</h5>
+              <p className="text-sm text-gray-600">{item.reason}</p>
+            </div>
+            <div>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">改善提案</h5>
+              <p className="text-sm text-gray-600">{item.suggestion}</p>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

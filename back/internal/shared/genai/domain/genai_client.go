@@ -7,6 +7,14 @@ type AdviceItem struct {
 	Suggestion  string `json:"suggestion"`
 }
 
+type CompanyInfo struct {
+	Name        string `json:"name"`
+	WebURL      string `json:"website"`
+	Description string `json:"description"`
+	Img         string `json:"image"`
+	Industry    string `json:"industry"`
+}
+
 type GenAIClient interface {
 	GenerateTranscriptFromAudio(path string) (string, error)
 	AnalyzeInterviewContent(content string) (summary string, err error)
@@ -14,4 +22,5 @@ type GenAIClient interface {
 	AnalyzeBaseESContent(content string) (summary string, advice string, adviceItems []AdviceItem, err error)
 	AnalyzeESContentWithCompany(content string, companyName string, companyDescription string, industry string) (summary string, advice string, adviceItems []AdviceItem, err error)
 	GenerateESContent(baseES string, companyDescription string, esTitle string) (content string, err error)
+	GenerateCompanyInfo(companyName string) (CompanyInfo, error)
 }

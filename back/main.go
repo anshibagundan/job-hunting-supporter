@@ -81,7 +81,7 @@ func main() {
 	userController := user_controller.NewUserController(userUseCase)
 
 	companyRepo := company_infrastructure.NewCompanyRepository(db)
-	companyUseCase := company_usecase.NewCompanyUseCase(companyRepo)
+	companyUseCase := company_usecase.NewCompanyUseCase(companyRepo, genAIClient)
 	companyController := company_controller.NewCompanyController(companyUseCase)
 
 	interviewRepo := interview_infrastructure.NewInterviewRepository(db)
@@ -143,11 +143,12 @@ func main() {
 
 			companies := protected.Group("/companies")
 			{
-				companies.POST("", companyController.CreateCompany)       // POST /api/companies
-				companies.GET("/:id", companyController.GetCompany)       // GET /api/companies/:id
-				companies.GET("", companyController.GetAllCompanies)      // GET /api/companies
-				companies.PUT("", companyController.UpdateCompany)        // PUT /api/companies
-				companies.DELETE("/:id", companyController.DeleteCompany) // DELETE /api/companies/:id
+				companies.POST("", companyController.CreateCompany)                // POST /api/companies
+        companies.GET("/:id", companyController.GetCompany)                // GET /api/companies/:id
+        companies.GET("", companyController.GetAllCompanies)               // GET /api/companies
+        companies.PUT("", companyController.UpdateCompany)                 // PUT /api/companies
+        companies.DELETE("/:id", companyController.DeleteCompany)          // DELETE /api/companies/:id
+        companies.POST("/generate", companyController.GenerateCompanyInfo) // POST /api/companies/generate
 			}
 
 			jobEvents := protected.Group("/job-events")

@@ -56,3 +56,16 @@ func (u *UserUseCase) AnalyzeBaseESContent(content string) (summary string, advi
 	// GenAI クライアントを使用して基本ESの分析を実行
 	return u.genaiClient.AnalyzeBaseESContent(content)
 }
+
+// SaveBaseESAnalysisToProfile - 基本ES分析結果をユーザープロファイルに保存する
+func (u *UserUseCase) SaveBaseESAnalysisToProfile(userID uint, summary string, adviceItems []genaidomain.AdviceItem) error {
+	// ドメイン型に変換
+	adviceItemsJSON := domain.AdviceItemsJSON(adviceItems)
+	
+	updates := map[string]interface{}{
+		"summary":      summary,
+		"advice_items": adviceItemsJSON,
+	}
+	
+	return u.repo.UpdatePartial(userID, updates)
+}

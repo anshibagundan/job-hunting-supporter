@@ -71,9 +71,10 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 
 	// 部分更新のためのリクエスト構造体
 	var updateRequest struct {
-		Name    *string `json:"name"`
-		BasicES *string `json:"basic_es"`
-		Icon    *string `json:"icon"`
+		Name           *string `json:"name"`
+		BasicES        *string `json:"basic_es"`
+		Icon           *string `json:"icon"`
+		AnalyzeBaseES  *bool   `json:"analyze_base_es"`  // base_es分析を実行するかどうか
 	}
 
 	if err := ctx.ShouldBindJSON(&updateRequest); err != nil {
@@ -91,6 +92,18 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 	}
 	if updateRequest.Icon != nil {
 		updates["icon"] = *updateRequest.Icon
+	}
+
+	// base_es分析を実行する場合
+	if updateRequest.AnalyzeBaseES != nil && *updateRequest.AnalyzeBaseES && updateRequest.BasicES != nil && *updateRequest.BasicES != "" {
+		summary, _, adviceItems, err := c.useCase.AnalyzeBaseESContent(*updateRequest.BasicES)
+		if err == nil {
+			// 分析が成功した場合、結果も保存
+			adviceItemsJSON := domain.AdviceItemsJSON(adviceItems)
+			updates["summary"] = summary
+			updates["advice_items"] = adviceItemsJSON
+		}
+		// 分析に失敗しても更新は続行
 	}
 
 	// 部分更新を実行
@@ -204,7 +217,9 @@ func (c *UserController) GetUserByFirebaseUID(ctx *gin.Context) {
 
 // 基本ES分析用の型定義
 type AnalyzeBaseESRequest struct {
-	Content string `json:"content" binding:"required"`
+	Content   string `json:"content" binding:"required"`
+	UserID    uint   `json:"user_id"`    // オプション: 分析結果をユーザープロファイルに保存する場合
+	SaveToProfile bool `json:"save_to_profile"` // 分析結果をプロファイルに保存するかどうか
 }
 
 type AnalyzeBaseESResponse struct {
@@ -225,6 +240,14 @@ func (c *UserController) AnalyzeBaseES(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
 		return
+	}
+
+	// 分析結果をユーザープロファイルに保存する場合
+	if req.SaveToProfile && req.UserID > 0 {
+		if err := c.useCase.SaveBaseESAnalysisToProfile(req.UserID, summary, adviceItems); err != nil {
+			// 保存に失敗してもレスポンスは返す（警告ログは出力）
+			ctx.Header("X-Warning", "Failed to save analysis to profile")
+		}
 	}
 
 	response := AnalyzeBaseESResponse{

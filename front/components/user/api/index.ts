@@ -1,5 +1,12 @@
 import  apiClient  from '@/lib/api-client';
 
+interface AdviceItem {
+  category: string;
+  achievement: number;
+  reason: string;
+  suggestion: string;
+}
+
 export interface UserProfile {
   id: number;
   name: string;
@@ -7,6 +14,8 @@ export interface UserProfile {
   email: string;
   icon: string;
   basic_es: string;
+  summary?: string;
+  advice_items?: AdviceItem[];
   created_at: string;
   updated_at: string;
 }
@@ -16,7 +25,10 @@ export const fetchUserByFirebaseUID = async (firebaseUID: string): Promise<UserP
   return response.data;
 };
 
-export const updateUserProfile = async (id: number, userProfile: Partial<UserProfile>): Promise<UserProfile> => {
+export const updateUserProfile = async (
+  id: number, 
+  userProfile: Partial<UserProfile> & { analyze_base_es?: boolean }
+): Promise<UserProfile> => {
   const response = await apiClient.put(`/users/${id}`, userProfile);
   return response.data;
 };
