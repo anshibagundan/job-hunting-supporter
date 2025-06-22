@@ -44,7 +44,7 @@ export default function JobEventDetailPage() {
 
       // 企業名を取得
       const companies = await storage.getCompanies()
-      const company = companies.find(c => c.id === found.company_id)
+      const company = companies.find(c => parseInt(c.id) === found.company_id)
       setCompanyName(company?.name || "不明な企業")
 
     } catch (error) {
@@ -140,7 +140,7 @@ export default function JobEventDetailPage() {
             <ArrowLeft className="h-4 w-4 mr-2" />
             カレンダーに戻る
           </Button>
-          <h1 className="text-3xl font-semibold text-gray-900">JobEvent詳細</h1>
+          <h1 className="text-3xl font-semibold text-gray-900">予定詳細</h1>
         </div>
 
         <div className="flex gap-2">
