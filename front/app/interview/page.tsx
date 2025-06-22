@@ -1,3 +1,5 @@
+"use client"
+
 import { useRouter } from "next/navigation"
 import { useInterviewLogs } from "@/components/interview/hooks/useInterviewLogs"
 import { InterviewList } from "@/components/interview/interview-list"
