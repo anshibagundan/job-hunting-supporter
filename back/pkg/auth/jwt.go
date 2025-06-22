@@ -16,10 +16,10 @@ type Claims struct {
 var jwtSecret []byte
 
 func InitJWT() {
-	secret := os.Getenv("JWT_SECRET")
+	secret := os.Getenv("SESSION_KEY")
 	if secret == "" {
-		// 開発環境用のデフォルト値（本番では必ず環境変数を設定）
-		secret = "your-super-secret-key-change-this-in-production"
+		fmt.Println("SESSION_KEY is not set in the environment variables")
+		panic("SESSION_KEY is not set")
 	}
 	jwtSecret = []byte(secret)
 }
