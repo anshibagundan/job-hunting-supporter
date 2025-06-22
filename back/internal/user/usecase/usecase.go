@@ -3,8 +3,8 @@ package usecase
 import (
 	"fmt"
 
-	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
+	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 )
 
 func NewUserUseCase(repo domain.UserRepository, genaiClient genaidomain.GenAIClient) *UserUseCase {
@@ -54,5 +54,5 @@ func (u *UserUseCase) AnalyzeBaseESContent(content string) (summary string, advi
 	}
 
 	// GenAI クライアントを使用して基本ESの分析を実行
-	return u.genaiClient.AnalyzeESContent(content)
+	return u.genaiClient.AnalyzeBaseESContent(content)
 }

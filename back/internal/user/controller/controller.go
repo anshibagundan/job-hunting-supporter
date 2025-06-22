@@ -3,9 +3,9 @@ package controller
 import (
 	"strconv"
 
+	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
-	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 	"github.com/gin-gonic/gin"
 )
 

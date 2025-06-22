@@ -179,7 +179,7 @@ func main() {
 			users.GET("", userController.GetAllUsers)                                 // GET /api/users
 			users.PUT("/:id", userController.UpdateUser)                              // PUT /api/users/:id
 			users.DELETE("/:id", userController.DeleteUser)                           // DELETE /api/users/:id
-			
+
 			// 基本ES分析エンドポイント
 			baseES := users.Group("/base-es")
 			{

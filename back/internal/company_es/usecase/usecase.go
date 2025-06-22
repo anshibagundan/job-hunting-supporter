@@ -3,8 +3,8 @@ package usecase
 import (
 	"fmt"
 
-	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/domain"
 	companyUsecase "github.com/anshibagundan/job-hunting-supporter/internal/companies/usecase"
+	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/domain"
 	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 )
 
