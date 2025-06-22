@@ -42,8 +42,8 @@ function AdviceItemCard({ item }: AdviceItemCardProps) {
       {/* 詳細情報（クリックで表示/非表示） */}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
         <CollapsibleTrigger asChild>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             className="w-full flex items-center justify-between p-2 hover:bg-gray-50"
           >
             <span className="text-sm text-gray-600">
@@ -109,7 +109,7 @@ export default function ProfilePage() {
 
   const handleAnalyze = async () => {
     if (!editData.basic_es.trim()) return;
-    
+
     setIsAnalyzing(true);
     try {
       // 分析付きで保存を実行
@@ -249,22 +249,61 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent>
             {isEditing ? (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  基本ES（自己PR・志望動機など）
-                </label>
-                <Textarea
-                  value={editData.basic_es}
-                  onChange={(e) =>
-                    setEditData((prev) => ({
-                      ...prev,
-                      basic_es: e.target.value,
-                    }))
-                  }
-                  placeholder="基本ESの内容を入力してください"
-                  rows={8}
-                  className="w-full"
-                />
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    基本ES（自己PR・志望動機など）
+                  </label>
+                  <Textarea
+                    value={editData.basic_es}
+                    onChange={(e) =>
+                      setEditData((prev) => ({
+                        ...prev,
+                        basic_es: e.target.value,
+                      }))
+                    }
+                    placeholder="基本ESの内容を入力してください"
+                    rows={8}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* 編集画面での分析結果表示 */}
+                {userProfile.summary && userProfile.advice_items && (
+                  <div className="space-y-6 mt-6 pt-6 border-t">
+                    <div className="flex items-center gap-2">
+                      <Brain className="h-5 w-5" />
+                      <h4 className="font-medium text-lg">現在の分析結果</h4>
+                    </div>
+
+                    {/* 分析要約 */}
+                    <div>
+                      <h5 className="font-medium text-base mb-3">分析要約</h5>
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <MarkdownRenderer content={userProfile.summary} />
+                      </div>
+                    </div>
+
+                    {/* 項目別達成度評価 */}
+                    {userProfile.advice_items && userProfile.advice_items.length > 0 && (
+                      <div>
+                        <h5 className="font-medium text-base mb-4 flex items-center gap-2">
+                          <BarChart3 className="h-5 w-5" />
+                          項目別達成度評価
+                        </h5>
+                        <div className="space-y-8">
+                          {userProfile.advice_items.map((item, index) => (
+                            <AdviceItemCard key={index} item={item} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded-lg">
+                      <p>💡 「分析して保存」ボタンを押すと、最新の基本ES内容で分析結果が更新されます。</p>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div>
@@ -322,8 +361,8 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <div className="flex gap-2">
               <Button onClick={handleSave}>保存</Button>
-              <Button 
-                onClick={handleAnalyze} 
+              <Button
+                onClick={handleAnalyze}
                 disabled={!editData.basic_es.trim() || isAnalyzing}
                 variant="outline"
               >
