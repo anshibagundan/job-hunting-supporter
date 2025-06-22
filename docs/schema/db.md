@@ -41,7 +41,7 @@ job_events ||--o{ interviews : generates
 | name               | VARCHAR(255) | NOT NULL, UNIQUE         | 企業名                       | 株式会社サンプル               |
 | web_url            | VARCHAR(255) | NOT NULL, UNIQUE         | 企業のウェブサイトURL        | https://example.com            |
 | description        | TEXT         | NOT NULL                 | 企業の説明                   | ITソリューション企業です       |
-| img                | VARCHAR(255) | NULL                     | 企業のロゴ画像URL            | https://example.com/logo.png   |
+| img                | TEXT         | NULL                     | 企業のロゴ画像URL            | https://example.com/logo.png   |
 | industry           | VARCHAR(255) | NOT NULL                 | 業種                         | IT・ソフトウェア               |
 | scrape_target_url  | VARCHAR(255) | NOT NULL, UNIQUE         | スクレイピング対象のURL      | https://example.com/jobs       |
 | last_scrape_time   | TIMESTAMP    | NOT NULL                 | 最後にスクレイピングした日時 | 2023-10-01 10:00:00            |
