@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Building2, Globe, ArrowRight } from "lucide-react";
+import { Building2, Globe, ArrowRight, Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,6 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { fetchAllCompanies, type CompanyResponse } from "@/components/company/api";
 import { type Company } from "@/lib/supabase";
 
@@ -46,6 +47,13 @@ export default function CompanyPage() {
     <div className="container mx-auto px-4 py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-semibold text-gray-900">企業一覧</h1>
+        <Button
+          onClick={() => router.push("/company/new")}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          新しい企業を追加
+        </Button>
       </div>
 
       <main className="overflow-auto">

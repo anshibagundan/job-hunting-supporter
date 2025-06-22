@@ -1,4 +1,5 @@
 import apiClient from '@/lib/api-client';
+import {Company} from "@lib/supabase";
 
 // 企業の型定義（バックエンドのレスポンス形式）
 export interface CompanyResponse {
@@ -14,6 +15,18 @@ export interface CompanyResponse {
   updated_at: string;
 }
 
+export const convertCompanyToFrontend = (backendCompany: CompanyResponse): Company => {
+  return {
+    id: backendCompany.id.toString(),
+    name: backendCompany.name,
+    website: backendCompany.website,
+    description: backendCompany.description,
+    image: backendCompany.image || '',
+    industry: backendCompany.industry || '',
+    events: [], // イベントは別途取得する必要がある場合に対応
+  };
+}
+
 // 全ての企業を取得
 export const fetchAllCompanies = async (): Promise<CompanyResponse[]> => {
   const response = await apiClient.get('/companies');
@@ -26,8 +39,18 @@ export const fetchCompanyById = async (id: string): Promise<CompanyResponse> => 
   return response.data;
 };
 
+// 企業作成用の型定義
+export interface CreateCompanyRequest {
+  name: string;
+  website: string;
+  description: string;
+  image: string;
+  industry: string;
+  scrape_target_url: string;
+}
+
 // 企業作成
-export const createCompany = async (data: Omit<CompanyResponse, 'ID' | 'CreatedAt' | 'UpdatedAt' | 'LastScrapeTime'>) => {
+export const createCompany = async (data: CreateCompanyRequest) => {
   const response = await apiClient.post('/companies', data);
   return response.data;
 };

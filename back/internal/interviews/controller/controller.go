@@ -2,14 +2,15 @@ package controller
 
 import (
 	"fmt"
-	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/domain"
-	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/domain"
+	"github.com/anshibagundan/job-hunting-supporter/internal/interviews/usecase"
+	"github.com/gin-gonic/gin"
 )
 
 func NewInterviewController(useCase *usecase.InterviewUseCase) *InterviewController {
@@ -125,61 +126,15 @@ func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
 		return
 	}
 
-	// JSONリクエストボディを読み取り
-	var req struct {
-		CompanyID    uint   `json:"company_id"`
-		JobEventID   uint   `json:"job_event_id"`
-		InterviewAt  string `json:"interview_at"`
-		Stage        string `json:"stage"`
-		TextNote     string `json:"text_note"`
-		Location     string `json:"location"`
-		MeetingURL   string `json:"meeting_url"`
-		AudioSummary string `json:"audio_summary"` // AI要約の編集対応
-	}
-
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(400, gin.H{
-			"error":   "Invalid input",
-			"details": err.Error(),
-		})
+	var interview domain.Interview
+	if err := ctx.ShouldBindJSON(&interview); err != nil {
+		fmt.Printf("Error binding JSON: %v\n", err)
+		ctx.JSON(400, gin.H{"error": fmt.Sprintf("Invalid input: %v", err)})
 		return
 	}
 
-	userID, err := strconv.ParseUint(userIDStr, 10, 32)
-	if err != nil {
-		ctx.JSON(400, gin.H{"error": "Invalid User-ID"})
-		return
-	}
-
-	// 日時のパース
-	interviewAt, err := time.Parse(time.RFC3339, req.InterviewAt)
-	if err != nil {
-		// 別のフォーマットも試す
-		interviewAt, err = time.Parse("2006-01-02T15:04", req.InterviewAt)
-		if err != nil {
-			ctx.JSON(400, gin.H{
-				"error":   "Invalid interview_at format",
-				"details": err.Error(),
-			})
-			return
-		}
-	}
-
-	// Interview構造体を作成
-	interview := domain.Interview{
-		ID:           uint(id),
-		CompanyID:    req.CompanyID,
-		JobEventID:   req.JobEventID,
-		UserID:       uint(userID),
-		InterviewAt:  interviewAt,
-		Stage:        req.Stage,
-		TextNote:     req.TextNote,
-		Location:     req.Location,
-		MeetingURL:   req.MeetingURL,
-		AudioSummary: req.AudioSummary, // AI要約の更新対応
-	}
-
-	fmt.Printf("Updating interview ID %d with data: %+v\n", id, interview)
+	// IDを設定
+	interview.ID = uint(id)	
 
 	// 面接を更新
 	if err := c.useCase.UpdateInterview(&interview); err != nil {
@@ -276,6 +231,73 @@ func (c *InterviewController) CreateInterviewWithAudio(ctx *gin.Context) {
 	}
 
 	ctx.JSON(201, gin.H{"message": "Interview created successfully", "id": interview.ID})
+}
+
+func (c *InterviewController) UpdateInterviewWithAudio(ctx *gin.Context) {
+	fmt.Printf("Updating interview with audio...\n")
+
+	// Parse multipart form
+	if err := ctx.Request.ParseMultipartForm(32 << 20); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Failed to parse multipart form"})
+		return
+	}
+
+	// Get interview ID from URL parameter
+	idStr := ctx.Param("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Interview ID"})
+		return
+	}
+
+	var interview domain.Interview
+	interview.ID = uint(id)
+	interview.UserID = parseUintFromForm(ctx, "user_id", 5)
+	interview.CompanyID = parseUintFromForm(ctx, "company_id", 5)
+	interview.JobEventID = parseUintFromForm(ctx, "job_event_id", 5)
+	interview.Stage = ctx.PostForm("stage")
+	interview.TextNote = ctx.PostForm("text_note")
+	interview.Location = ctx.PostForm("location")
+	interview.MeetingURL = ctx.PostForm("meeting_url")
+
+	if interviewAt := ctx.PostForm("interview_at"); interviewAt != "" {
+		if t, err := time.Parse(time.RFC3339, interviewAt); err == nil {
+			interview.InterviewAt = t
+		} else {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid interview date format"})
+			return
+		}
+	} else {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Interview date is required"})
+		return
+	}
+
+	file, err := ctx.FormFile("audio_file")
+	if err == nil {
+		savePath := filepath.Join(os.TempDir(), file.Filename)
+		if err := ctx.SaveUploadedFile(file, savePath); err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "file save failed"})
+			return
+		}
+
+		transcript, err := c.useCase.Transcribe(savePath)
+		if err != nil {
+			fmt.Printf("Error transcribing audio: %v\n", err)
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to transcribe audio"})
+		} else {
+			interview.Transcript = transcript
+
+			audioSummary, err := c.useCase.AnalyzeInterviewContent(transcript)
+			if err != nil {
+				fmt.Printf("Error analyzing interview content: %v\n", err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to analyze interview content"})
+				return
+			} else {
+				interview.AudioSummary = audioSummary
+			}
+		}
+	}
+
 }
 
 func parseUintFromForm(ctx *gin.Context, key string, defaultValue uint) uint {

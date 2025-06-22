@@ -88,6 +88,10 @@ export default function CompanyDetailPage() {
     }
   }
 
+  const handleEdit = () => {
+    router.push(`/company/${companyId}/edit`)
+  }
+
   if (loading) {
     return <LoadingSpinner message="企業情報を読み込み中..." />
   }
@@ -100,7 +104,9 @@ export default function CompanyDetailPage() {
     <div className="flex-1 flex flex-col">
       <CompanyDetailHeader
         companyName={company.name}
+        companyId={companyId}
         onBack={() => router.push('/company')}
+        onEdit={handleEdit}
       />
 
       <main className="flex-1 p-6 overflow-auto">

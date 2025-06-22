@@ -263,3 +263,48 @@ func parseAdviceResponse(adviceText string) []domain.AdviceItem {
 
 	return adviceItems
 }
+
+// GenerateESContent は BaseES、企業説明、ESタイトルからESの内容を自動生成します
+func (g *GenAIClientImpl) GenerateESContent(baseES string, companyDescription string, esTitle string) (content string, err error) {
+	ctx := context.Background()
+
+	// ES自動生成のプロンプト
+	prompt := fmt.Sprintf(`
+あなたは就職活動のエントリーシート作成をサポートするAIアシスタントです。
+以下の情報を基に、具体的で説得力のあるエントリーシート内容を生成してください。
+
+【基本ES（ユーザーの自己PR）】
+%s
+
+【企業情報・説明】
+%s
+
+【ESのタイトル・テーマ】
+%s
+
+【生成時の注意点】
+1. ユーザーの基本ESの内容を活かしつつ、企業の特色に合わせてカスタマイズしてください
+2. 企業の事業内容、価値観、求める人材像に言及してください
+3. 具体的なエピソードや経験を含めてください
+4. 400-600文字程度で作成してください
+5. 読みやすい文章構成にしてください
+6. 志望動機の場合は「なぜその企業なのか」を明確にしてください
+7. 自己PRの場合は「その企業でどう活かせるか」を示してください
+
+【期待する出力】
+企業に合わせたオリジナルのエントリーシート内容を日本語で出力してください。
+`, baseES, companyDescription, esTitle)
+
+	contents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(prompt),
+		}, genai.RoleUser),
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", contents, nil)
+	if err != nil {
+		return "", fmt.Errorf("ES content generation failed: %w", err)
+	}
+
+	return resp.Text(), nil
+}

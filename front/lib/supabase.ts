@@ -1,8 +1,8 @@
-import { fetchAllCompanies, type CompanyResponse } from '@/components/company/api';
+import {convertCompanyToFrontend, fetchAllCompanies} from '@/components/company/api';
 
 // API client utilities and interfaces
 export interface Company {
-  id: number
+  id: string
   name: string
   industry: string
   image: string
@@ -58,7 +58,7 @@ export interface InterviewLog {
   location?: string
   meetingUrl?: string
 
-  audioFile?: File
+  audioFile?: File | null // 音声ファイルはオプション
   transcript?: string
 
   audioSummary?: string
@@ -85,11 +85,7 @@ export const storage = {
     try {
       // APIから企業データを取得
       const backendCompanies = await fetchAllCompanies();
-      const companies: Company[] = backendCompanies.map(company => ({
-        ...company,
-        events: [] // デフォルトで空配列
-      }));
-      return companies;
+      return backendCompanies.map(convertCompanyToFrontend);
     } catch (error) {
       console.error('Failed to fetch companies from API:', error);
       return [];

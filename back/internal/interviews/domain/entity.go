@@ -7,9 +7,9 @@ import (
 
 type Interview struct {
 	ID           uint      `gorm:"primaryKey" json:"id"`
+	UserID       uint      `gorm:"not null" json:"user_id"`      // ユーザーID
 	CompanyID    uint      `gorm:"not null" json:"company_id"`   // 会社ID
 	JobEventID   uint      `gorm:"not null" json:"job_event_id"` // 求人イベントID
-	UserID       uint      `gorm:"not null" json:"user_id"`      // ユーザーID
 	InterviewAt  time.Time `gorm:"not null" json:"interview_at"` // 面接日時
 	Stage        string    `gorm:"not null" json:"stage"`        // 面接ステージ（例: 一次面接、最終面接など）
 	AudioFile    string    `gorm:"column:audio_note_path" json:"audio_file"`

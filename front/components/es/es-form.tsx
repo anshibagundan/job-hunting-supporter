@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronsUpDown, Wand2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useESForm } from "@/components/es/hooks/useEsForm"
 import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
+import { useESGeneration } from "@/components/es/hooks/useESGeneration"
+import { useUserProfile } from "@/hooks/useAuth"
 import { storage, type ESEntry, type AdviceItem } from "@/lib/supabase"
 import type { Company } from "@/lib/supabase"
 
@@ -24,9 +26,14 @@ interface ESFormProps {
 export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFormProps) {
   const { formData, setFormData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
   const { isAnalyzing, analyzeContent } = useAIAnalysis()
+  const { isGenerating, generateContent } = useESGeneration()
+  const { userProfile } = useUserProfile()
   const [companies, setCompanies] = useState<Company[]>([])
   const [companiesLoading, setCompaniesLoading] = useState(true)
   const [open, setOpen] = useState(false)
+
+  // ユーザーのBaseESを取得
+  const userBaseES = userProfile?.basic_es || ""
 
   // 利用可能な企業リストを取得
   useEffect(() => {
@@ -70,6 +77,22 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
     updateField("advice", result.advice)
     setFormData(prev => ({ ...prev, adviceItems: result.adviceItems }))
   }, [formData.content, analyzeContent, updateField, setFormData])
+
+  // ES自動生成機能
+  const handleGenerate = useCallback(async () => {
+    if (!formData.company?.id || !formData.title.trim() || !userBaseES.trim()) {
+      alert("企業、タイトル、BaseESが必要です。プロフィールでBaseESを設定してください。")
+      return
+    }
+
+    try {
+      const result = await generateContent(userBaseES, formData.company.description, formData.title)
+      updateField("content", result.content)
+    } catch (error) {
+      console.error("ES生成に失敗しました:", error)
+      alert("ES生成に失敗しました")
+    }
+  }, [formData.company, formData.title, userBaseES, generateContent, updateField])
 
   // 達成度の色を決定する関数
   const getAchievementColor = (achievement: number) => {
@@ -138,7 +161,34 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
               placeholder="例: 志望動機、自己PR"
               required
             />
-          </div>          <div>
+          </div>
+
+          {/* AI自動生成ボタン */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-medium text-blue-900">AI自動生成</h3>
+              <Wand2 className="h-4 w-4 text-blue-600" />
+            </div>
+            <p className="text-sm text-blue-700 mb-3">
+              BaseESと企業情報から、ESの内容を自動生成します
+              {!userBaseES && (
+                <span className="block text-red-600 mt-1">
+                  ※ BaseESが設定されていません。プロフィールで設定してください。
+                </span>
+              )}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGenerate}
+              disabled={isGenerating || !formData.company?.id || !formData.title.trim() || !userBaseES.trim()}
+              className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+            >
+              {isGenerating ? "生成中..." : "AI生成"}
+            </Button>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium mb-2">内容</label>
             <Textarea
               value={formData.content}
@@ -221,18 +271,18 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
           )}
 
           <div className="flex space-x-2">
-            <Button type="submit" disabled={!isFormValid() || isAnalyzing}>
+            <Button type="submit" disabled={!isFormValid() || isAnalyzing || isGenerating}>
               保存
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={handleAnalyze}
-              disabled={isAnalyzing || !formData.content.trim()}
+              disabled={isAnalyzing || isGenerating || !formData.content.trim()}
             >
               {isAnalyzing ? "分析中..." : (formData.summary || formData.advice) ? "再分析" : "分析"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isAnalyzing}>
+            <Button type="button" variant="outline" onClick={onCancel} disabled={isAnalyzing || isGenerating}>
               キャンセル
             </Button>
           </div>
