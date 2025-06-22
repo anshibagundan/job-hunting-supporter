@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { storage, type Company, type InterviewLog, type Event } from "@/lib/supabase"
+import { type Company, type InterviewLog, type Event } from "@/lib/supabase"
 import { CompanyDetailHeader } from "@/components/company/company-detail-header"
 import { CompanyHeader } from "@/components/company/company-header"
 import { CompanyRelatedDataTabs } from "@/components/company/company-related-data-tabs"
@@ -10,6 +10,7 @@ import { LoadingSpinner, NotFoundMessage } from "@/components/common/loading-sta
 import { useCompanyESEntries } from "@/components/company/hooks/useCompanyESEntries"
 import { useCompanyJobEvents } from "@/components/company/hooks/useCompanyJobEvents"
 import { jobEventToEvent } from "@/lib/job-event-utils"
+import { fetchCompanyById, convertCompanyToFrontend } from "@/components/company/api"
 import { fetchInterviewsByCompanyID, deleteInterview } from "@/components/interview/api"
 
 export default function CompanyDetailPage() {
@@ -42,8 +43,9 @@ export default function CompanyDetailPage() {
 
   const loadCompanyData = async () => {
     try {
-      const companies = await storage.getCompanies()
-      const foundCompany = companies.find(c => c.id.toString() === companyId)
+      // APIから企業データを取得
+      const companyResponse = await fetchCompanyById(companyId)
+      const foundCompany = convertCompanyToFrontend(companyResponse)
 
       if (!foundCompany) {
         router.push('/company')
@@ -52,15 +54,9 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // インタビューログをAPIから取得
-      try {
-        const companyInterviewLogs = await fetchInterviewsByCompanyID(companyId)
-        setInterviewLogs(companyInterviewLogs)
-      } catch (error) {
-        console.error('インタビューログの取得に失敗しました:', error)
-        // APIエラーの場合は空配列を設定
-        setInterviewLogs([])
-      }
+      // APIから面接ログを取得
+      const companyInterviewLogs = await fetchInterviewsByCompanyID(companyId)
+      setInterviewLogs(companyInterviewLogs)
 
     } catch (error) {
       console.error('企業データの読み込みに失敗しました:', error)
@@ -80,11 +76,11 @@ export default function CompanyDetailPage() {
 
   const handleDeleteInterviewLog = async (logId: string) => {
     try {
+      // APIから削除
       await deleteInterview(logId)
-      // 削除成功後、ローカル状態からも削除
       setInterviewLogs(prev => prev.filter(log => log.id !== logId))
     } catch (error) {
-      console.error('インタビューログの削除に失敗しました:', error)
+      console.error('面接ログの削除に失敗しました:', error)
     }
   }
 

@@ -11,6 +11,11 @@ interface InterviewLogListProps {
 }
 
 export function InterviewLogList({ interviewLogs, onDelete, onViewDetail, onCreateNew }: InterviewLogListProps) {
+  const onViewDetails = (logId: string) => {
+    window.location.href = `/interview/${logId}`
+  }
+
+
   if (interviewLogs.length === 0) {
     return (
       <Card>
@@ -44,14 +49,15 @@ export function InterviewLogList({ interviewLogs, onDelete, onViewDetail, onCrea
                   面接ログ
                 </CardTitle>
                 <CardDescription>
-                  {new Date(log.date).toLocaleDateString("ja-JP")}
+                  {new Date(log.interviewAt).toLocaleDateString("ja-JP")}
+                  {log.stage ? ` - ${log.stage}` : ""}
                 </CardDescription>
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={onViewDetail}
+                  onClick={onViewDetails.bind(null, log.id)}
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   詳細表示
@@ -68,33 +74,20 @@ export function InterviewLogList({ interviewLogs, onDelete, onViewDetail, onCrea
             </div>
           </CardHeader>
           <CardContent>
-            {log.summary && (
+            {log.audioSummary && (
               <div className="mb-3">
                 <h4 className="font-medium text-sm text-gray-700 mb-1">面接要約</h4>
                 <p className="text-sm text-gray-600 line-clamp-3">
-                  {log.summary.slice(0, 200)}...
+                  {log.audioSummary.slice(0, 200)}...
                 </p>
               </div>
             )}
-            {log.transcript && (
+            {log.textNote && (
               <div className="mb-3">
-                <h4 className="font-medium text-sm text-gray-700 mb-1">内容</h4>
+                <h4 className="font-medium text-sm text-gray-700 mb-1">面接メモ</h4>
                 <p className="text-sm text-gray-600 line-clamp-2">
-                  {log.transcript.slice(0, 150)}...
+                  {log.textNote.slice(0, 150)}...
                 </p>
-              </div>
-            )}
-            {log.questions && log.questions.length > 0 && (
-              <div className="mt-3 p-3 bg-green-50 rounded-md">
-                <h4 className="font-medium text-sm text-green-900 mb-1">質問一覧</h4>
-                <ul className="text-sm text-green-800 space-y-1">
-                  {log.questions.slice(0, 3).map((question, index) => (
-                    <li key={index}>• {question}</li>
-                  ))}
-                  {log.questions.length > 3 && (
-                    <li className="text-green-600">他{log.questions.length - 3}件</li>
-                  )}
-                </ul>
               </div>
             )}
           </CardContent>
