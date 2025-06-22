@@ -2,22 +2,104 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Brain, BarChart3, FileText, Loader2 } from "lucide-react";
-import { useBaseESAnalysis, type BaseESAnalysisResult } from "@/components/es/hooks/useBaseESAnalysis";
+import {
+  Brain,
+  BarChart3,
+  FileText,
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import {
+  useBaseESAnalysis,
+  type BaseESAnalysisResult,
+} from "@/components/es/hooks/useBaseESAnalysis";
 import { useState } from "react";
+import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface BaseESAnalysisProps {
   baseES: string;
 }
 
+interface AdviceItemCardProps {
+  item: {
+    category: string;
+    achievement: number;
+    reason: string;
+    suggestion: string;
+  };
+}
+
+function AdviceItemCard({ item }: AdviceItemCardProps) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      {/* 達成度表示部分 */}
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <h4 className="font-medium text-base mb-2">{item.category}</h4>
+        </div>
+        <div className="flex items-center gap-4">
+          <SemiCircleProgress
+            value={item.achievement}
+            size={100}
+            strokeWidth={6}
+          />
+        </div>
+      </div>
+
+      {/* 詳細情報（クリックで表示/非表示） */}
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger asChild>
+          <Button
+            variant="ghost"
+            className="w-full flex items-center justify-between p-2 hover:bg-gray-50"
+          >
+            <span className="text-sm text-gray-600">
+              {isOpen ? "詳細を閉じる" : "詳細を表示"}
+            </span>
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-3 pt-2">
+          <div className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                評価理由
+              </h5>
+              <p className="text-sm text-gray-600">{item.reason}</p>
+            </div>
+            <div>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                改善提案
+              </h5>
+              <p className="text-sm text-gray-600">{item.suggestion}</p>
+            </div>
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+}
+
 export function BaseESAnalysis({ baseES }: BaseESAnalysisProps) {
   const { isAnalyzing, analyzeContent } = useBaseESAnalysis();
-  const [analysisResult, setAnalysisResult] = useState<BaseESAnalysisResult | null>(null);
+  const [analysisResult, setAnalysisResult] =
+    useState<BaseESAnalysisResult | null>(null);
 
   const handleAnalyze = async () => {
     if (!baseES.trim()) return;
-    
+
     try {
       const result = await analyzeContent(baseES);
       setAnalysisResult(result);
@@ -57,11 +139,7 @@ export function BaseESAnalysis({ baseES }: BaseESAnalysisProps) {
               <Brain className="h-5 w-5" />
               基本ES分析
             </div>
-            <Button
-              onClick={handleAnalyze}
-              disabled={isAnalyzing}
-              size="sm"
-            >
+            <Button onClick={handleAnalyze} disabled={isAnalyzing} size="sm">
               {isAnalyzing ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -98,47 +176,20 @@ export function BaseESAnalysis({ baseES }: BaseESAnalysisProps) {
               </div>
 
               {/* 項目別達成度評価 */}
-              {analysisResult.adviceItems && analysisResult.adviceItems.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-lg mb-4 flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    項目別達成度評価
-                  </h4>
-                  <div className="space-y-6">
-                    {analysisResult.adviceItems.map((item, index) => (
-                      <div key={index} className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <h5 className="font-medium text-sm">{item.category}</h5>
-                          <span className="text-sm font-medium text-blue-600">
-                            {item.achievement}%
-                          </span>
-                        </div>
-                        <Progress value={item.achievement} className="h-2" />
-                        <div className="space-y-2 text-sm">
-                          <div className="bg-yellow-50 p-3 rounded-md">
-                            <span className="font-medium text-yellow-800">評価理由:</span>{" "}
-                            <span className="text-yellow-700">{item.reason}</span>
-                          </div>
-                          <div className="bg-green-50 p-3 rounded-md">
-                            <span className="font-medium text-green-800">改善提案:</span>{" "}
-                            <span className="text-green-700">{item.suggestion}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+              {analysisResult.adviceItems &&
+                analysisResult.adviceItems.length > 0 && (
+                  <div>
+                    <h4 className="font-medium text-lg mb-4 flex items-center gap-2">
+                      <BarChart3 className="h-5 w-5" />
+                      項目別達成度評価
+                    </h4>
+                    <div className="space-y-8">
+                      {analysisResult.adviceItems.map((item, index) => (
+                        <AdviceItemCard key={index} item={item} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
-
-              {/* 詳細なアドバイス */}
-              <div>
-                <h4 className="font-medium text-lg mb-3">詳細なアドバイス</h4>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                    {analysisResult.advice}
-                  </p>
-                </div>
-              </div>
+                )}
             </div>
           )}
         </CardContent>
