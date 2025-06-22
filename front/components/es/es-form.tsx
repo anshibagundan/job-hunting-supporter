@@ -69,14 +69,14 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
   }, [formData, isFormValid, onSubmit, resetForm, isEditMode])
 
   const handleAnalyze = useCallback(async () => {
-    if (!formData.content.trim()) return
+    if (!formData.content.trim() || !formData.company?.id) return
 
-    const result = await analyzeContent(formData.content)
+    const result = await analyzeContent(formData.content, formData.company.id)
     // 分析結果をformDataに反映
     updateField("summary", result.summary)
     updateField("advice", result.advice)
     setFormData(prev => ({ ...prev, adviceItems: result.adviceItems }))
-  }, [formData.content, analyzeContent, updateField, setFormData])
+  }, [formData.content, formData.company?.id, analyzeContent, updateField, setFormData])
 
   // ES自動生成機能
   const handleGenerate = useCallback(async () => {
@@ -278,7 +278,7 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
               type="button"
               variant="outline"
               onClick={handleAnalyze}
-              disabled={isAnalyzing || isGenerating || !formData.content.trim()}
+              disabled={isAnalyzing || isGenerating || !formData.content.trim() || !formData.company?.id}
             >
               {isAnalyzing ? "分析中..." : (formData.summary || formData.advice) ? "再分析" : "分析"}
             </Button>
