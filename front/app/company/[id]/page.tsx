@@ -10,6 +10,7 @@ import { LoadingSpinner, NotFoundMessage } from "@/components/common/loading-sta
 import { useCompanyESEntries } from "@/components/company/hooks/useCompanyESEntries"
 import { useCompanyJobEvents } from "@/components/company/hooks/useCompanyJobEvents"
 import { jobEventToEvent } from "@/lib/job-event-utils"
+import { fetchInterviewsByCompanyID, deleteInterview } from "@/components/interview/api"
 
 export default function CompanyDetailPage() {
   const params = useParams()
@@ -23,7 +24,6 @@ export default function CompanyDetailPage() {
 
   // APIからESデータを取得
   const { entries: esEntries, isLoading: esLoading, deleteEntry } = useCompanyESEntries(companyId)
-  
   // APIからJobEventsデータを取得
   const { jobEvents, isLoading: jobEventsLoading } = useCompanyJobEvents(companyId)
 
@@ -52,10 +52,15 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // 面接ログはまだローカルストレージから取得（必要に応じて後でAPI化）
-      const allInterviewLogs = storage.getInterviewLogs()
-      const companyInterviewLogs = allInterviewLogs.filter(log => log.company_name === foundCompany.name)
-      setInterviewLogs(companyInterviewLogs)
+      // インタビューログをAPIから取得
+      try {
+        const companyInterviewLogs = await fetchInterviewsByCompanyID(companyId)
+        setInterviewLogs(companyInterviewLogs)
+      } catch (error) {
+        console.error('インタビューログの取得に失敗しました:', error)
+        // APIエラーの場合は空配列を設定
+        setInterviewLogs([])
+      }
 
     } catch (error) {
       console.error('企業データの読み込みに失敗しました:', error)
@@ -73,11 +78,14 @@ export default function CompanyDetailPage() {
     }
   }
 
-  const handleDeleteInterviewLog = (logId: string) => {
-    const allLogs = storage.getInterviewLogs()
-    const updatedLogs = allLogs.filter(log => log.id !== logId)
-    storage.saveInterviewLogs(updatedLogs)
-    setInterviewLogs(prev => prev.filter(log => log.id !== logId))
+  const handleDeleteInterviewLog = async (logId: string) => {
+    try {
+      await deleteInterview(logId)
+      // 削除成功後、ローカル状態からも削除
+      setInterviewLogs(prev => prev.filter(log => log.id !== logId))
+    } catch (error) {
+      console.error('インタビューログの削除に失敗しました:', error)
+    }
   }
 
   const handleEdit = () => {

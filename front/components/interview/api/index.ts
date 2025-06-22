@@ -38,30 +38,30 @@ export const fetchInterview = async (id: string) => {
 // All interviews fetch
 export const fetchAllInterviews = async () => {
   const response = await apiClient.get('/interviews')
-  return response.data.map(convertInterviewToFrontend)
+  return response.data?.map(convertInterviewToFrontend)
 }
 
 // Interviews by user ID
 export const fetchInterviewsByUserID = async (userID: string) => {
   const response = await apiClient.get(`/interviews/user/${userID}`)
-  return response.data.map(convertInterviewToFrontend)
+  return response.data?.map(convertInterviewToFrontend)
 }
 
 // Interviews by company ID
 export const fetchInterviewsByCompanyID = async (companyID: string) => {
   const response = await apiClient.get(`/interviews/company/${companyID}`)
-  return response.data.map(convertInterviewToFrontend)
+  return response.data?.map(convertInterviewToFrontend)
 }
 
 
 export const createInterview = async (data: InterviewLog) => {
   console.log('Creating interview with data:', data)
-  
+
   // 音声ファイルがある場合はFormDataを使用
   if (data.audioFile) {
     console.log('Using FormData for audio file upload')
     const formData = new FormData()
-    
+
     // フォームデータに面接情報を追加
     formData.append('user_id', (parseInt(data.userId || "1")).toString())
     formData.append('company_id', (parseInt(data.company?.id || "1")).toString())
@@ -71,10 +71,10 @@ export const createInterview = async (data: InterviewLog) => {
     formData.append('text_note', data.textNote || "")
     formData.append('location', data.location || "")
     formData.append('meeting_url', data.meetingUrl || "")
-    
+
     // 音声ファイルを追加
     formData.append('audio_file', data.audioFile)
-    
+
     console.log('Sending FormData to /interviews/with-audio')
     // multipart/form-dataとして送信（CreateInterviewWithAudioエンドポイントを使用）
     const response = await apiClient.post('/interviews/with-audio', formData)
@@ -97,7 +97,7 @@ export const createInterview = async (data: InterviewLog) => {
     }
 
     console.log('Sending JSON to /interviews:', JSON.stringify(backendData, null, 2))
-    
+
     try {
       const response = await apiClient.post('/interviews', backendData, {
         headers: {
