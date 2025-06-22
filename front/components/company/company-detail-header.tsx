@@ -8,7 +8,7 @@ interface CompanyDetailHeaderProps {
   onEdit: () => void
 }
 
-export function CompanyDetailHeader({ companyName, companyId, onBack, onEdit }: CompanyDetailHeaderProps) {
+export function CompanyDetailHeader({ companyName, onBack, onEdit }: CompanyDetailHeaderProps) {
   return (
     <header className="bg-white shadow-sm border-b px-6 py-4">
       <div className="flex items-center justify-between">
