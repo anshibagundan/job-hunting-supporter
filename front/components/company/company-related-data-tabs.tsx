@@ -55,7 +55,6 @@ export function CompanyRelatedDataTabs({
         <InterviewLogList
           interviewLogs={interviewLogs}
           onDelete={onDeleteInterviewLog}
-          onViewDetail={onNavigateToInterview}
           onCreateNew={onNavigateToInterview}
         />
       </TabsContent>

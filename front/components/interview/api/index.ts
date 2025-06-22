@@ -49,8 +49,13 @@ export const fetchInterviewsByUserID = async (userID: string) => {
 
 // Interviews by company ID
 export const fetchInterviewsByCompanyID = async (companyID: string) => {
-  const response = await apiClient.get(`/interviews/company/${companyID}`)
-  return response.data?.map(convertInterviewToFrontend)
+  try {
+    const response = await apiClient.get(`/interviews/company/${companyID}`)
+    return response.data?.map(convertInterviewToFrontend) || []
+  } catch (error) {
+    console.error('Failed to fetch interviews by company ID:', error)
+    return []
+  }
 }
 
 
