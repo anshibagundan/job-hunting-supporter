@@ -9,6 +9,7 @@ import { ArrowLeft, User, Mail, Calendar, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { updateUserProfile } from "@/components/user/api";
+import { BaseESAnalysis } from "@/components/user/base-es-analysis";
 
 export default function ProfilePage() {
   const { user, userProfile, isLoading } = useUserProfile();
@@ -199,6 +200,12 @@ export default function ProfilePage() {
             )}
           </CardContent>
         </Card>
+
+        {/* 基本ES分析セクション */}
+        {!isEditing && userProfile.basic_es && (
+          <BaseESAnalysis baseES={userProfile.basic_es} />
+        )}
+
         {isEditing && (
           <div className="flex gap-2 pt-4">
             <Button onClick={handleSave}>保存</Button>
