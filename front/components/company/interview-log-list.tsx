@@ -6,11 +6,10 @@ import { type InterviewLog } from "@/lib/supabase"
 interface InterviewLogListProps {
   interviewLogs: InterviewLog[]
   onDelete: (logId: string) => void
-  onViewDetail: () => void
   onCreateNew: () => void
 }
 
-export function InterviewLogList({ interviewLogs, onDelete, onViewDetail, onCreateNew }: InterviewLogListProps) {
+export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: InterviewLogListProps) {
   const onViewDetails = (logId: string) => {
     window.location.href = `/interview/${logId}`
   }
@@ -39,6 +38,12 @@ export function InterviewLogList({ interviewLogs, onDelete, onViewDetail, onCrea
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold">面接ログ一覧</h2>
+        <Button onClick={onCreateNew}>
+          新しいES作成
+        </Button>
+      </div>
       {interviewLogs.map((log) => (
         <Card key={log.id}>
           <CardHeader>

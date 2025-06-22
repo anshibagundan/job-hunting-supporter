@@ -12,6 +12,7 @@ import { useCompanyJobEvents } from "@/components/company/hooks/useCompanyJobEve
 import { jobEventToEvent } from "@/lib/job-event-utils"
 import { fetchCompanyById, convertCompanyToFrontend } from "@/components/company/api"
 import { fetchInterviewsByCompanyID, deleteInterview } from "@/components/interview/api"
+import {useCompanyInterviewLogs} from "@/components/company/hooks/useCompanyInterviewLogs";
 
 export default function CompanyDetailPage() {
   const params = useParams()
@@ -19,7 +20,6 @@ export default function CompanyDetailPage() {
   const companyId = params.id as string
 
   const [company, setCompany] = useState<Company | null>(null)
-  const [interviewLogs, setInterviewLogs] = useState<InterviewLog[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -27,6 +27,8 @@ export default function CompanyDetailPage() {
   const { entries: esEntries, isLoading: esLoading, deleteEntry } = useCompanyESEntries(companyId)
   // APIからJobEventsデータを取得
   const { jobEvents, isLoading: jobEventsLoading } = useCompanyJobEvents(companyId)
+  // APIから面接ログを取得
+  const { logs: interviewLogs, isLoading: interviewLogsLoading } = useCompanyInterviewLogs(companyId)
 
   useEffect(() => {
     if (companyId) {
@@ -54,10 +56,6 @@ export default function CompanyDetailPage() {
 
       setCompany(foundCompany)
 
-      // APIから面接ログを取得
-      const companyInterviewLogs = await fetchInterviewsByCompanyID(companyId)
-      setInterviewLogs(companyInterviewLogs)
-
     } catch (error) {
       console.error('企業データの読み込みに失敗しました:', error)
       router.push('/company')
@@ -78,7 +76,6 @@ export default function CompanyDetailPage() {
     try {
       // APIから削除
       await deleteInterview(logId)
-      setInterviewLogs(prev => prev.filter(log => log.id !== logId))
     } catch (error) {
       console.error('面接ログの削除に失敗しました:', error)
     }
@@ -115,7 +112,7 @@ export default function CompanyDetailPage() {
             companyId={companyId}
             onDeleteES={handleDeleteES}
             onDeleteInterviewLog={handleDeleteInterviewLog}
-            onNavigateToInterview={() => router.push('/interview')}
+            onNavigateToInterview={() => router.push('/interview/new?companyId=' + companyId)}
             onNavigateToCalendar={() => router.push('/calendar')}
           />
         </div>
