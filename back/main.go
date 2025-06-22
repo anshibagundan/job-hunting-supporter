@@ -75,11 +75,9 @@ func main() {
 	// DI の設定
 	// 既存の機能用（音声転写など）
 	genAIClient := genai_infrastructure.NewGenAIClient(os.Getenv("GEMINI_API_KEY"))
-	// ES分析専用
-	esAnalysisClient := genai_infrastructure.NewGenAIClient(os.Getenv("AI_ANALYZE_API_KEY"))
 
 	userRepo := user_infrastructure.NewUserRepository(db)
-	userUseCase := user_usecase.NewUserUseCase(userRepo, esAnalysisClient)
+	userUseCase := user_usecase.NewUserUseCase(userRepo, genAIClient)
 	userController := user_controller.NewUserController(userUseCase)
 
 	companyRepo := company_infrastructure.NewCompanyRepository(db)
@@ -96,23 +94,14 @@ func main() {
 	jobEventController := jobevent_controller.NewJobEventController(jobEventUseCase)
 
 	companyESRepo := companyes_infrastructure.NewCompanyESRepository(db)
-	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo, esAnalysisClient, companyUseCase)
+	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo, genAIClient, companyUseCase)
 	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	// JWT初期化
 	auth.InitJWT()
 
-	// Firebase Admin SDK初期化
-	//if err := firebase.InitFirebaseAdmin(); err != nil {
-	//	log.Printf("Firebase initialization failed: %v", err)
-	//}
-
-	// 認証コントローラー初期化
-	//authController := auth_controller.NewAuthController(userUseCase)
-
 	router := gin.Default()
 
-	//router.Use(middleware.CORS())
 	// CORSの設定
 	router.Use(func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
@@ -135,31 +124,6 @@ func main() {
 	router.Handle("GET", "/health", health)
 	api := router.Group("/api")
 	{
-		// 認証エンドポイント（認証不要）
-		//api.POST("/auth/firebase-login", authController.LoginWithFirebase)
-		//api.POST("/auth/logout", authController.Logout)
-
-		// 認証が必要なエンドポイント
-		//protected := api.Group("")
-		//protected.Use(middleware.AuthRequired())
-		//{
-		//protected.GET("/auth/me", authController.GetCurrentUser)
-
-		// 認証が必要なエンドポイント
-		//interviews := protected.Group("/interviews")
-		//{
-		//	interviews.POST("", interviewController.CreateInterview)                     // JSON用
-		//	interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
-		//	interviews.GET("/:id", interviewController.GetInterview)
-		//	interviews.GET("", interviewController.GetAllInterviews)
-		//	interviews.PUT("/:id", interviewController.UpdateInterview)
-		//	interviews.DELETE("/:id", interviewController.DeleteInterview)
-		//	interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
-		//	interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
-		//	interviews.POST("/upload-audio", interviewController.UploadAudio)
-		//}
-		//}
-		// 認証が必要なエンドポイント
 		protected := api.Group("")
 		protected.Use(middleware.AuthRequired())
 		{
@@ -176,6 +140,53 @@ func main() {
 				interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
 				interviews.POST("/upload-audio", interviewController.UploadAudio)
 			}
+
+			companies := protected.Group("/companies")
+			{
+				companies.POST("", companyController.CreateCompany)       // POST /api/companies
+				companies.GET("/:id", companyController.GetCompany)       // GET /api/companies/:id
+				companies.GET("", companyController.GetAllCompanies)      // GET /api/companies
+				companies.PUT("", companyController.UpdateCompany)        // PUT /api/companies
+				companies.DELETE("/:id", companyController.DeleteCompany) // DELETE /api/companies/:id
+			}
+
+			jobEvents := protected.Group("/job-events")
+			{
+				jobEvents.POST("", jobEventController.CreateJobEvent)                            // POST /api/job-events
+				jobEvents.GET("/:id", jobEventController.GetJobEvent)                            // GET /api/job-events/:id
+				jobEvents.GET("", jobEventController.GetAllJobEvents)                            // GET /api/job-events
+				jobEvents.GET("/company/:companyID", jobEventController.GetJobEventsByCompanyID) // GET /api/job-events/company/:companyID
+				jobEvents.GET("/user/:userID", jobEventController.GetJobEventsByUserID)          // GET /api/job-events/user/:userID
+				jobEvents.PUT("", jobEventController.UpdateJobEvent)                             // PUT /api/job-events
+				jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent)                      // DELETE /api/job-events/:id
+			}
+
+			companyESs := protected.Group("/company-es")
+			{
+				companyESs.POST("", companyESController.CreateCompanyES)                                                 // POST /api/company-es
+				companyESs.GET("/:id", companyESController.GetCompanyES)                                                 // GET /api/company-es/:id
+				companyESs.GET("", companyESController.GetAllCompanyESs)                                                 // GET /api/company-es
+				companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                               // GET /api/company-es/user/:userID
+				companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                      // GET /api/company-es/company/:companyID
+				companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
+				companyESs.PUT("/:id", companyESController.UpdateCompanyES)                                              // PUT /api/company-es/:id
+				companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
+				companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
+				companyESs.POST("/generate", companyESController.GenerateESContent)                                      // POST /api/company-es/generate
+			}
+
+			// ユーザー関連のエンドポイント
+			users := protected.Group("/users")
+			{
+				users.PUT("/:id", userController.UpdateUser)    // PUT /api/users/:id
+				users.DELETE("/:id", userController.DeleteUser) // DELETE /api/users/:id
+
+				// 基本ES分析エンドポイント
+				baseES := users.Group("/base-es")
+				{
+					baseES.POST("/analyze", userController.AnalyzeBaseES) // POST /api/users/base-es/analyze
+				}
+			}
 		}
 
 		users := api.Group("/users")
@@ -185,48 +196,6 @@ func main() {
 			users.GET("/:id", userController.GetUser)                                 // GET /api/users/:id
 			users.GET("/firebase/:firebase_uid", userController.GetUserByFirebaseUID) // GET /api/users/firebase/:firebase_uid
 			users.GET("", userController.GetAllUsers)                                 // GET /api/users
-			users.PUT("/:id", userController.UpdateUser)                              // PUT /api/users/:id
-			users.DELETE("/:id", userController.DeleteUser)                           // DELETE /api/users/:id
-
-			// 基本ES分析エンドポイント
-			baseES := users.Group("/base-es")
-			{
-				baseES.POST("/analyze", userController.AnalyzeBaseES) // POST /api/users/base-es/analyze
-			}
-		}
-
-		companies := api.Group("/companies")
-		{
-			companies.POST("", companyController.CreateCompany)       // POST /api/companies
-			companies.GET("/:id", companyController.GetCompany)       // GET /api/companies/:id
-			companies.GET("", companyController.GetAllCompanies)      // GET /api/companies
-			companies.PUT("", companyController.UpdateCompany)        // PUT /api/companies
-			companies.DELETE("/:id", companyController.DeleteCompany) // DELETE /api/companies/:id
-		}
-
-		jobEvents := api.Group("/job-events")
-		{
-			jobEvents.POST("", jobEventController.CreateJobEvent)                            // POST /api/job-events
-			jobEvents.GET("/:id", jobEventController.GetJobEvent)                            // GET /api/job-events/:id
-			jobEvents.GET("", jobEventController.GetAllJobEvents)                            // GET /api/job-events
-			jobEvents.GET("/company/:companyID", jobEventController.GetJobEventsByCompanyID) // GET /api/job-events/company/:companyID
-			jobEvents.GET("/user/:userID", jobEventController.GetJobEventsByUserID)          // GET /api/job-events/user/:userID
-			jobEvents.PUT("", jobEventController.UpdateJobEvent)                             // PUT /api/job-events
-			jobEvents.DELETE("/:id", jobEventController.DeleteJobEvent)                      // DELETE /api/job-events/:id
-		}
-
-		companyESs := api.Group("/company-es")
-		{
-			companyESs.POST("", companyESController.CreateCompanyES)                                                 // POST /api/company-es
-			companyESs.GET("/:id", companyESController.GetCompanyES)                                                 // GET /api/company-es/:id
-			companyESs.GET("", companyESController.GetAllCompanyESs)                                                 // GET /api/company-es
-			companyESs.GET("/user/:userID", companyESController.GetCompanyESsByUserID)                               // GET /api/company-es/user/:userID
-			companyESs.GET("/company/:companyID", companyESController.GetCompanyESsByCompanyID)                      // GET /api/company-es/company/:companyID
-			companyESs.GET("/user/:userID/company/:companyID", companyESController.GetCompanyESByUserIDAndCompanyID) // GET /api/company-es/user/:userID/company/:companyID
-			companyESs.PUT("/:id", companyESController.UpdateCompanyES)                                              // PUT /api/company-es/:id
-			companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
-			companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
-			companyESs.POST("/generate", companyESController.GenerateESContent)                                      // POST /api/company-es/generate
 		}
 	}
 

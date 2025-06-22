@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/domain"
@@ -41,6 +42,12 @@ type CompanyESController struct {
 }
 
 func (c *CompanyESController) CreateCompanyES(ctx *gin.Context) {
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	var req CreateCompanyESRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(400, gin.H{"error": "Invalid input", "details": err.Error()})
@@ -49,7 +56,7 @@ func (c *CompanyESController) CreateCompanyES(ctx *gin.Context) {
 
 	// DTOからドメインエンティティに変換
 	companyES := domain.CompanyES{
-		UserID:      req.UserID,
+		UserID:      userID.(uint), // 認証ミドルウェアから UserID を取得
 		CompanyID:   req.CompanyID,
 		Title:       req.Title,
 		Content:     req.Content,
@@ -74,7 +81,16 @@ func (c *CompanyESController) GetCompanyES(ctx *gin.Context) {
 		return
 	}
 
-	companyES, err := c.useCase.GetCompanyESWithCompany(uint(id))
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized access"})
+		return
+	}
+
+	fmt.Printf("Fetching CompanyES with ID: %d for UserID: %d\n", id, userID)
+
+	companyES, err := c.useCase.GetCompanyESWithCompany(uint(id), userID.(uint))
 	if err != nil {
 		ctx.JSON(404, gin.H{"error": "CompanyES not found"})
 		return
@@ -108,7 +124,15 @@ func (c *CompanyESController) GetCompanyESsByCompanyID(ctx *gin.Context) {
 		return
 	}
 
-	companyESs, err := c.useCase.GetCompanyESsByCompanyIDWithCompany(uint(companyID))
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// ユーザーIDと企業IDで絞り込んで取得
+	companyESs, err := c.useCase.GetCompanyESsByCompanyIDWithCompany(uint(companyID), userID.(uint))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch CompanyESs"})
 		return
@@ -143,7 +167,14 @@ func (c *CompanyESController) GetCompanyESByUserIDAndCompanyID(ctx *gin.Context)
 }
 
 func (c *CompanyESController) GetAllCompanyESs(ctx *gin.Context) {
-	companyESs, err := c.useCase.GetAllCompanyESsWithCompany()
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	companyESs, err := c.useCase.GetAllCompanyESsWithCompany(userID.(uint))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch CompanyESs"})
 		return
@@ -153,6 +184,12 @@ func (c *CompanyESController) GetAllCompanyESs(ctx *gin.Context) {
 }
 
 func (c *CompanyESController) UpdateCompanyES(ctx *gin.Context) {
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	idStr := ctx.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -169,7 +206,7 @@ func (c *CompanyESController) UpdateCompanyES(ctx *gin.Context) {
 	// DTOからドメインエンティティに変換
 	companyES := domain.CompanyES{
 		ID:          uint(id),
-		UserID:      req.UserID,
+		UserID:      userID.(uint), // 認証ミドルウェアから UserID を取得
 		CompanyID:   req.CompanyID,
 		Title:       req.Title,
 		Content:     req.Content,
@@ -178,13 +215,13 @@ func (c *CompanyESController) UpdateCompanyES(ctx *gin.Context) {
 		AdviceItems: domain.AdviceItemsJSON(req.AdviceItems),
 	}
 
-	if err := c.useCase.UpdateCompanyES(&companyES); err != nil {
+	if err := c.useCase.UpdateCompanyES(&companyES, userID.(uint)); err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to update CompanyES", "details": err.Error()})
 		return
 	}
 
 	// 更新されたエンティティを企業情報と一緒に返す
-	updatedCompanyES, err := c.useCase.GetCompanyESWithCompany(uint(id))
+	updatedCompanyES, err := c.useCase.GetCompanyESWithCompany(uint(id), userID.(uint))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch updated CompanyES"})
 		return
@@ -201,7 +238,14 @@ func (c *CompanyESController) DeleteCompanyES(ctx *gin.Context) {
 		return
 	}
 
-	if err := c.useCase.DeleteCompanyES(uint(id)); err != nil {
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	if err := c.useCase.DeleteCompanyES(uint(id), userID.(uint)); err != nil {
 		ctx.JSON(404, gin.H{"error": "CompanyES not found"})
 		return
 	}
