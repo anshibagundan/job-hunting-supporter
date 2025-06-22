@@ -2,9 +2,11 @@ package controller
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
+	"github.com/anshibagundan/job-hunting-supporter/pkg/auth"
 	"github.com/gin-gonic/gin"
 )
 
@@ -135,29 +137,52 @@ func (c *UserController) SyncFirebaseUser(ctx *gin.Context) {
 		return
 	}
 
+	var user *domain.User
+
 	// Check if user already exists
 	existingUser, err := c.useCase.GetUserByFirebaseUID(req.FirebaseUID)
 	if err == nil && existingUser != nil {
-		// User already exists, return the existing user
-		ctx.JSON(200, existingUser)
+		// User already exists
+		user = existingUser
+	} else {
+		// Create new user
+		newUser := &domain.User{
+			FirebaseUID: req.FirebaseUID,
+			Email:       req.Email,
+			Name:        req.Name,
+			Icon:        req.PhotoURL,
+			BasicES:     "",
+		}
+
+		if err := c.useCase.CreateUser(newUser); err != nil {
+			ctx.JSON(500, gin.H{"error": "Failed to create user"})
+			return
+		}
+		user = newUser
+	}
+
+	// Generate JWT token
+	token, err := auth.GenerateToken(user.ID)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to generate token"})
 		return
 	}
 
-	// Create new user
-	user := &domain.User{
-		FirebaseUID: req.FirebaseUID,
-		Email:       req.Email,
-		Name:        req.Name,
-		Icon:        req.PhotoURL,
-		BasicES:     "",
-	}
+	// Set JWT token as HttpOnly cookie
+	ctx.SetCookie(
+		"auth_token",
+		token,
+		int(24*time.Hour/time.Second), // 24 hours
+		"/",
+		"",
+		false, // secure (set to true in production with HTTPS)
+		true,  // httpOnly
+	)
 
-	if err := c.useCase.CreateUser(user); err != nil {
-		ctx.JSON(500, gin.H{"error": "Failed to create user"})
-		return
-	}
-
-	ctx.JSON(201, user)
+	ctx.JSON(200, gin.H{
+		"user":    user,
+		"message": "Authentication successful",
+	})
 }
 
 func (c *UserController) GetUserByFirebaseUID(ctx *gin.Context) {

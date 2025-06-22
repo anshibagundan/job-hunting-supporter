@@ -31,13 +31,13 @@ func (c *InterviewController) CreateInterview(ctx *gin.Context) {
 		return
 	}
 
-	// 認証ミドルウェアから UserID を取得
-	if userID, exists := ctx.Get("userID"); exists {
-		interview.UserID = userID.(uint)
-	} else if interview.UserID == 0 {
-		// 開発用フォールバック（JWT実装後は削除）
-		interview.UserID = 1
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
 	}
+
+	interview.UserID = userID.(uint) // 認証ミドルウェアから UserID を取得
 
 	// デバッグ: 受信したデータを確認
 	fmt.Printf("Received interview data: %+v\n", interview)
@@ -62,8 +62,15 @@ func (c *InterviewController) GetInterview(ctx *gin.Context) {
 		return
 	}
 
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	// Return interview with company information
-	interview, err := c.useCase.GetInterviewWithCompany(uint(id))
+	interview, err := c.useCase.GetInterviewWithCompany(uint(id), userID.(uint))
 	if err != nil {
 		ctx.JSON(404, gin.H{"error": "Interview not found"})
 		return
@@ -73,8 +80,15 @@ func (c *InterviewController) GetInterview(ctx *gin.Context) {
 }
 
 func (c *InterviewController) GetAllInterviews(ctx *gin.Context) {
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	// Return interviews with company information
-	interviews, err := c.useCase.GetAllInterviewsWithCompany()
+	interviews, err := c.useCase.GetAllInterviewsWithCompany(userID.(uint))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch Interviews"})
 		return
@@ -108,7 +122,15 @@ func (c *InterviewController) GetInterviewsByCompanyID(ctx *gin.Context) {
 		return
 	}
 
-	interviews, err := c.useCase.GetInterviewsByCompanyIDWithCompany(uint(companyID))
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	// ユーザーIDと企業IDで絞り込んで取得
+	interviews, err := c.useCase.GetInterviewsByUserIDAndCompanyIDWithCompany(userID.(uint), uint(companyID))
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to fetch Interviews"})
 		return
@@ -118,6 +140,13 @@ func (c *InterviewController) GetInterviewsByCompanyID(ctx *gin.Context) {
 }
 
 func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
+
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
 	// URLパラメータからIDを取得
 	idStr := ctx.Param("id")
 	id, err := strconv.ParseUint(idStr, 10, 32)
@@ -133,8 +162,10 @@ func (c *InterviewController) UpdateInterview(ctx *gin.Context) {
 		return
 	}
 
+	interview.UserID = userID.(uint) // 認証ミドルウェアから UserID を取得
+
 	// IDを設定
-	interview.ID = uint(id)	
+	interview.ID = uint(id)
 
 	// 面接を更新
 	if err := c.useCase.UpdateInterview(&interview); err != nil {
@@ -182,6 +213,13 @@ func (c *InterviewController) CreateInterviewWithAudio(ctx *gin.Context) {
 	interview.TextNote = ctx.PostForm("text_note")
 	interview.Location = ctx.PostForm("location")
 	interview.MeetingURL = ctx.PostForm("meeting_url")
+
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	interview.UserID = userID.(uint) // 認証ミドルウェアから UserID を取得
 
 	// デバッグ: 受信したデータを確認
 	fmt.Printf("Received interview data: %+v\n", interview)
@@ -234,6 +272,12 @@ func (c *InterviewController) CreateInterviewWithAudio(ctx *gin.Context) {
 }
 
 func (c *InterviewController) UpdateInterviewWithAudio(ctx *gin.Context) {
+	// 認証ミドルウェアから UserID を取得
+	userID, exists := ctx.Get("userID")
+	if !exists {
+		ctx.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
 	fmt.Printf("Updating interview with audio...\n")
 
 	// Parse multipart form
@@ -259,6 +303,8 @@ func (c *InterviewController) UpdateInterviewWithAudio(ctx *gin.Context) {
 	interview.TextNote = ctx.PostForm("text_note")
 	interview.Location = ctx.PostForm("location")
 	interview.MeetingURL = ctx.PostForm("meeting_url")
+
+	interview.UserID = userID.(uint) // 認証ミドルウェアから UserID を取得
 
 	if interviewAt := ctx.PostForm("interview_at"); interviewAt != "" {
 		if t, err := time.Parse(time.RFC3339, interviewAt); err == nil {

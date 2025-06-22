@@ -35,12 +35,23 @@ func (u *InterviewUseCase) DeleteInterview(id uint) error {
 }
 
 // Operations with Company information using service
-func (u *InterviewUseCase) GetInterviewWithCompany(id uint) (*domain.InterviewResponse, error) {
-	return u.service.FindByIDWithCompany(id)
+func (u *InterviewUseCase) GetInterviewWithCompany(id uint, requestUserID uint) (*domain.InterviewResponse, error) {
+	interview, err := u.service.FindByIDWithCompany(id)
+	if err != nil {
+		return nil, err
+	}
+	
+	// 権限チェック：自分の面接データのみアクセス可能
+	if interview.UserID != requestUserID {
+		return nil, fmt.Errorf("access denied: you can only view your own interviews")
+	}
+	
+	return interview, nil
 }
 
-func (u *InterviewUseCase) GetAllInterviewsWithCompany() ([]*domain.InterviewResponse, error) {
-	return u.service.GetAllWithCompany()
+func (u *InterviewUseCase) GetAllInterviewsWithCompany(requestUserID uint) ([]*domain.InterviewResponse, error) {
+	// 自分の面接データのみ取得
+	return u.service.FindByUserIDWithCompany(requestUserID)
 }
 
 func (u *InterviewUseCase) GetInterviewsByUserIDWithCompany(userID uint) ([]*domain.InterviewResponse, error) {

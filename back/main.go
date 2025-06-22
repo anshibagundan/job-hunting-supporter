@@ -40,6 +40,9 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+
+	"github.com/anshibagundan/job-hunting-supporter/pkg/auth"
+	"github.com/anshibagundan/job-hunting-supporter/pkg/middleware"
 )
 
 func main() {
@@ -97,7 +100,7 @@ func main() {
 	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	// JWT初期化
-	//auth.InitJWT()
+	auth.InitJWT()
 
 	// Firebase Admin SDK初期化
 	//if err := firebase.InitFirebaseAdmin(); err != nil {
@@ -156,18 +159,23 @@ func main() {
 		//	interviews.POST("/upload-audio", interviewController.UploadAudio)
 		//}
 		//}
-		interviews := api.Group("/interviews")
+		// 認証が必要なエンドポイント
+		protected := api.Group("")
+		protected.Use(middleware.AuthRequired())
 		{
-			interviews.POST("", interviewController.CreateInterview)                     // JSON用
-			interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
-			interviews.GET("/:id", interviewController.GetInterview)
-			interviews.GET("", interviewController.GetAllInterviews)
-			interviews.PUT("/:id", interviewController.UpdateInterview)
-			interviews.PUT("/with-audio/:id", interviewController.UpdateInterviewWithAudio) // 音声付きの面接更新
-			interviews.DELETE("/:id", interviewController.DeleteInterview)
-			interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
-			interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
-			interviews.POST("/upload-audio", interviewController.UploadAudio)
+			interviews := protected.Group("/interviews")
+			{
+				interviews.POST("", interviewController.CreateInterview)                     // JSON用
+				interviews.POST("/with-audio", interviewController.CreateInterviewWithAudio) // FormData用
+				interviews.GET("/:id", interviewController.GetInterview)
+				interviews.GET("", interviewController.GetAllInterviews)
+				interviews.PUT("/:id", interviewController.UpdateInterview)
+				interviews.PUT("/with-audio/:id", interviewController.UpdateInterviewWithAudio) // 音声付きの面接更新
+				interviews.DELETE("/:id", interviewController.DeleteInterview)
+				interviews.GET("/user/:userID", interviewController.GetInterviewsByUserID)
+				interviews.GET("/company/:companyID", interviewController.GetInterviewsByCompanyID)
+				interviews.POST("/upload-audio", interviewController.UploadAudio)
+			}
 		}
 
 		users := api.Group("/users")

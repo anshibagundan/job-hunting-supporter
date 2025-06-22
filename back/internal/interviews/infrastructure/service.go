@@ -81,6 +81,11 @@ func (i *InterviewService) FindByUserIDWithCompany(userID uint) ([]*domain.Inter
 		responses = append(responses, i.convertToInterviewResponse(interview, company))
 	}
 
+	// 面接データが存在しない場合は空のリストを返す
+	if len(responses) == 0 {
+		return []*domain.InterviewResponse{}, nil
+	}
+
 	return responses, nil
 }
 
@@ -98,6 +103,11 @@ func (i *InterviewService) FindByCompanyIDWithCompany(companyID uint) ([]*domain
 	err = i.db.Where("company_id = ?", companyID).Find(&interviews).Error
 	if err != nil {
 		return nil, err
+	}
+
+	// 面接データが存在しない場合は空のリストを返す
+	if len(interviews) == 0 {
+		return []*domain.InterviewResponse{}, nil
 	}
 
 	var responses []*domain.InterviewResponse
