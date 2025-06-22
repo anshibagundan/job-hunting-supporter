@@ -76,7 +76,7 @@ func main() {
 	esAnalysisClient := genai_infrastructure.NewGenAIClient(os.Getenv("AI_ANALYZE_API_KEY"))
 
 	userRepo := user_infrastructure.NewUserRepository(db)
-	userUseCase := user_usecase.NewUserUseCase(userRepo)
+	userUseCase := user_usecase.NewUserUseCase(userRepo, esAnalysisClient)
 	userController := user_controller.NewUserController(userUseCase)
 
 	companyRepo := company_infrastructure.NewCompanyRepository(db)
@@ -93,7 +93,7 @@ func main() {
 	jobEventController := jobevent_controller.NewJobEventController(jobEventUseCase)
 
 	companyESRepo := companyes_infrastructure.NewCompanyESRepository(db)
-	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo, esAnalysisClient)
+	companyESUseCase := companyes_usecase.NewCompanyESUseCase(companyESRepo, esAnalysisClient, companyUseCase)
 	companyESController := companyes_controller.NewCompanyESController(companyESUseCase)
 
 	// JWT初期化
@@ -179,6 +179,12 @@ func main() {
 			users.GET("", userController.GetAllUsers)                                 // GET /api/users
 			users.PUT("/:id", userController.UpdateUser)                              // PUT /api/users/:id
 			users.DELETE("/:id", userController.DeleteUser)                           // DELETE /api/users/:id
+
+			// 基本ES分析エンドポイント
+			baseES := users.Group("/base-es")
+			{
+				baseES.POST("/analyze", userController.AnalyzeBaseES) // POST /api/users/base-es/analyze
+			}
 		}
 
 		companies := api.Group("/companies")

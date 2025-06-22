@@ -3,6 +3,7 @@ package controller
 import (
 	"strconv"
 
+	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/usecase"
 	"github.com/gin-gonic/gin"
@@ -174,4 +175,38 @@ func (c *UserController) GetUserByFirebaseUID(ctx *gin.Context) {
 	}
 
 	ctx.JSON(200, user)
+}
+
+// 基本ES分析用の型定義
+type AnalyzeBaseESRequest struct {
+	Content string `json:"content" binding:"required"`
+}
+
+type AnalyzeBaseESResponse struct {
+	Summary     string                   `json:"summary"`
+	Advice      string                   `json:"advice"`
+	AdviceItems []genaidomain.AdviceItem `json:"adviceItems"`
+}
+
+// AnalyzeBaseES - 基本ESの分析エンドポイント
+func (c *UserController) AnalyzeBaseES(ctx *gin.Context) {
+	var req AnalyzeBaseESRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	summary, advice, adviceItems, err := c.useCase.AnalyzeBaseESContent(req.Content)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
+		return
+	}
+
+	response := AnalyzeBaseESResponse{
+		Summary:     summary,
+		Advice:      advice,
+		AdviceItems: adviceItems,
+	}
+
+	ctx.JSON(200, response)
 }

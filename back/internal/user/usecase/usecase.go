@@ -1,17 +1,22 @@
 package usecase
 
 import (
+	"fmt"
+
+	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 	"github.com/anshibagundan/job-hunting-supporter/internal/user/domain"
 )
 
-func NewUserUseCase(repo domain.UserRepository) *UserUseCase {
+func NewUserUseCase(repo domain.UserRepository, genaiClient genaidomain.GenAIClient) *UserUseCase {
 	return &UserUseCase{
-		repo: repo,
+		repo:        repo,
+		genaiClient: genaiClient,
 	}
 }
 
 type UserUseCase struct {
-	repo domain.UserRepository
+	repo        domain.UserRepository
+	genaiClient genaidomain.GenAIClient
 }
 
 func (u *UserUseCase) CreateUser(user *domain.User) error {
@@ -40,4 +45,14 @@ func (u *UserUseCase) DeleteUser(id uint) error {
 
 func (u *UserUseCase) GetUserByFirebaseUID(firebaseUID string) (*domain.User, error) {
 	return u.repo.FindByFirebaseUID(firebaseUID)
+}
+
+// AnalyzeBaseESContent - 基本ESの内容を分析する
+func (u *UserUseCase) AnalyzeBaseESContent(content string) (summary string, advice string, adviceItems []genaidomain.AdviceItem, err error) {
+	if content == "" {
+		return "", "", nil, fmt.Errorf("content is empty")
+	}
+
+	// GenAI クライアントを使用して基本ESの分析を実行
+	return u.genaiClient.AnalyzeBaseESContent(content)
 }

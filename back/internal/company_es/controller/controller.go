@@ -210,7 +210,8 @@ func (c *CompanyESController) DeleteCompanyES(ctx *gin.Context) {
 }
 
 type AnalyzeRequest struct {
-	Content string `json:"content" binding:"required"`
+	Content   string `json:"content" binding:"required"`
+	CompanyID uint   `json:"company_id" binding:"required"`
 }
 
 type AnalyzeResponse struct {
@@ -226,7 +227,7 @@ func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
 		return
 	}
 
-	summary, advice, adviceItems, err := c.useCase.AnalyzeContent(req.Content)
+	summary, advice, adviceItems, err := c.useCase.AnalyzeContentWithCompany(req.Content, req.CompanyID)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
 		return

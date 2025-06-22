@@ -3,20 +3,23 @@ package usecase
 import (
 	"fmt"
 
+	companyUsecase "github.com/anshibagundan/job-hunting-supporter/internal/companies/usecase"
 	"github.com/anshibagundan/job-hunting-supporter/internal/company_es/domain"
 	genaidomain "github.com/anshibagundan/job-hunting-supporter/internal/shared/genai/domain"
 )
 
-func NewCompanyESUseCase(repo domain.CompanyESRepository, genaiClient genaidomain.GenAIClient) *CompanyESUseCase {
+func NewCompanyESUseCase(repo domain.CompanyESRepository, genaiClient genaidomain.GenAIClient, companyUseCase *companyUsecase.CompanyUseCase) *CompanyESUseCase {
 	return &CompanyESUseCase{
-		repo:        repo,
-		genaiClient: genaiClient,
+		repo:           repo,
+		genaiClient:    genaiClient,
+		companyUseCase: companyUseCase,
 	}
 }
 
 type CompanyESUseCase struct {
-	repo        domain.CompanyESRepository
-	genaiClient genaidomain.GenAIClient
+	repo           domain.CompanyESRepository
+	genaiClient    genaidomain.GenAIClient
+	companyUseCase *companyUsecase.CompanyUseCase
 }
 
 func (u *CompanyESUseCase) CreateCompanyES(companyES *domain.CompanyES) error {
@@ -96,4 +99,20 @@ func (u *CompanyESUseCase) GenerateESContent(baseES string, companyDescription s
 
 	// GenAI クライアントを使用してES内容を自動生成
 	return u.genaiClient.GenerateESContent(baseES, companyDescription, esTitle)
+}
+
+// AnalyzeContentWithCompany - 企業情報を含めたES内容の分析
+func (u *CompanyESUseCase) AnalyzeContentWithCompany(content string, companyID uint) (summary string, advice string, adviceItems []genaidomain.AdviceItem, err error) {
+	if content == "" {
+		return "", "", nil, fmt.Errorf("content is empty")
+	}
+
+	// 企業情報を取得
+	company, err := u.companyUseCase.GetCompany(companyID)
+	if err != nil {
+		return "", "", nil, fmt.Errorf("failed to get company information: %w", err)
+	}
+
+	// 企業情報を含めたプロンプトでGenAI分析を実行
+	return u.genaiClient.AnalyzeESContentWithCompany(content, company.Name, company.Description, company.Industry)
 }
