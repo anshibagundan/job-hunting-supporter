@@ -66,3 +66,14 @@ export const deleteCompany = async (id: string) => {
   const response = await apiClient.delete(`/companies/${id}`);
   return response.data;
 };
+
+// 企業情報生成用の型定義
+export interface GenerateCompanyRequest {
+  name: string;
+}
+
+// 企業情報自動生成
+export const generateCompanyInfo = async (companyName: string): Promise<CompanyResponse> => {
+  const response = await apiClient.post('/companies/generate', { name: companyName });
+  return response.data;
+};

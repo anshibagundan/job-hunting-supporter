@@ -2,6 +2,7 @@ package genaiinfra
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"regexp"
@@ -506,4 +507,84 @@ func (g *GenAIClientImpl) AnalyzeESContentWithCompany(content string, companyNam
 	adviceItemsList := parseAdviceResponse(adviceText, companyESCategories)
 
 	return summaryResp.Text(), adviceText, adviceItemsList, nil
+}
+
+// GenerateCompanyInfo は企業名から企業情報を自動生成します
+func (g *GenAIClientImpl) GenerateCompanyInfo(companyName string) (domain.CompanyInfo, error) {
+	ctx := context.Background()
+
+	// 企業情報生成のプロンプト
+	prompt := fmt.Sprintf(`
+あなたは企業情報を調査・生成するAIアシスタントです。
+以下の企業名について、公開されている情報を基に企業情報を生成してください。
+
+【企業名】
+%s
+
+【生成すべき情報】
+1. 企業名（正式名称）
+2. ウェブサイトURL（企業の公式サイト）
+3. 企業説明（事業内容、バリュー、パーパス、ミッション、製品、求めている人材について詳しく）
+4. 企業ロゴ画像URL（利用可能な場合）
+5. 業界（例: IT、製造、金融、サービス等）
+
+【出力形式】
+以下のJSON形式で出力してください：
+{
+  "name": "企業の正式名称",
+  "website": "https://www.example.com",
+  "description": "企業の詳細な説明（バリュー、パーパス、ミッション、製品、求めている人材について400-600文字）",
+  "image": "企業ロゴのURL（利用可能な場合）またはプレースホルダー画像URL",
+  "industry": "業界名"
+}
+
+【注意事項】
+- 最新の公開情報を基に正確な情報を提供してください
+- 企業説明では、バリューやパーパス、ミッション、主要製品・サービス、求めている人材像について詳しく記載してください
+- ウェブサイトURLは正確なものを提供してください
+- 画像URLが不明な場合は "https://via.placeholder.com/300x200?text=Company+Logo" を使用してください
+
+JSONのみを出力し、余計な説明は含めないでください。
+`, companyName)
+
+	contents := []*genai.Content{
+		genai.NewContentFromParts([]*genai.Part{
+			genai.NewPartFromText(prompt),
+		}, genai.RoleUser),
+	}
+
+	resp, err := g.client.Models.GenerateContent(ctx, "gemini-1.5-flash", contents, nil)
+	if err != nil {
+		return domain.CompanyInfo{}, fmt.Errorf("company info generation failed: %w", err)
+	}
+
+	responseText := resp.Text()
+
+	// JSONレスポンスをパースして構造体に変換
+	var companyInfo domain.CompanyInfo
+
+	// JSON部分を抽出（```json と ``` で囲まれている場合の対応）
+	jsonStart := strings.Index(responseText, "{")
+	jsonEnd := strings.LastIndex(responseText, "}")
+
+	if jsonStart == -1 || jsonEnd == -1 {
+		return domain.CompanyInfo{}, fmt.Errorf("invalid JSON response from AI")
+	}
+
+	jsonText := responseText[jsonStart : jsonEnd+1]
+
+	// JSONをパース
+	err = json.Unmarshal([]byte(jsonText), &companyInfo)
+	if err != nil {
+		// パースエラーの場合は、デフォルト値で構造体を作成
+		return domain.CompanyInfo{
+			Name:        companyName,
+			WebURL:      "https://www.example.com",
+			Description: fmt.Sprintf("%sに関する詳細な企業情報を取得できませんでした。", companyName),
+			Img:         "https://via.placeholder.com/300x200?text=Company+Logo",
+			Industry:    "その他",
+		}, fmt.Errorf("failed to parse company info JSON: %w", err)
+	}
+
+	return companyInfo, nil
 }

@@ -7,14 +7,15 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Building2 } from "lucide-react"
-import { createCompany, type CreateCompanyRequest } from "@/components/company/api"
+import { ArrowLeft, Building2, Wand2 } from "lucide-react"
+import { createCompany, generateCompanyInfo, type CreateCompanyRequest } from "@/components/company/api"
 import { useToast } from "@/hooks/useToast"
 
 export default function NewCompanyPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGenerating, setIsGenerating] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     website: "",
@@ -32,9 +33,49 @@ export default function NewCompanyPage() {
     }))
   }
 
+  const handleAutoFill = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "エラー",
+        description: "企業名を入力してから自動入力ボタンを押してください",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsGenerating(true)
+
+    try {
+      const generatedInfo = await generateCompanyInfo(formData.name)
+      setFormData(prev => ({
+        ...prev,
+        name: generatedInfo.name,
+        website: generatedInfo.website,
+        description: generatedInfo.description,
+        image: generatedInfo.image,
+        industry: generatedInfo.industry,
+        scrape_target_url: generatedInfo.website, // デフォルトでウェブサイトを設定
+      }))
+
+      toast({
+        title: "成功",
+        description: "企業情報が自動入力されました",
+      })
+    } catch (error) {
+      console.error("Failed to generate company info:", error)
+      toast({
+        title: "エラー",
+        description: "企業情報の自動生成に失敗しました",
+        variant: "destructive",
+      })
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.name.trim()) {
       toast({
         title: "エラー",
@@ -45,7 +86,7 @@ export default function NewCompanyPage() {
     }
 
     setIsSubmitting(true)
-    
+
     try {
       await createCompany(formData)
       toast({
@@ -86,22 +127,45 @@ export default function NewCompanyPage() {
       <Card>
         <CardHeader>
           <CardTitle>企業情報</CardTitle>
+          <p className="text-sm text-gray-600">
+            企業名を入力して「自動入力」ボタンを押すと、AIが企業情報を自動生成します。
+            <br />
+            例：「カルタホールディングス」と入力してお試しください。
+          </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name" className="required">
                   企業名 *
                 </Label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="例：株式会社○○"
-                  required
-                />
+                <div className="flex gap-2">
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="例：株式会社○○"
+                    required
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleAutoFill}
+                    disabled={isGenerating || !formData.name.trim()}
+                    className="flex items-center gap-2 whitespace-nowrap"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                    {isGenerating ? "生成中..." : "自動入力"}
+                  </Button>
+                </div>
+                {isGenerating && (
+                  <p className="text-sm text-blue-600">
+                    AIが企業情報を生成しています...
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -150,21 +214,6 @@ export default function NewCompanyPage() {
                 placeholder="企業の概要や特徴を記入してください..."
                 rows={4}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="scrape_target_url">スクレイピング対象URL</Label>
-              <Input
-                id="scrape_target_url"
-                name="scrape_target_url"
-                type="url"
-                value={formData.scrape_target_url}
-                onChange={handleInputChange}
-                placeholder="例：https://example.com/careers"
-              />
-              <p className="text-sm text-gray-500">
-                求人情報の自動取得に使用するURLです（オプション）
-              </p>
             </div>
 
             <div className="flex justify-end gap-4 pt-4">
