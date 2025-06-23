@@ -41,7 +41,7 @@ export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: Inter
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">面接ログ一覧</h2>
         <Button onClick={onCreateNew}>
-          新しいES作成
+          新しい面接ログ作成
         </Button>
       </div>
       {interviewLogs.map((log) => (
