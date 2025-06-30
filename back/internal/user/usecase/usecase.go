@@ -57,6 +57,20 @@ func (u *UserUseCase) AnalyzeBaseESContent(content string) (summary string, advi
 	return u.genaiClient.AnalyzeBaseESContent(content)
 }
 
+// AnalyzeBaseESContentWithCategories - カスタムカテゴリで基本ESの内容を分析する
+func (u *UserUseCase) AnalyzeBaseESContentWithCategories(content string, categories []string) (summary string, advice string, adviceItems []genaidomain.AdviceItem, err error) {
+	if content == "" {
+		return "", "", nil, fmt.Errorf("content is empty")
+	}
+
+	if len(categories) == 0 {
+		return "", "", nil, fmt.Errorf("categories cannot be empty")
+	}
+
+	// GenAI クライアントを使用してカスタムカテゴリで基本ESの分析を実行
+	return u.genaiClient.AnalyzeBaseESContentWithCategories(content, categories)
+}
+
 // SaveBaseESAnalysisToProfile - 基本ES分析結果をユーザープロファイルに保存する
 func (u *UserUseCase) SaveBaseESAnalysisToProfile(userID uint, summary string, adviceItems []genaidomain.AdviceItem) error {
 	// ドメイン型に変換

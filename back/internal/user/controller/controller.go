@@ -222,6 +222,13 @@ type AnalyzeBaseESRequest struct {
 	SaveToProfile bool `json:"save_to_profile"` // 分析結果をプロファイルに保存するかどうか
 }
 
+type AnalyzeBaseESWithCategoriesRequest struct {
+	Content   string   `json:"content" binding:"required"`
+	Categories []string `json:"categories" binding:"required"` // カスタム評価カテゴリ
+	UserID    uint     `json:"user_id"`    // オプション: 分析結果をユーザープロファイルに保存する場合
+	SaveToProfile bool `json:"save_to_profile"` // 分析結果をプロファイルに保存するかどうか
+}
+
 type AnalyzeBaseESResponse struct {
 	Summary     string                   `json:"summary"`
 	Advice      string                   `json:"advice"`
@@ -237,6 +244,48 @@ func (c *UserController) AnalyzeBaseES(ctx *gin.Context) {
 	}
 
 	summary, advice, adviceItems, err := c.useCase.AnalyzeBaseESContent(req.Content)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
+		return
+	}
+
+	// 分析結果をユーザープロファイルに保存する場合
+	if req.SaveToProfile && req.UserID > 0 {
+		if err := c.useCase.SaveBaseESAnalysisToProfile(req.UserID, summary, adviceItems); err != nil {
+			// 保存に失敗してもレスポンスは返す（警告ログは出力）
+			ctx.Header("X-Warning", "Failed to save analysis to profile")
+		}
+	}
+
+	response := AnalyzeBaseESResponse{
+		Summary:     summary,
+		Advice:      advice,
+		AdviceItems: adviceItems,
+	}
+
+	ctx.JSON(200, response)
+}
+
+// AnalyzeBaseESWithCategories - カスタムカテゴリでの基本ES分析エンドポイント
+func (c *UserController) AnalyzeBaseESWithCategories(ctx *gin.Context) {
+	var req AnalyzeBaseESWithCategoriesRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// カテゴリの検証
+	if len(req.Categories) == 0 {
+		ctx.JSON(400, gin.H{"error": "Categories cannot be empty"})
+		return
+	}
+
+	if len(req.Categories) > 10 {
+		ctx.JSON(400, gin.H{"error": "Too many categories (maximum 10)"})
+		return
+	}
+
+	summary, advice, adviceItems, err := c.useCase.AnalyzeBaseESContentWithCategories(req.Content, req.Categories)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
 		return

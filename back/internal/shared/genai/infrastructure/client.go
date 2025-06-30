@@ -17,6 +17,24 @@ type GenAIClientImpl struct {
 	client *genai.Client
 }
 
+// デフォルトの評価カテゴリ
+var defaultEvaluationCategories = []string{
+	"具体性の向上（数値や成果の追加）",
+	"企業との関連性の明確化",
+	"文章構成の改善提案",
+	"インパクトの向上方法",
+	"読みやすさの改善",
+}
+
+// デフォルトの企業分析評価カテゴリ
+var defaultCompanyEvaluationCategories = []string{
+	"企業理解と志望動機の明確化",
+	"企業文化・価値観との適合性",
+	"業界知識と関連性の表現",
+	"具体的な貢献可能性の提示",
+	"企業が求める人材像との一致度",
+}
+
 func NewGenAIClient(apiKey string) domain.GenAIClient {
 	ctx := context.Background()
 	client, err := genai.NewClient(ctx, &genai.ClientConfig{
@@ -91,10 +109,86 @@ func (g *GenAIClientImpl) AnalyzeInterviewContent(content string) (summary strin
 	}
 
 	return summaryResp.Text(), nil
+}
 
+// generateCompanyAdvicePrompt は企業情報を含む動的なアドバイスプロンプトを生成します
+func generateCompanyAdvicePrompt(content string, companyName string, companyDescription string, industry string, categories []string) string {
+	// カテゴリ一覧を動的に生成
+	categoriesText := ""
+	for i, category := range categories {
+		categoriesText += fmt.Sprintf("%d. %s\n", i+1, category)
+	}
+
+	// 出力形式を動的に生成
+	outputFormat := ""
+	for i, category := range categories {
+		outputFormat += fmt.Sprintf(`## %d. %s
+**達成度: XX%%**
+**評価理由:** [企業の特色を踏まえた現在の状況の説明]
+**改善提案:** [企業に特化した具体的な改善アドバイス]
+
+`, i+1, category)
+	}
+
+	return fmt.Sprintf(`以下のエントリーシート内容を企業情報と照らし合わせて分析し、各項目の達成度を%%で評価し、企業に特化した改善アドバイスを提供してください。
+
+【分析対象ES】
+%s
+
+【企業情報】
+企業名: %s
+業界: %s
+企業説明: %s
+
+【評価・アドバイス項目】
+以下の各項目について、企業の特色を踏まえた現在の達成度を0-100%%で評価し、その理由と具体的な改善提案を提供してください。
+
+%s
+【出力形式】
+各項目について以下の形式で出力してください：
+
+%s企業の特色を活かした建設的で具体的なアドバイスを日本語で提供してください。`, content, companyName, industry, companyDescription, categoriesText, outputFormat)
+}
+
+// generateAdvicePrompt は動的にアドバイスプロンプトを生成します
+func generateAdvicePrompt(content string, categories []string) string {
+	// カテゴリ一覧を動的に生成
+	categoriesText := ""
+	for i, category := range categories {
+		categoriesText += fmt.Sprintf("%d. %s\n", i+1, category)
+	}
+
+	// 出力形式を動的に生成
+	outputFormat := ""
+	for i, category := range categories {
+		outputFormat += fmt.Sprintf(`## %d. %s
+**達成度: XX%%**
+**評価理由:** [現在の状況の説明]
+**改善提案:** [具体的な改善アドバイス]
+
+`, i+1, category)
+	}
+
+	return fmt.Sprintf(`以下のエントリーシート内容を分析し、各項目の達成度を%%で評価し、改善アドバイスを提供してください。
+
+【分析対象】
+%s
+
+【評価・アドバイス項目】
+以下の各項目について、現在の達成度を0-100%%で評価し、その理由と具体的な改善提案を提供してください。
+
+%s
+【出力形式】
+各項目について以下の形式で出力してください：
+
+%s建設的で具体的なアドバイスを日本語で提供してください。`, content, categoriesText, outputFormat)
 }
 
 func (g *GenAIClientImpl) AnalyzeESContent(content string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
+	return g.AnalyzeESContentWithCategories(content, defaultEvaluationCategories)
+}
+
+func (g *GenAIClientImpl) AnalyzeESContentWithCategories(content string, categories []string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
 	ctx := context.Background()
 
 	// 要約を生成するプロンプト
@@ -122,50 +216,8 @@ func (g *GenAIClientImpl) AnalyzeESContent(content string) (summary string, advi
 		return "", "", nil, fmt.Errorf("summary generation failed: %w", err)
 	}
 
-	// 改善アドバイスを生成するプロンプト
-	advicePrompt := fmt.Sprintf(`以下のエントリーシート内容を分析し、各項目の達成度を%で評価し、改善アドバイスを提供してください。
-
-【分析対象】
-%s
-
-【評価・アドバイス項目】
-以下の各項目について、現在の達成度を0-100%で評価し、その理由と具体的な改善提案を提供してください。
-
-1. 具体性の向上（数値や成果の追加）
-2. 企業との関連性の明確化
-3. 文章構成の改善提案
-4. インパクトの向上方法
-5. 読みやすさの改善
-
-【出力形式】
-各項目について以下の形式で出力してください：
-
-## 1. 具体性の向上（数値や成果の追加）
-**達成度: XX%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 2. 企業との関連性の明確化
-**達成度: XX%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 3. 文章構成の改善提案
-**達成度: XX%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 4. インパクトの向上方法
-**達成度: XX%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 5. 読みやすさの改善
-**達成度: XX%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-建設的で具体的なアドバイスを日本語で提供してください。`, content)
+	// 改善アドバイスを生成するプロンプト（動的カテゴリを使用）
+	advicePrompt := generateAdvicePrompt(content, categories)
 
 	adviceContents := []*genai.Content{
 		genai.NewContentFromParts([]*genai.Part{
@@ -180,20 +232,17 @@ func (g *GenAIClientImpl) AnalyzeESContent(content string) (summary string, advi
 
 	// アドバイステキストから構造化データを抽出
 	adviceText := adviceResp.Text()
-	companyESCategories := []string{
-		"企業理解と志望動機の明確化",
-		"企業文化・価値観との適合性",
-		"業界知識と関連性の表現",
-		"具体的な貢献可能性の提示",
-		"企業が求める人材像との一致度",
-	}
-	adviceItemsList := parseAdviceResponse(adviceText, companyESCategories)
+	adviceItemsList := parseAdviceResponse(adviceText, categories)
 
 	return summaryResp.Text(), adviceText, adviceItemsList, nil
 }
 
 // AnalyzeBaseESContent は基本ES分析（企業情報なし）を実行します
 func (g *GenAIClientImpl) AnalyzeBaseESContent(content string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
+	return g.AnalyzeBaseESContentWithCategories(content, defaultEvaluationCategories)
+}
+
+func (g *GenAIClientImpl) AnalyzeBaseESContentWithCategories(content string, categories []string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
 	ctx := context.Background()
 
 	// 要約を生成するプロンプト
@@ -221,40 +270,8 @@ func (g *GenAIClientImpl) AnalyzeBaseESContent(content string) (summary string, 
 		return "", "", nil, fmt.Errorf("summary generation failed: %w", err)
 	}
 
-	// アドバイスを生成するプロンプト（基本ES分析用）
-	advicePrompt := fmt.Sprintf(`以下のエントリーシート内容について、基本的な改善点をアドバイスしてください。
-
-【分析対象】
-%s
-
-以下の5つの観点から評価し、それぞれについて達成度（%%）、評価理由、改善提案を記載してください：
-
-## 1. 具体性の向上（数値や成果の追加）
-**達成度: XX%%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 2. 企業との関連性の明確化
-**達成度: XX%%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 3. 文章構成の改善提案
-**達成度: XX%%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 4. インパクトの向上方法
-**達成度: XX%%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-## 5. 読みやすさの改善
-**達成度: XX%%**
-**評価理由:** [現在の状況の説明]
-**改善提案:** [具体的な改善アドバイス]
-
-建設的で具体的なアドバイスを日本語で提供してください。`, content)
+	// アドバイスを生成するプロンプト（動的カテゴリを使用）
+	advicePrompt := generateAdvicePrompt(content, categories)
 
 	adviceContents := []*genai.Content{
 		genai.NewContentFromParts([]*genai.Part{
@@ -267,16 +284,9 @@ func (g *GenAIClientImpl) AnalyzeBaseESContent(content string) (summary string, 
 		return summaryResp.Text(), "", nil, fmt.Errorf("advice generation failed: %w", err)
 	}
 
-	// アドバイステキストから構造化データを抽出（基本ES分析用パーサーを使用）
+	// アドバイステキストから構造化データを抽出
 	adviceText := adviceResp.Text()
-	baseESCategories := []string{
-		"具体性の向上（数値や成果の追加）",
-		"企業との関連性の明確化",
-		"文章構成の改善提案",
-		"インパクトの向上方法",
-		"読みやすさの改善",
-	}
-	adviceItemsList := parseAdviceResponse(adviceText, baseESCategories)
+	adviceItemsList := parseAdviceResponse(adviceText, categories)
 
 	return summaryResp.Text(), adviceText, adviceItemsList, nil
 }
@@ -401,6 +411,10 @@ func (g *GenAIClientImpl) GenerateESContent(baseES string, companyDescription st
 
 // AnalyzeESContentWithCompany は企業情報を含めたES内容の分析を行います
 func (g *GenAIClientImpl) AnalyzeESContentWithCompany(content string, companyName string, companyDescription string, industry string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
+	return g.AnalyzeESContentWithCompanyAndCategories(content, companyName, companyDescription, industry, defaultCompanyEvaluationCategories)
+}
+
+func (g *GenAIClientImpl) AnalyzeESContentWithCompanyAndCategories(content string, companyName string, companyDescription string, industry string, categories []string) (summary string, advice string, adviceItems []domain.AdviceItem, err error) {
 	ctx := context.Background()
 
 	// 企業情報を含めた要約を生成するプロンプト
@@ -434,55 +448,8 @@ func (g *GenAIClientImpl) AnalyzeESContentWithCompany(content string, companyNam
 		return "", "", nil, fmt.Errorf("summary generation failed: %w", err)
 	}
 
-	// 企業情報を含めた改善アドバイスを生成するプロンプト
-	advicePrompt := fmt.Sprintf(`以下のエントリーシート内容を企業情報と照らし合わせて分析し、各項目の達成度を%%で評価し、企業に特化した改善アドバイスを提供してください。
-
-【分析対象ES】
-%s
-
-【企業情報】
-企業名: %s
-業界: %s
-企業説明: %s
-
-【評価・アドバイス項目】
-以下の各項目について、企業の特色を踏まえた現在の達成度を0-100%%で評価し、その理由と具体的な改善提案を提供してください。
-
-1. 企業理解と志望動機の明確化
-2. 企業文化・価値観との適合性
-3. 業界知識と関連性の表現
-4. 具体的な貢献可能性の提示
-5. 企業が求める人材像との一致度
-
-【出力形式】
-各項目について以下の形式で出力してください：
-
-## 1. 企業理解と志望動機の明確化
-**達成度: XX%%**
-**評価理由:** [企業の特色を踏まえた現在の状況の説明]
-**改善提案:** [企業に特化した具体的な改善アドバイス]
-
-## 2. 企業文化・価値観との適合性
-**達成度: XX%%**
-**評価理由:** [企業の特色を踏まえた現在の状況の説明]
-**改善提案:** [企業に特化した具体的な改善アドバイス]
-
-## 3. 業界知識と関連性の表現
-**達成度: XX%%**
-**評価理由:** [企業の特色を踏まえた現在の状況の説明]
-**改善提案:** [企業に特化した具体的な改善アドバイス]
-
-## 4. 具体的な貢献可能性の提示
-**達成度: XX%%**
-**評価理由:** [企業の特色を踏まえた現在の状況の説明]
-**改善提案:** [企業に特化した具体的な改善アドバイス]
-
-## 5. 企業が求める人材像との一致度
-**達成度: XX%%**
-**評価理由:** [企業の特色を踏まえた現在の状況の説明]
-**改善提案:** [企業に特化した具体的な改善アドバイス]
-
-企業の特色を活かした建設的で具体的なアドバイスを日本語で提供してください。`, content, companyName, industry, companyDescription)
+	// 企業情報を含めた改善アドバイスを生成するプロンプト（動的カテゴリを使用）
+	advicePrompt := generateCompanyAdvicePrompt(content, companyName, companyDescription, industry, categories)
 
 	adviceContents := []*genai.Content{
 		genai.NewContentFromParts([]*genai.Part{
@@ -497,14 +464,7 @@ func (g *GenAIClientImpl) AnalyzeESContentWithCompany(content string, companyNam
 
 	// アドバイステキストから構造化データを抽出
 	adviceText := adviceResp.Text()
-	companyESCategories := []string{
-		"企業理解と志望動機の明確化",
-		"企業文化・価値観との適合性",
-		"業界知識と関連性の表現",
-		"具体的な貢献可能性の提示",
-		"企業が求める人材像との一致度",
-	}
-	adviceItemsList := parseAdviceResponse(adviceText, companyESCategories)
+	adviceItemsList := parseAdviceResponse(adviceText, categories)
 
 	return summaryResp.Text(), adviceText, adviceItemsList, nil
 }

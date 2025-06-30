@@ -86,6 +86,20 @@ func (u *CompanyESUseCase) AnalyzeContent(content string) (summary string, advic
 	return u.genaiClient.AnalyzeESContent(content)
 }
 
+// AnalyzeContentWithCategories - カスタムカテゴリで内容を分析する
+func (u *CompanyESUseCase) AnalyzeContentWithCategories(content string, categories []string) (summary string, advice string, adviceItems []genaidomain.AdviceItem, err error) {
+	if content == "" {
+		return "", "", nil, fmt.Errorf("content is empty")
+	}
+
+	if len(categories) == 0 {
+		return "", "", nil, fmt.Errorf("categories cannot be empty")
+	}
+
+	// GenAI クライアントを使用してカスタムカテゴリで分析を実行
+	return u.genaiClient.AnalyzeESContentWithCategories(content, categories)
+}
+
 // Methods to get responses with Company details
 func (u *CompanyESUseCase) GetCompanyESWithCompany(id uint, requestUserID uint) (*domain.CompanyESResponse, error) {
 	companyES, err := u.repo.FindByIDWithCompany(id)
@@ -149,4 +163,24 @@ func (u *CompanyESUseCase) AnalyzeContentWithCompany(content string, companyID u
 
 	// 企業情報を含めたプロンプトでGenAI分析を実行
 	return u.genaiClient.AnalyzeESContentWithCompany(content, company.Name, company.Description, company.Industry)
+}
+
+// AnalyzeContentWithCompanyAndCategories - 企業情報とカスタムカテゴリを含めたES内容の分析
+func (u *CompanyESUseCase) AnalyzeContentWithCompanyAndCategories(content string, companyID uint, categories []string) (summary string, advice string, adviceItems []genaidomain.AdviceItem, err error) {
+	if content == "" {
+		return "", "", nil, fmt.Errorf("content is empty")
+	}
+
+	if len(categories) == 0 {
+		return "", "", nil, fmt.Errorf("categories cannot be empty")
+	}
+
+	// 企業情報を取得
+	company, err := u.companyUseCase.GetCompany(companyID)
+	if err != nil {
+		return "", "", nil, fmt.Errorf("failed to get company information: %w", err)
+	}
+
+	// 企業情報とカスタムカテゴリを含めたプロンプトでGenAI分析を実行
+	return u.genaiClient.AnalyzeESContentWithCompanyAndCategories(content, company.Name, company.Description, company.Industry, categories)
 }
