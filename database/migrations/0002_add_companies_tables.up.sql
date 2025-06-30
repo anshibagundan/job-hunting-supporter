@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS companies (
     name VARCHAR(255) NOT NULL UNIQUE,
     web_url VARCHAR(255) NOT NULL UNIQUE,
     description TEXT NOT NULL,
-    img VARCHAR(255),
+    img TEXT,
     industry VARCHAR(255) NOT NULL,
     scrape_target_url VARCHAR(255) NOT NULL,
     last_scrape_time TIMESTAMP NOT NULL,
