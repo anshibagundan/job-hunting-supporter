@@ -258,6 +258,12 @@ type AnalyzeRequest struct {
 	CompanyID uint   `json:"company_id" binding:"required"`
 }
 
+type AnalyzeWithCategoriesRequest struct {
+	Content    string   `json:"content" binding:"required"`
+	CompanyID  uint     `json:"company_id" binding:"required"`
+	Categories []string `json:"categories" binding:"required"` // カスタム評価カテゴリ
+}
+
 type AnalyzeResponse struct {
 	Summary     string                   `json:"summary"`
 	Advice      string                   `json:"advice"`
@@ -272,6 +278,39 @@ func (c *CompanyESController) AnalyzeCompanyES(ctx *gin.Context) {
 	}
 
 	summary, advice, adviceItems, err := c.useCase.AnalyzeContentWithCompany(req.Content, req.CompanyID)
+	if err != nil {
+		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
+		return
+	}
+
+	response := AnalyzeResponse{
+		Summary:     summary,
+		Advice:      advice,
+		AdviceItems: adviceItems,
+	}
+
+	ctx.JSON(200, response)
+}
+
+func (c *CompanyESController) AnalyzeCompanyESWithCategories(ctx *gin.Context) {
+	var req AnalyzeWithCategoriesRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(400, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	// カテゴリの検証
+	if len(req.Categories) == 0 {
+		ctx.JSON(400, gin.H{"error": "Categories cannot be empty"})
+		return
+	}
+
+	if len(req.Categories) > 10 {
+		ctx.JSON(400, gin.H{"error": "Too many categories (maximum 10)"})
+		return
+	}
+
+	summary, advice, adviceItems, err := c.useCase.AnalyzeContentWithCompanyAndCategories(req.Content, req.CompanyID, req.Categories)
 	if err != nil {
 		ctx.JSON(500, gin.H{"error": "Failed to analyze content"})
 		return

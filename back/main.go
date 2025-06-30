@@ -173,6 +173,7 @@ func main() {
 				companyESs.PUT("/:id", companyESController.UpdateCompanyES)                                              // PUT /api/company-es/:id
 				companyESs.DELETE("/:id", companyESController.DeleteCompanyES)                                           // DELETE /api/company-es/:id
 				companyESs.POST("/analyze", companyESController.AnalyzeCompanyES)                                        // POST /api/company-es/analyze
+				companyESs.POST("/analyze-with-categories", companyESController.AnalyzeCompanyESWithCategories)          // POST /api/company-es/analyze-with-categories
 				companyESs.POST("/generate", companyESController.GenerateESContent)                                      // POST /api/company-es/generate
 			}
 
@@ -185,7 +186,8 @@ func main() {
 				// 基本ES分析エンドポイント
 				baseES := users.Group("/base-es")
 				{
-					baseES.POST("/analyze", userController.AnalyzeBaseES) // POST /api/users/base-es/analyze
+					baseES.POST("/analyze", userController.AnalyzeBaseES)                     // POST /api/users/base-es/analyze
+					baseES.POST("/analyze-with-categories", userController.AnalyzeBaseESWithCategories) // POST /api/users/base-es/analyze-with-categories
 				}
 			}
 		}
