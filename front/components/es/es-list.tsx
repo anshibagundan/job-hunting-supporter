@@ -1,39 +1,42 @@
-import { useState, useMemo, useCallback } from "react"
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { ESItem } from "./es-item"
-import type { ESEntry } from "@/lib/supabase"
+import { Search } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import type { ESEntry } from "@/lib/supabase";
+import { ESItem } from "./es-item";
 
 interface ESListProps {
-  entries: ESEntry[]
-  onSelectEntry: (id: string) => void
-  onDeleteEntry: (id: string) => void
+  entries: ESEntry[];
+  onSelectEntry: (id: string) => void;
+  onDeleteEntry: (id: string) => void;
 }
 
-export function ESList({
-  entries,
-  onSelectEntry,
-  onDeleteEntry,
-}: ESListProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+export function ESList({ entries, onSelectEntry, onDeleteEntry }: ESListProps) {
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredEntries = useMemo(() => {
-    if (!searchTerm.trim()) return entries
+    if (!searchTerm.trim()) return entries;
 
-    return entries.filter(entry =>
-      entry.company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      entry.content.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [entries, searchTerm])
+    return entries.filter(
+      (entry) =>
+        entry.company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        entry.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [entries, searchTerm]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-  }, [])
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(e.target.value);
+    },
+    []
+  );
 
-  const handleDeleteEntry = useCallback((id: string) => {
-    onDeleteEntry(id)
-  }, [onDeleteEntry])
+  const handleDeleteEntry = useCallback(
+    (id: string) => {
+      onDeleteEntry(id);
+    },
+    [onDeleteEntry]
+  );
 
   return (
     <div>
@@ -75,5 +78,5 @@ export function ESList({
         </div>
       )}
     </div>
-  )
+  );
 }

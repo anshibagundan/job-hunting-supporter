@@ -1,26 +1,30 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Building2 } from "lucide-react"
-import { fetchCompanyById, updateCompany, type CompanyResponse } from "@/components/company/api"
-import { useToast } from "@/hooks/useToast"
-import { LoadingSpinner } from "@/components/common/loading-states"
+import { ArrowLeft, Building2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LoadingSpinner } from "@/components/common/loading-states";
+import {
+  type CompanyResponse,
+  fetchCompanyById,
+  updateCompany,
+} from "@/components/company/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/useToast";
 
 export default function EditCompanyPage() {
-  const router = useRouter()
-  const params = useParams()
-  const { toast } = useToast()
-  const companyId = params.id as string
+  const router = useRouter();
+  const params = useParams();
+  const { toast } = useToast();
+  const companyId = params.id as string;
 
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [company, setCompany] = useState<CompanyResponse | null>(null)
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [company, setCompany] = useState<CompanyResponse | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     website: "",
@@ -28,13 +32,13 @@ export default function EditCompanyPage() {
     image: "",
     industry: "",
     scrape_target_url: "",
-  })
+  });
 
   useEffect(() => {
     const loadCompany = async () => {
       try {
-        const companyData = await fetchCompanyById(companyId)
-        setCompany(companyData)
+        const companyData = await fetchCompanyById(companyId);
+        setCompany(companyData);
         setFormData({
           name: companyData.name || "",
           website: companyData.website || "",
@@ -42,75 +46,77 @@ export default function EditCompanyPage() {
           image: companyData.image || "",
           industry: companyData.industry || "",
           scrape_target_url: companyData.scrape_target_url || "",
-        })
+        });
       } catch (error) {
-        console.error("Failed to load company:", error)
+        console.error("Failed to load company:", error);
         toast({
           title: "エラー",
           description: "企業情報の読み込みに失敗しました",
           variant: "destructive",
-        })
-        router.push("/company")
+        });
+        router.push("/company");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (companyId) {
-      loadCompany()
+      loadCompany();
     }
-  }, [companyId, router, toast])
+  }, [companyId, router, toast]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
+    e.preventDefault();
+
     if (!formData.name.trim()) {
       toast({
         title: "エラー",
         description: "企業名は必須です",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    if (!company) return
+    if (!company) return;
 
-    setIsSubmitting(true)
-    
+    setIsSubmitting(true);
+
     try {
       const updatedCompany: CompanyResponse = {
         ...company,
         ...formData,
-      }
-      
-      await updateCompany(updatedCompany)
+      };
+
+      await updateCompany(updatedCompany);
       toast({
         title: "成功",
         description: "企業情報が正常に更新されました",
-      })
-      router.push(`/company/${companyId}`)
+      });
+      router.push(`/company/${companyId}`);
     } catch (error) {
-      console.error("Failed to update company:", error)
+      console.error("Failed to update company:", error);
       toast({
         title: "エラー",
         description: "企業情報の更新に失敗しました",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (isLoading) {
-    return <LoadingSpinner message="企業情報を読み込み中..." />
+    return <LoadingSpinner message="企業情報を読み込み中..." />;
   }
 
   if (!company) {
@@ -118,7 +124,7 @@ export default function EditCompanyPage() {
       <div className="container mx-auto px-4 py-6">
         <p>企業が見つかりません</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -156,7 +162,7 @@ export default function EditCompanyPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="例：株式会社○○"
-                  required
+                  required={true}
                 />
               </div>
 
@@ -244,5 +250,5 @@ export default function EditCompanyPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

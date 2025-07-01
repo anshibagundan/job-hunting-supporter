@@ -1,35 +1,40 @@
-import type React from "react"
-import "./globals.css"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { AuthenticatedLayout } from "@/components/layout/authenticated-layout"
-import { Header } from "@/components/layout/header"
-import { AuthProvider } from "@/contexts/auth-context"
+import type React from "react";
+import "./globals.css";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { AuthenticatedLayout } from "@/components/layout/authenticated-layout";
+import { Header } from "@/components/layout/header";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from "@/contexts/auth-context";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "就活サポーター",
   description: "ES管理・面接予定・振り返りを一元管理",
-  generator: 'v0.dev',
+  generator: "v0.dev",
   icons: {
-    icon: '/job-hunting-logo-circle.png',
-    apple: '/job-hunting-logo-circle.png',
+    icon: "/job-hunting-logo-circle.png",
+    apple: "/job-hunting-logo-circle.png",
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja" suppressHydrationWarning={true}>
       <body className={inter.className}>
         <AuthProvider>
-          <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={true}
+            disableTransitionOnChange={true}
+          >
             <Header />
             <AuthenticatedLayout>{children}</AuthenticatedLayout>
             <Toaster />
@@ -37,5 +42,5 @@ export default function RootLayout({
         </AuthProvider>
       </body>
     </html>
-  )
+  );
 }

@@ -1,16 +1,26 @@
-import { Calendar } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { type Event } from "@/lib/supabase"
+import { Calendar } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { Event } from "@/lib/supabase";
 
 interface EventListProps {
-  events: Event[]
-  onViewCalendar: () => void
-  onCreateNew: () => void
+  events: Event[];
+  onViewCalendar: () => void;
+  onCreateNew: () => void;
 }
 
-export function EventList({ events, onViewCalendar, onCreateNew }: EventListProps) {
+export function EventList({
+  events,
+  onViewCalendar,
+  onCreateNew,
+}: EventListProps) {
   if (events.length === 0) {
     return (
       <Card>
@@ -19,17 +29,13 @@ export function EventList({ events, onViewCalendar, onCreateNew }: EventListProp
           <p className="text-gray-500 text-center">
             この企業の予定はまだ登録されていません。
             <br />
-            <Button
-              variant="link"
-              className="p-0 mt-2"
-              onClick={onCreateNew}
-            >
+            <Button variant="link" className="p-0 mt-2" onClick={onCreateNew}>
               予定を作成する
             </Button>
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -43,7 +49,9 @@ export function EventList({ events, onViewCalendar, onCreateNew }: EventListProp
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="outline">{event.type}</Badge>
                   {event.isJobEvent && (
-                    <Badge variant="secondary" className="text-xs">求人イベント</Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      求人イベント
+                    </Badge>
                   )}
                   <CardDescription>
                     {new Date(event.date).toLocaleDateString("ja-JP")}
@@ -56,16 +64,12 @@ export function EventList({ events, onViewCalendar, onCreateNew }: EventListProp
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => window.open(event.event_url, '_blank')}
+                    onClick={() => window.open(event.event_url, "_blank")}
                   >
                     詳細を見る
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={onViewCalendar}
-                >
+                <Button variant="outline" size="sm" onClick={onViewCalendar}>
                   <Calendar className="h-4 w-4 mr-2" />
                   カレンダーで確認
                 </Button>
@@ -82,7 +86,9 @@ export function EventList({ events, onViewCalendar, onCreateNew }: EventListProp
                   {event.job_description && (
                     <div>
                       <h4 className="font-medium text-sm">詳細</h4>
-                      <p className="text-sm text-gray-600">{event.job_description}</p>
+                      <p className="text-sm text-gray-600">
+                        {event.job_description}
+                      </p>
                     </div>
                   )}
                   {event.start_date && event.deadline && (
@@ -106,5 +112,5 @@ export function EventList({ events, onViewCalendar, onCreateNew }: EventListProp
         </Card>
       ))}
     </div>
-  )
+  );
 }

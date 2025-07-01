@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Building2, Wand2 } from "lucide-react"
-import { createCompany, generateCompanyInfo, type CreateCompanyRequest } from "@/components/company/api"
-import { useToast } from "@/hooks/useToast"
+import { ArrowLeft, Building2, Wand2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createCompany, generateCompanyInfo } from "@/components/company/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/useToast";
 
 export default function NewCompanyPage() {
-  const router = useRouter()
-  const { toast } = useToast()
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     website: "",
@@ -23,15 +23,17 @@ export default function NewCompanyPage() {
     image: "",
     industry: "",
     scrape_target_url: "",
-  })
+  });
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
-  }
+      [name]: value,
+    }));
+  };
 
   const handleAutoFill = async () => {
     if (!formData.name.trim()) {
@@ -39,15 +41,15 @@ export default function NewCompanyPage() {
         title: "エラー",
         description: "企業名を入力してから自動入力ボタンを押してください",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsGenerating(true)
+    setIsGenerating(true);
 
     try {
-      const generatedInfo = await generateCompanyInfo(formData.name)
-      setFormData(prev => ({
+      const generatedInfo = await generateCompanyInfo(formData.name);
+      setFormData((prev) => ({
         ...prev,
         name: generatedInfo.name,
         website: generatedInfo.website,
@@ -55,56 +57,56 @@ export default function NewCompanyPage() {
         image: generatedInfo.image,
         industry: generatedInfo.industry,
         scrape_target_url: generatedInfo.website, // デフォルトでウェブサイトを設定
-      }))
+      }));
 
       toast({
         title: "成功",
         description: "企業情報が自動入力されました",
-      })
+      });
     } catch (error) {
-      console.error("Failed to generate company info:", error)
+      console.error("Failed to generate company info:", error);
       toast({
         title: "エラー",
         description: "企業情報の自動生成に失敗しました",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.name.trim()) {
       toast({
         title: "エラー",
         description: "企業名は必須です",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      await createCompany(formData)
+      await createCompany(formData);
       toast({
         title: "成功",
         description: "企業が正常に作成されました",
-      })
-      router.push("/company")
+      });
+      router.push("/company");
     } catch (error) {
-      console.error("Failed to create company:", error)
+      console.error("Failed to create company:", error);
       toast({
         title: "エラー",
         description: "企業の作成に失敗しました",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -147,7 +149,7 @@ export default function NewCompanyPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     placeholder="例：株式会社○○"
-                    required
+                    required={true}
                     className="flex-1"
                   />
                   <Button
@@ -237,5 +239,5 @@ export default function NewCompanyPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,47 +1,51 @@
-import { FileText, Search } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useState, useMemo, useCallback } from "react"
-import { type ESEntry } from "@/lib/supabase"
-import { ESItem } from "./es-item"
+import { FileText, Search } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import type { ESEntry } from "@/lib/supabase";
+import { ESItem } from "./es-item";
 
 interface ESListProps {
-  esEntries: ESEntry[]
-  onDelete: (esId: string) => void
-  companyId?: string // 企業IDを追加
+  esEntries: ESEntry[];
+  onDelete: (esId: string) => void;
+  companyId?: string; // 企業IDを追加
 }
 
 export function ESList({ esEntries, onDelete, companyId }: ESListProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState("");
 
   const onCreateNew = () => {
     // 企業IDがある場合はクエリパラメータとして渡す
     if (companyId) {
-      window.location.href = `/es/new?companyId=${companyId}`
+      window.location.href = `/es/new?companyId=${companyId}`;
     } else {
-      window.location.href = `/es/new`
+      window.location.href = "/es/new";
     }
-  }
+  };
 
   const onViewDetail = (esId: string) => {
-    window.location.href = `/es/${esId}`
-  }
+    window.location.href = `/es/${esId}`;
+  };
 
   // フィルタリングされたESエントリ
   const filteredESEntries = useMemo(() => {
-    if (!searchTerm.trim()) return esEntries
+    if (!searchTerm.trim()) return esEntries;
 
-    return esEntries.filter(es =>
-      es.company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      es.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      es.content.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [esEntries, searchTerm])
+    return esEntries.filter(
+      (es) =>
+        es.company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        es.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        es.content.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [esEntries, searchTerm]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-  }, [])
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(e.target.value);
+    },
+    []
+  );
 
   if (esEntries.length === 0) {
     return (
@@ -51,17 +55,13 @@ export function ESList({ esEntries, onDelete, companyId }: ESListProps) {
           <p className="text-gray-500 text-center">
             この企業のESはまだ登録されていません。
             <br />
-            <Button
-              variant="link"
-              className="p-0 mt-2"
-              onClick={onCreateNew}
-            >
+            <Button variant="link" className="p-0 mt-2" onClick={onCreateNew}>
               ESを作成する
             </Button>
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -77,9 +77,7 @@ export function ESList({ esEntries, onDelete, companyId }: ESListProps) {
             className="pl-10"
           />
         </div>
-        <Button onClick={onCreateNew}>
-          新しいES作成
-        </Button>
+        <Button onClick={onCreateNew}>新しいES作成</Button>
       </div>
 
       {/* ES一覧 */}
@@ -102,5 +100,5 @@ export function ESList({ esEntries, onDelete, companyId }: ESListProps) {
         </Card>
       )}
     </div>
-  )
+  );
 }

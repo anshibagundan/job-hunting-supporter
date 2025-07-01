@@ -1,21 +1,27 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { Event, Company } from "@/lib/supabase"
-import { storage } from "@/lib/supabase"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { Company, Event } from "@/lib/supabase";
 
 interface EventFormProps {
-  onSubmit: (event: Omit<Event, "id">) => void
-  onCancel: () => void
+  onSubmit: (event: Omit<Event, "id">) => void;
+  onCancel: () => void;
+  companies: Company[];
 }
 
-export function EventForm({ onSubmit, onCancel }: EventFormProps) {
+export function EventForm({ onSubmit, onCancel, companies }: EventFormProps) {
   const [formData, setFormData] = useState({
     company_id: "",
     company_name: "",
@@ -26,28 +32,12 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
     notes: "",
     start_date: "",
     event_url: "",
-  })
-
-  const [companies, setCompanies] = useState<Company[]>([])
-
-  useEffect(() => {
-    // 企業リストを取得
-    const fetchCompanies = async () => {
-      try {
-        const companiesData = await storage.getCompanies()
-        setCompanies(companiesData)
-      } catch (error) {
-        console.error('Failed to load companies:', error)
-      }
-    }
-
-    fetchCompanies()
-  }, [])
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     onSubmit({
-      company_id: parseInt(formData.company_id) || 0, // 数値に変換
+      company_id: Number.parseInt(formData.company_id) || 0, // 数値に変換
       company_name: formData.company_name,
       type: formData.type,
       title: formData.title,
@@ -57,8 +47,8 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
       start_date: formData.start_date || undefined,
       event_url: formData.event_url || undefined,
       isJobEvent: true, // JobEvent として作成
-    })
-  }
+    });
+  };
 
   return (
     <div>
@@ -69,13 +59,13 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
           <Select
             value={formData.company_id}
             onValueChange={(value) => {
-              const company = companies.find((c) => c.id.toString() === value)
+              const company = companies.find((c) => c.id.toString() === value);
               if (company) {
-                setFormData((prev) => ({ 
-                  ...prev, 
+                setFormData((prev) => ({
+                  ...prev,
                   company_id: value,
-                  company_name: company.name 
-                }))
+                  company_name: company.name,
+                }));
               }
             }}
           >
@@ -96,7 +86,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
           <label className="block text-sm font-medium mb-2">種別</label>
           <Select
             value={formData.type}
-            onValueChange={(value: Event["type"]) => setFormData((prev) => ({ ...prev, type: value }))}
+            onValueChange={(value: Event["type"]) =>
+              setFormData((prev) => ({ ...prev, type: value }))
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="種別を選択" />
@@ -114,9 +106,11 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
           <label className="block text-sm font-medium mb-2">タイトル</label>
           <Input
             value={formData.title}
-            onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, title: e.target.value }))
+            }
             placeholder="例: 一次面接、ES提出"
-            required
+            required={true}
           />
         </div>
 
@@ -126,8 +120,10 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
             <Input
               type="date"
               value={formData.date}
-              onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
-              required
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, date: e.target.value }))
+              }
+              required={true}
             />
           </div>
           <div>
@@ -135,7 +131,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
             <Input
               type="time"
               value={formData.time}
-              onChange={(e) => setFormData((prev) => ({ ...prev, time: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, time: e.target.value }))
+              }
             />
           </div>
         </div>
@@ -145,7 +143,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
           <Input
             type="date"
             value={formData.start_date}
-            onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, start_date: e.target.value }))
+            }
             placeholder="応募開始日"
           />
         </div>
@@ -155,7 +155,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
           <Input
             type="url"
             value={formData.event_url}
-            onChange={(e) => setFormData((prev) => ({ ...prev, event_url: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, event_url: e.target.value }))
+            }
             placeholder="https://example.com/event"
           />
         </div>
@@ -164,7 +166,9 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
           <label className="block text-sm font-medium mb-2">備考</label>
           <Textarea
             value={formData.notes}
-            onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, notes: e.target.value }))
+            }
             placeholder="場所、準備事項など"
             rows={3}
           />
@@ -178,5 +182,5 @@ export function EventForm({ onSubmit, onCancel }: EventFormProps) {
         </div>
       </form>
     </div>
-  )
+  );
 }

@@ -1,18 +1,25 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { Trash2, Calendar, MapPin, Video, Building, Clock, FileText, Brain, Mic } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
-import type { InterviewLog } from "@/lib/supabase"
+import {
+  Brain,
+  Building,
+  Calendar,
+  Clock,
+  FileText,
+  MapPin,
+  Trash2,
+  Video,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { InterviewLog } from "@/lib/supabase";
 
 interface InterviewDetailProps {
-  log: InterviewLog
-  onDelete: (id: string) => void
+  log: InterviewLog;
+  onDelete: (id: string) => void;
 }
 
 export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
@@ -22,9 +29,9 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
       month: "long",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
-    })
-  }
+      minute: "2-digit",
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -42,20 +49,16 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
                   {log.company?.industry || "業界未設定"}
                 </p>
               </div>
-              
+
               <div className="flex flex-wrap gap-2">
                 <Badge variant="secondary" className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {formatDate(log.interviewAt)}
                 </Badge>
-                {log.stage && (
-                  <Badge variant="outline">
-                    {log.stage}
-                  </Badge>
-                )}
+                {log.stage && <Badge variant="outline">{log.stage}</Badge>}
               </div>
             </div>
-            
+
             <Button
               variant="ghost"
               size="sm"
@@ -66,23 +69,27 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
             </Button>
           </div>
         </CardHeader>
-        
+
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Location Info */}
             {(log.location || log.meetingUrl) && (
               <div className="space-y-2">
                 <h4 className="text-sm font-medium text-gray-700 flex items-center gap-1">
-                  {log.meetingUrl ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                  {log.meetingUrl ? (
+                    <Video className="h-4 w-4" />
+                  ) : (
+                    <MapPin className="h-4 w-4" />
+                  )}
                   面接場所
                 </h4>
                 {log.location && (
                   <p className="text-sm text-gray-600">{log.location}</p>
                 )}
                 {log.meetingUrl && (
-                  <a 
-                    href={log.meetingUrl} 
-                    target="_blank" 
+                  <a
+                    href={log.meetingUrl}
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-sm text-blue-600 hover:underline"
                   >
@@ -91,7 +98,7 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
                 )}
               </div>
             )}
-            
+
             {/* Timestamps */}
             <div className="space-y-2">
               <h4 className="text-sm font-medium text-gray-700 flex items-center gap-1">
@@ -161,19 +168,23 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
           <CardContent className="space-y-3">
             {log.company.description && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-1">企業概要</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-1">
+                  企業概要
+                </h4>
                 <p className="text-sm text-gray-600 leading-relaxed">
                   {log.company.description}
                 </p>
               </div>
             )}
-            
+
             {log.company.website && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-1">ウェブサイト</h4>
-                <a 
-                  href={log.company.website} 
-                  target="_blank" 
+                <h4 className="text-sm font-medium text-gray-700 mb-1">
+                  ウェブサイト
+                </h4>
+                <a
+                  href={log.company.website}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-blue-600 hover:underline"
                 >
@@ -186,7 +197,7 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
       )}
 
       {/* Debug Info (only in development) */}
-      {process.env.NODE_ENV === 'development' && (
+      {process.env.NODE_ENV === "development" && (
         <Card className="border-dashed">
           <CardHeader>
             <CardTitle className="text-sm text-gray-500">Debug Info</CardTitle>
@@ -202,5 +213,5 @@ export function InterviewDetail({ log, onDelete }: InterviewDetailProps) {
         </Card>
       )}
     </div>
-  )
+  );
 }

@@ -1,23 +1,25 @@
-import { Building2 } from "lucide-react"
+import { Building2 } from "lucide-react";
 
 interface LoadingSpinnerProps {
-  message?: string
+  message?: string;
 }
 
-export function LoadingSpinner({ message = "読み込み中..." }: LoadingSpinnerProps) {
+export function LoadingSpinner({
+  message = "読み込み中...",
+}: LoadingSpinnerProps) {
   return (
     <div className="flex-1 flex items-center justify-center">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto" />
         <p className="mt-4 text-gray-600">{message}</p>
       </div>
     </div>
-  )
+  );
 }
 
 interface NotFoundMessageProps {
-  message: string
-  icon?: React.ReactNode
+  message: string;
+  icon?: React.ReactNode;
 }
 
 export function NotFoundMessage({ message, icon }: NotFoundMessageProps) {
@@ -28,5 +30,5 @@ export function NotFoundMessage({ message, icon }: NotFoundMessageProps) {
         <p className="text-gray-600">{message}</p>
       </div>
     </div>
-  )
+  );
 }

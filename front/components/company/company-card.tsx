@@ -1,4 +1,5 @@
-import { Building2, Globe, ArrowRight } from "lucide-react";
+import { ArrowRight, Building2, Globe } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -6,8 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { type CompanyResponse } from "./api";
+import type { CompanyResponse } from "./api";
 
 interface CompanyCardProps {
   company: CompanyResponse;

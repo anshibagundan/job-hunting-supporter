@@ -1,26 +1,34 @@
-import { useCallback } from "react"
-import { Trash2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { ESEntry } from "@/lib/supabase"
+import { Trash2 } from "lucide-react";
+import { useCallback } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { ESEntry } from "@/lib/supabase";
 
 interface ESItemProps {
-  entry: ESEntry
-  isSelected?: boolean
-  onSelect: (id: string) => void
-  onDelete: (id: string) => void
+  entry: ESEntry;
+  isSelected?: boolean;
+  onSelect: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export function ESItem({ entry, isSelected = false, onSelect, onDelete }: ESItemProps) {
+export function ESItem({
+  entry,
+  isSelected = false,
+  onSelect,
+  onDelete,
+}: ESItemProps) {
   const handleSelect = useCallback(() => {
-    onSelect(entry.id)
-  }, [onSelect, entry.id])
+    onSelect(entry.id);
+  }, [onSelect, entry.id]);
 
-  const handleDelete = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation()
-    onDelete(entry.id)
-  }, [onDelete, entry.id])
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onDelete(entry.id);
+    },
+    [onDelete, entry.id]
+  );
 
   return (
     <Card
@@ -32,11 +40,7 @@ export function ESItem({ entry, isSelected = false, onSelect, onDelete }: ESItem
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
           <Badge variant="outline">{entry.company.name}</Badge>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-          >
+          <Button variant="ghost" size="sm" onClick={handleDelete}>
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
@@ -49,5 +53,5 @@ export function ESItem({ entry, isSelected = false, onSelect, onDelete }: ESItem
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }

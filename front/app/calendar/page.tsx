@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
 import { CalendarView } from "@/components/calender/calendar-view";
 import { EventForm } from "@/components/calender/event-form";
-import { storage, type Event } from "@/lib/supabase";
 import {
-  fetchAllJobEvents,
   createJobEvent,
+  fetchAllJobEvents,
   type JobEventRequest,
 } from "@/components/job-events/api";
+import { Button } from "@/components/ui/button";
 import { jobEventToEvent } from "@/lib/job-event-utils";
+import { type Event, storage } from "@/lib/supabase";
 
 export default function CalendarPage() {
   const [events, setEvents] = useState<Event[]>([]);
@@ -27,7 +27,7 @@ export default function CalendarPage() {
         const convertedJobEvents: Event[] = [];
         jobEvents.forEach((jobEvent) => {
           const company = companies.find(
-            (c) => parseInt(c.id) === jobEvent.company_id
+            (c) => Number.parseInt(c.id) === jobEvent.company_id
           );
           if (company) {
             convertedJobEvents.push(jobEventToEvent(jobEvent, company.name));
@@ -71,7 +71,7 @@ export default function CalendarPage() {
       const convertedJobEvents: Event[] = [];
       jobEvents.forEach((jobEvent) => {
         const company = companies.find(
-          (c) => parseInt(c.id) === jobEvent.company_id
+          (c) => Number.parseInt(c.id) === jobEvent.company_id
         );
         if (company) {
           convertedJobEvents.push(jobEventToEvent(jobEvent, company.name));
@@ -84,6 +84,7 @@ export default function CalendarPage() {
       console.error("Failed to create event:", error);
     }
   };
+  const companies = storage.getCompanies();
 
   return (
     <div className="container mx-auto px-4 py-6">
@@ -106,6 +107,7 @@ export default function CalendarPage() {
             <EventForm
               onSubmit={handleAddEvent}
               onCancel={() => setShowEventForm(false)}
+              companies={companies} // 企業リストを取得
             />
           </div>
         </div>

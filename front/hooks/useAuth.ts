@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useAuth as useFirebaseAuth } from '@/contexts/auth-context';
-import { fetchUserByFirebaseUID, type UserProfile } from '@/components/user/api';
+import { useEffect, useState } from "react";
+import {
+  fetchUserByFirebaseUID,
+  type UserProfile,
+} from "@/components/user/api";
+import { useAuth as useFirebaseAuth } from "@/contexts/auth-context";
 
 export function useUserProfile() {
   const { user: firebaseUser, loading: firebaseLoading } = useFirebaseAuth();
@@ -14,7 +17,7 @@ export function useUserProfile() {
           const profile = await fetchUserByFirebaseUID(firebaseUser.uid);
           setUserProfile(profile);
         } catch (error) {
-          console.error('Failed to load user profile:', error);
+          console.error("Failed to load user profile:", error);
           setUserProfile(null);
         }
       } else {
@@ -31,6 +34,6 @@ export function useUserProfile() {
   return {
     user: firebaseUser,
     userProfile,
-    isLoading: firebaseLoading || isLoading
+    isLoading: firebaseLoading || isLoading,
   };
 }

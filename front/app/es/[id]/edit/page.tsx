@@ -1,77 +1,79 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import { useParams } from "next/navigation"
-import { ESForm } from "@/components/es/es-form"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import type { ESEntry } from "@/lib/supabase"
-import { useAuth } from "@/contexts/auth-context"
-import { fetchES, updateES } from "@/components/es/api"
+import { ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { fetchES, updateES } from "@/components/es/api";
+import { ESForm } from "@/components/es/es-form";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/auth-context";
+import type { ESEntry } from "@/lib/supabase";
 
 export default function ESEditPage() {
-  const router = useRouter()
-  const params = useParams()
-  const { user, loading: authLoading } = useAuth()
-  const [entry, setEntry] = useState<ESEntry | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const params = useParams();
+  const { user, loading: authLoading } = useAuth();
+  const [entry, setEntry] = useState<ESEntry | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const id = params.id as string
+  const id = params.id as string;
 
   // ESエントリをIDで取得
   useEffect(() => {
     const loadEntry = async () => {
-      if (!id) return
+      if (!id) return;
 
       try {
-        setIsLoading(true)
-        setError(null)
-        const esEntry = await fetchES(id)
-        setEntry(esEntry)
+        setIsLoading(true);
+        setError(null);
+        const esEntry = await fetchES(id);
+        setEntry(esEntry);
       } catch (error) {
-        console.error('Failed to fetch ES entry:', error)
-        setError('ESエントリの取得に失敗しました')
+        console.error("Failed to fetch ES entry:", error);
+        setError("ESエントリの取得に失敗しました");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadEntry()
-  }, [id])
+    loadEntry();
+  }, [id]);
 
   // 認証チェック
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push('/login')
+      router.push("/login");
     }
-  }, [user, authLoading, router])
+  }, [user, authLoading, router]);
 
   // エントリーが見つからない場合は一覧に戻る
   useEffect(() => {
     if (!isLoading && !entry && !error) {
-      router.push("/es")
+      router.push("/es");
     }
-  }, [entry, isLoading, error, router])
+  }, [entry, isLoading, error, router]);
 
   const handleBack = useCallback(() => {
-    router.push(`/es/${id}`)
-  }, [router, id])
+    router.push(`/es/${id}`);
+  }, [router, id]);
 
-  const handleSubmit = useCallback(async (updatedEntry: ESEntry) => {
-    try {
-      await updateES(id, updatedEntry)
-      router.push(`/es/${id}`)
-    } catch (error) {
-      console.error('Failed to update ES entry:', error)
-      setError('ESエントリの更新に失敗しました')
-    }
-  }, [id, router])
+  const handleSubmit = useCallback(
+    async (updatedEntry: ESEntry) => {
+      try {
+        await updateES(id, updatedEntry);
+        router.push(`/es/${id}`);
+      } catch (error) {
+        console.error("Failed to update ES entry:", error);
+        setError("ESエントリの更新に失敗しました");
+      }
+    },
+    [id, router]
+  );
 
   const handleCancel = useCallback(() => {
-    router.push(`/es/${id}`)
-  }, [router, id])
+    router.push(`/es/${id}`);
+  }, [router, id]);
 
   // ローディング中の表示
   if (authLoading || isLoading) {
@@ -79,7 +81,7 @@ export default function ESEditPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-gray-500">読み込み中...</div>
       </div>
-    )
+    );
   }
 
   // エラー時の表示
@@ -88,12 +90,12 @@ export default function ESEditPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-red-500">{error}</div>
       </div>
-    )
+    );
   }
 
   // ユーザーが認証されていない場合
   if (!user) {
-    return null
+    return null;
   }
 
   // エントリーが見つからない場合
@@ -102,7 +104,7 @@ export default function ESEditPage() {
       <div className="flex-1 flex items-center justify-center">
         <div className="text-gray-500">エントリーが見つかりません</div>
       </div>
-    )
+    );
   }
 
   return (
@@ -125,12 +127,8 @@ export default function ESEditPage() {
       </header>
 
       <main className="flex-1 p-6 overflow-auto">
-        <ESForm
-          entry={entry}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
-        />
+        <ESForm entry={entry} onSubmit={handleSubmit} onCancel={handleCancel} />
       </main>
     </div>
-  )
+  );
 }

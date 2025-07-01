@@ -1,10 +1,15 @@
-import { Building2, Globe } from "lucide-react"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { type Company } from "@/lib/supabase"
+import { Building2, Globe } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { Company } from "@/lib/supabase";
 
 interface CompanyHeaderProps {
-  company: Company
+  company: Company;
 }
 
 export function CompanyHeader({ company }: CompanyHeaderProps) {
@@ -56,5 +61,5 @@ export function CompanyHeader({ company }: CompanyHeaderProps) {
         </div>
       </CardHeader>
     </Card>
-  )
+  );
 }

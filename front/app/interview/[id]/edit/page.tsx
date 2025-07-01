@@ -1,54 +1,52 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { InterviewForm } from "@/components/interview/interview-form"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
-import { interviewApi } from "@/components/interview/api"
-import type { InterviewLog } from "@/lib/supabase"
+import { ArrowLeft } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { interviewApi } from "@/components/interview/api";
+import { InterviewForm } from "@/components/interview/interview-form";
+import { Button } from "@/components/ui/button";
+import type { InterviewLog } from "@/lib/supabase";
 
 export default function EditInterviewPage() {
-  const router = useRouter()
-  const params = useParams()
-  const id = params.id as string
-  const [log, setLog] = useState<InterviewLog | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+  const [log, setLog] = useState<InterviewLog | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchLog = async () => {
       try {
-        const interviewLog = await interviewApi.getById(id)
-        setLog(interviewLog)
+        const interviewLog = await interviewApi.getById(id);
+        setLog(interviewLog);
       } catch (error) {
-        console.error("Failed to fetch interview log:", error)
+        console.error("Failed to fetch interview log:", error);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (id) {
-      fetchLog()
+      fetchLog();
     }
-  }, [id])
+  }, [id]);
 
   const handleBack = () => {
-    router.push(`/interview/${id}`)
-  }
+    router.push(`/interview/${id}`);
+  };
 
-  const handleSubmit = async (data: {
-    InterviewLog: InterviewLog
-  }) => {
+  const handleSubmit = async (data: { InterviewLog: InterviewLog }) => {
     try {
       await interviewApi.update(id, {
         ...data.InterviewLog,
         id, // Ensure the ID is included in the update
-      })
-      router.push(`/interview/${id}`)
+      });
+      router.push(`/interview/${id}`);
     } catch (error) {
-      console.error("Failed to update interview log:", error)
+      console.error("Failed to update interview log:", error);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -60,7 +58,7 @@ export default function EditInterviewPage() {
           <div>読み込み中...</div>
         </main>
       </div>
-    )
+    );
   }
 
   if (!log) {
@@ -68,17 +66,23 @@ export default function EditInterviewPage() {
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow-sm border-b px-6 py-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.push("/interview")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.push("/interview")}
+            >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h2 className="text-lg font-semibold text-gray-900">面接ログ編集</h2>
+            <h2 className="text-lg font-semibold text-gray-900">
+              面接ログ編集
+            </h2>
           </div>
         </header>
         <main className="flex-1 p-6 flex items-center justify-center">
           <div className="text-red-500">面接ログが見つかりません</div>
         </main>
       </div>
-    )
+    );
   }
 
   return (
@@ -111,5 +115,5 @@ export default function EditInterviewPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }

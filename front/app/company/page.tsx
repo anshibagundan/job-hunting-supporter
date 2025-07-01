@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { Building2, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { fetchAllCompanies, type CompanyResponse } from "@/components/company/api";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  type CompanyResponse,
+  fetchAllCompanies,
+} from "@/components/company/api";
 import { CompanyCard } from "@/components/company/company-card";
+import { Button } from "@/components/ui/button";
 
 export default function CompanyPage() {
   const [companies, setCompanies] = useState<CompanyResponse[]>([]);

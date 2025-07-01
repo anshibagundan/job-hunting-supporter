@@ -1,22 +1,39 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { updateJobEvent, type JobEventResponse, type JobEventRequest } from "@/components/job-events/api"
-import { storage, type Company } from "@/lib/supabase"
+import { useState } from "react";
+import {
+  type JobEventRequest,
+  type JobEventResponse,
+  updateJobEvent,
+} from "@/components/job-events/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { Company } from "@/lib/supabase";
 
 interface JobEventEditFormProps {
-  jobEvent: JobEventResponse
-  companyName: string
-  onSave: () => void
-  onCancel: () => void
+  jobEvent: JobEventResponse;
+  companyName: string;
+  companies: Company[];
+  onSave: () => void;
+  onCancel: () => void;
 }
 
-export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: JobEventEditFormProps) {
+export function JobEventEditForm({
+  jobEvent,
+  companyName,
+  companies,
+  onSave,
+  onCancel,
+}: JobEventEditFormProps) {
   const [formData, setFormData] = useState({
     job_title: jobEvent.job_title,
     job_type: jobEvent.job_type,
@@ -26,52 +43,37 @@ export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: Jo
     event_url: jobEvent.event_url,
     company_id: jobEvent.company_id.toString(),
     company_name: companyName,
-  })
-
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const companiesData = await storage.getCompanies()
-        setCompanies(companiesData)
-      } catch (error) {
-        console.error('Failed to load companies:', error)
-      }
-    }
-
-    fetchCompanies()
-  }, [])
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (isSubmitting) return
+    if (isSubmitting) return;
 
     try {
-      setIsSubmitting(true)
+      setIsSubmitting(true);
 
       const updateRequest: JobEventRequest = {
         user_id: jobEvent.user_id,
-        company_id: parseInt(formData.company_id),
+        company_id: Number.parseInt(formData.company_id),
         job_title: formData.job_title,
         job_type: formData.job_type,
         job_description: formData.job_description,
         start_date: new Date(formData.start_date).toISOString(),
         deadline: new Date(formData.deadline).toISOString(),
         event_url: formData.event_url,
-      }
+      };
 
-      await updateJobEvent(jobEvent.id.toString(), updateRequest)
-      onSave()
+      await updateJobEvent(jobEvent.id.toString(), updateRequest);
+      onSave();
     } catch (error) {
-      console.error('Failed to update job event:', error)
-      alert('更新に失敗しました')
+      console.error("Failed to update job event:", error);
+      alert("更新に失敗しました");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Card className="max-w-4xl">
@@ -86,13 +88,15 @@ export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: Jo
             <Select
               value={formData.company_id}
               onValueChange={(value) => {
-                const company = companies.find((c) => c.id.toString() === value)
+                const company = companies.find(
+                  (c) => c.id.toString() === value
+                );
                 if (company) {
                   setFormData((prev) => ({
                     ...prev,
                     company_id: value,
-                    company_name: company.name
-                  }))
+                    company_name: company.name,
+                  }));
                 }
               }}
             >
@@ -110,10 +114,14 @@ export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: Jo
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">イベント種別</label>
+            <label className="block text-sm font-medium mb-2">
+              イベント種別
+            </label>
             <Select
               value={formData.job_type}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, job_type: value }))}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, job_type: value }))
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="種別を選択" />
@@ -131,9 +139,11 @@ export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: Jo
             <label className="block text-sm font-medium mb-2">タイトル</label>
             <Input
               value={formData.job_title}
-              onChange={(e) => setFormData((prev) => ({ ...prev, job_title: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, job_title: e.target.value }))
+              }
               placeholder="例: 2024年新卒採用説明会"
-              required
+              required={true}
             />
           </div>
 
@@ -141,41 +151,61 @@ export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: Jo
             <label className="block text-sm font-medium mb-2">詳細説明</label>
             <Textarea
               value={formData.job_description}
-              onChange={(e) => setFormData((prev) => ({ ...prev, job_description: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  job_description: e.target.value,
+                }))
+              }
               placeholder="イベントの詳細を入力してください"
               rows={4}
-              required
+              required={true}
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-2">応募開始日時</label>
+              <label className="block text-sm font-medium mb-2">
+                応募開始日時
+              </label>
               <Input
                 type="datetime-local"
                 value={formData.start_date}
-                onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
-                required
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    start_date: e.target.value,
+                  }))
+                }
+                required={true}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">応募締切日時</label>
+              <label className="block text-sm font-medium mb-2">
+                応募締切日時
+              </label>
               <Input
                 type="datetime-local"
                 value={formData.deadline}
-                onChange={(e) => setFormData((prev) => ({ ...prev, deadline: e.target.value }))}
-                required
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, deadline: e.target.value }))
+                }
+                required={true}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">イベントURL</label>
+            <label className="block text-sm font-medium mb-2">
+              イベントURL
+            </label>
             <Input
               type="url"
               value={formData.event_url}
-              onChange={(e) => setFormData((prev) => ({ ...prev, event_url: e.target.value }))}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, event_url: e.target.value }))
+              }
               placeholder="https://example.com/event"
             />
           </div>
@@ -200,5 +230,5 @@ export function JobEventEditForm({ jobEvent, companyName, onSave, onCancel }: Jo
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

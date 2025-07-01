@@ -1,107 +1,161 @@
-import type React from "react"
-import { useState, useEffect, useMemo, useCallback } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Check, ChevronsUpDown, Wand2, ChevronDown, ChevronUp } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useESForm } from "@/components/es/hooks/useEsForm"
-import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis"
-import { useESGeneration } from "@/components/es/hooks/useESGeneration"
-import { useUserProfile } from "@/hooks/useAuth"
-import { storage, type ESEntry, type AdviceItem } from "@/lib/supabase"
-import type { Company } from "@/lib/supabase"
-import { SemiCircleProgress } from "@/components/ui/semi-circle-progress"
-import { MarkdownRenderer } from "@/components/ui/markdown-renderer"
+import {
+  Check,
+  ChevronDown,
+  ChevronsUpDown,
+  ChevronUp,
+  Wand2,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAIAnalysis } from "@/components/es/hooks/useAiAnalysis";
+import { useESGeneration } from "@/components/es/hooks/useESGeneration";
+import { useESForm } from "@/components/es/hooks/useEsForm";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
+import { Textarea } from "@/components/ui/textarea";
+import { useUserProfile } from "@/hooks/useAuth";
+import type { Company } from "@/lib/supabase";
+import { type ESEntry, storage } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
 
 interface ESFormProps {
-  entry?: ESEntry | null
-  onSubmit: (entry: ESEntry) => void
-  onCancel: () => void
-  preSelectedCompanyId?: string | null
+  entry?: ESEntry | null;
+  onSubmit: (entry: ESEntry) => void;
+  onCancel: () => void;
+  preSelectedCompanyId?: string | null;
 }
 
-export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFormProps) {
-  const { formData, setFormData, updateField, updateCompany, resetForm, isFormValid } = useESForm(entry, preSelectedCompanyId)
-  const { isAnalyzing, analyzeContent } = useAIAnalysis()
-  const { isGenerating, generateContent } = useESGeneration()
-  const { userProfile } = useUserProfile()
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [companiesLoading, setCompaniesLoading] = useState(true)
-  const [open, setOpen] = useState(false)
+export function ESForm({
+  entry,
+  onSubmit,
+  onCancel,
+  preSelectedCompanyId,
+}: ESFormProps) {
+  const {
+    formData,
+    setFormData,
+    updateField,
+    updateCompany,
+    resetForm,
+    isFormValid,
+  } = useESForm(entry, preSelectedCompanyId);
+  const { isAnalyzing, analyzeContent } = useAIAnalysis();
+  const { isGenerating, generateContent } = useESGeneration();
+  const { userProfile } = useUserProfile();
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(true);
+  const [open, setOpen] = useState(false);
 
   // ユーザーのBaseESを取得
-  const userBaseES = userProfile?.basic_es || ""
+  const userBaseES = userProfile?.basic_es || "";
 
   // 利用可能な企業リストを取得
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const companiesData = await storage.getCompanies()
-        setCompanies(companiesData)
+        const companiesData = await storage.getCompanies();
+        setCompanies(companiesData);
       } catch (error) {
-        console.error('Failed to load companies:', error)
+        console.error("Failed to load companies:", error);
       } finally {
-        setCompaniesLoading(false)
+        setCompaniesLoading(false);
       }
-    }
+    };
 
-    loadCompanies()
-  }, [])
+    loadCompanies();
+  }, []);
 
   // 編集モードかどうかを判定
-  const isEditMode = useMemo(() => Boolean(entry), [entry])
+  const isEditMode = useMemo(() => Boolean(entry), [entry]);
 
   // フォームタイトルをuseMemoで最適化
   const formTitle = useMemo(() => {
-    return entry ? "ES編集" : "新しいES"
-  }, [entry])
+    return entry ? "ES編集" : "新しいES";
+  }, [entry]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isFormValid()) return
-    onSubmit(formData)
-    if (!isEditMode) {
-      resetForm()
-    }
-  }, [formData, isFormValid, onSubmit, resetForm, isEditMode])
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!isFormValid()) return;
+      onSubmit(formData);
+      if (!isEditMode) {
+        resetForm();
+      }
+    },
+    [formData, isFormValid, onSubmit, resetForm, isEditMode]
+  );
 
   const handleAnalyze = useCallback(async () => {
-    if (!formData.content.trim() || !formData.company?.id) return
+    if (!formData.content.trim() || !formData.company?.id) return;
 
-    const result = await analyzeContent(formData.content, formData.company.id)
+    const result = await analyzeContent(formData.content, formData.company.id);
     // 分析結果をformDataに反映
-    updateField("summary", result.summary)
-    updateField("advice", result.advice)
-    setFormData(prev => ({ ...prev, adviceItems: result.adviceItems }))
-  }, [formData.content, formData.company?.id, analyzeContent, updateField, setFormData])
+    updateField("summary", result.summary);
+    updateField("advice", result.advice);
+    setFormData((prev) => ({ ...prev, adviceItems: result.adviceItems }));
+  }, [
+    formData.content,
+    formData.company?.id,
+    analyzeContent,
+    updateField,
+    setFormData,
+  ]);
 
   // ES自動生成機能
   const handleGenerate = useCallback(async () => {
     if (!formData.company?.id || !formData.title.trim() || !userBaseES.trim()) {
-      alert("企業、タイトル、BaseESが必要です。プロフィールでBaseESを設定してください。")
-      return
+      alert(
+        "企業、タイトル、BaseESが必要です。プロフィールでBaseESを設定してください。"
+      );
+      return;
     }
 
     try {
-      const result = await generateContent(userBaseES, formData.company.description, formData.title)
-      updateField("content", result.content)
+      const result = await generateContent(
+        userBaseES,
+        formData.company.description,
+        formData.title
+      );
+      updateField("content", result.content);
     } catch (error) {
-      console.error("ES生成に失敗しました:", error)
-      alert("ES生成に失敗しました")
+      console.error("ES生成に失敗しました:", error);
+      alert("ES生成に失敗しました");
     }
-  }, [formData.company, formData.title, userBaseES, generateContent, updateField])
+  }, [
+    formData.company,
+    formData.title,
+    userBaseES,
+    generateContent,
+    updateField,
+  ]);
 
   // 達成度の色を決定する関数
-  const getAchievementColor = (achievement: number) => {
-    if (achievement >= 80) return "bg-green-500"
-    if (achievement >= 60) return "bg-yellow-500"
-    return "bg-red-500"
-  }
+  const _getAchievementColor = (achievement: number) => {
+    if (achievement >= 80) return "bg-green-500";
+    if (achievement >= 60) return "bg-yellow-500";
+    return "bg-red-500";
+  };
 
   return (
     <Card>
@@ -113,7 +167,7 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
           <div>
             <label className="block text-sm font-medium mb-2">企業名</label>
             <Popover open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
+              <PopoverTrigger asChild={true}>
                 <Button
                   variant="outline"
                   role="combobox"
@@ -121,7 +175,10 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
                   className="w-full justify-between"
                   disabled={companiesLoading}
                 >
-                  {formData.company?.name || (companiesLoading ? "企業情報を読み込み中..." : "企業を選択してください")}
+                  {formData.company?.name ||
+                    (companiesLoading
+                      ? "企業情報を読み込み中..."
+                      : "企業を選択してください")}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -136,14 +193,16 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
                           key={company.id}
                           value={company.name}
                           onSelect={() => {
-                            updateCompany(company)
-                            setOpen(false)
+                            updateCompany(company);
+                            setOpen(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              formData.company?.id === company.id ? "opacity-100" : "opacity-0"
+                              formData.company?.id === company.id
+                                ? "opacity-100"
+                                : "opacity-0"
                             )}
                           />
                           {company.name}
@@ -161,7 +220,7 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
               value={formData.title}
               onChange={(e) => updateField("title", e.target.value)}
               placeholder="例: 志望動機、自己PR"
-              required
+              required={true}
             />
           </div>
 
@@ -183,7 +242,12 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
               type="button"
               variant="outline"
               onClick={handleGenerate}
-              disabled={isGenerating || !formData.company?.id || !formData.title.trim() || !userBaseES.trim()}
+              disabled={
+                isGenerating ||
+                !formData.company?.id ||
+                !formData.title.trim() ||
+                !userBaseES.trim()
+              }
               className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
             >
               {isGenerating ? "生成中..." : "AI生成"}
@@ -197,7 +261,7 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
               onChange={(e) => updateField("content", e.target.value)}
               rows={10}
               placeholder="ESの内容を入力してください..."
-              required
+              required={true}
             />
           </div>
 
@@ -230,25 +294,42 @@ export function ESForm({ entry, onSubmit, onCancel, preSelectedCompanyId }: ESFo
           )}
 
           <div className="flex space-x-2">
-            <Button type="submit" disabled={!isFormValid() || isAnalyzing || isGenerating}>
+            <Button
+              type="submit"
+              disabled={!isFormValid() || isAnalyzing || isGenerating}
+            >
               保存
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={handleAnalyze}
-              disabled={isAnalyzing || isGenerating || !formData.content.trim() || !formData.company?.id}
+              disabled={
+                isAnalyzing ||
+                isGenerating ||
+                !formData.content.trim() ||
+                !formData.company?.id
+              }
             >
-              {isAnalyzing ? "分析中..." : (formData.summary || formData.advice) ? "再分析" : "分析"}
+              {isAnalyzing
+                ? "分析中..."
+                : formData.summary || formData.advice
+                  ? "再分析"
+                  : "分析"}
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isAnalyzing || isGenerating}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isAnalyzing || isGenerating}
+            >
               キャンセル
             </Button>
           </div>
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 interface AdviceItemFormCardProps {
@@ -271,13 +352,17 @@ function AdviceItemFormCard({ item }: AdviceItemFormCardProps) {
           <h4 className="font-medium text-base mb-2">{item.category}</h4>
         </div>
         <div className="flex items-center gap-4">
-          <SemiCircleProgress value={item.achievement} size={100} strokeWidth={6} />
+          <SemiCircleProgress
+            value={item.achievement}
+            size={100}
+            strokeWidth={6}
+          />
         </div>
       </div>
 
       {/* 詳細情報（クリックで表示/非表示） */}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
+        <CollapsibleTrigger asChild={true}>
           <Button
             variant="ghost"
             className="w-full flex items-center justify-between p-2 hover:bg-gray-50"
@@ -285,17 +370,25 @@ function AdviceItemFormCard({ item }: AdviceItemFormCardProps) {
             <span className="text-sm text-gray-600">
               {isOpen ? "詳細を閉じる" : "詳細を表示"}
             </span>
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-3 pt-2">
           <div className="p-4 bg-gray-50 rounded-lg space-y-3">
             <div>
-              <h5 className="font-medium text-sm text-gray-700 mb-1">評価理由</h5>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                評価理由
+              </h5>
               <p className="text-sm text-gray-600">{item.reason}</p>
             </div>
             <div>
-              <h5 className="font-medium text-sm text-gray-700 mb-1">改善提案</h5>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                改善提案
+              </h5>
               <p className="text-sm text-gray-600">{item.suggestion}</p>
             </div>
           </div>

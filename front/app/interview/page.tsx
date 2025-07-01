@@ -1,47 +1,50 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useInterviewLogs } from "@/components/interview/hooks/useInterviewLogs"
-import { InterviewList } from "@/components/interview/interview-list"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { useUserProfile } from "@/hooks/useAuth"
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useInterviewLogs } from "@/components/interview/hooks/useInterviewLogs";
+import { InterviewList } from "@/components/interview/interview-list";
+import { Button } from "@/components/ui/button";
+import { useUserProfile } from "@/hooks/useAuth";
 
 export default function InterviewPage() {
-  const router = useRouter()
-  const { user, isLoading: authLoading } = useUserProfile()
-  const { logs, selectedLog, isLoading, deleteLog, selectLog } = useInterviewLogs()
+  const router = useRouter();
+  const { user, isLoading: authLoading } = useUserProfile();
+  const { logs, selectedLog, isLoading, deleteLog, selectLog } =
+    useInterviewLogs();
 
   const handleSelectLog = (id: string) => {
-    router.push(`/interview/${id}`)
-  }
+    router.push(`/interview/${id}`);
+  };
 
   const handleCreateNew = () => {
-    router.push("/interview/new")
-  }
+    router.push("/interview/new");
+  };
 
   const handleDeleteLog = async (id: string) => {
     try {
-      await deleteLog(id)
+      await deleteLog(id);
     } catch (error) {
-      console.error("Failed to delete log:", error)
+      console.error("Failed to delete log:", error);
     }
-  }
+  };
 
   if (authLoading || isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <div className="text-muted-foreground">読み込み中...</div>
       </div>
-    )
+    );
   }
 
   if (!user) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-muted-foreground">ユーザー情報を取得できませんでした</div>
+        <div className="text-muted-foreground">
+          ユーザー情報を取得できませんでした
+        </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -66,5 +69,5 @@ export default function InterviewPage() {
         />
       </main>
     </div>
-  )
+  );
 }

@@ -1,14 +1,18 @@
-import { ArrowLeft, Edit } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ArrowLeft, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CompanyDetailHeaderProps {
-  companyName: string
-  companyId: string
-  onBack: () => void
-  onEdit: () => void
+  companyName: string;
+  companyId: string;
+  onBack: () => void;
+  onEdit: () => void;
 }
 
-export function CompanyDetailHeader({ companyName, onBack, onEdit }: CompanyDetailHeaderProps) {
+export function CompanyDetailHeader({
+  companyName,
+  onBack,
+  onEdit,
+}: CompanyDetailHeaderProps) {
   return (
     <header className="bg-white shadow-sm border-b px-6 py-4">
       <div className="flex items-center justify-between">
@@ -36,5 +40,5 @@ export function CompanyDetailHeader({ companyName, onBack, onEdit }: CompanyDeta
         </Button>
       </div>
     </header>
-  )
+  );
 }

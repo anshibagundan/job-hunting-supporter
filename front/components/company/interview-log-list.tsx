@@ -1,19 +1,28 @@
-import { Mic, Eye, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { type InterviewLog } from "@/lib/supabase"
+import { Eye, Mic, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { InterviewLog } from "@/lib/supabase";
 
 interface InterviewLogListProps {
-  interviewLogs: InterviewLog[]
-  onDelete: (logId: string) => void
-  onCreateNew: () => void
+  interviewLogs: InterviewLog[];
+  onDelete: (logId: string) => void;
+  onCreateNew: () => void;
 }
 
-export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: InterviewLogListProps) {
+export function InterviewLogList({
+  interviewLogs,
+  onDelete,
+  onCreateNew,
+}: InterviewLogListProps) {
   const onViewDetails = (logId: string) => {
-    window.location.href = `/interview/${logId}`
-  }
-
+    window.location.href = `/interview/${logId}`;
+  };
 
   if (interviewLogs.length === 0) {
     return (
@@ -23,26 +32,20 @@ export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: Inter
           <p className="text-gray-500 text-center">
             この企業の面接ログはまだ登録されていません。
             <br />
-            <Button
-              variant="link"
-              className="p-0 mt-2"
-              onClick={onCreateNew}
-            >
+            <Button variant="link" className="p-0 mt-2" onClick={onCreateNew}>
               面接ログを作成する
             </Button>
           </p>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">面接ログ一覧</h2>
-        <Button onClick={onCreateNew}>
-          新しいES作成
-        </Button>
+        <Button onClick={onCreateNew}>新しいES作成</Button>
       </div>
       {interviewLogs.map((log) => (
         <Card key={log.id}>
@@ -81,7 +84,9 @@ export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: Inter
           <CardContent>
             {log.audioSummary && (
               <div className="mb-3">
-                <h4 className="font-medium text-sm text-gray-700 mb-1">面接要約</h4>
+                <h4 className="font-medium text-sm text-gray-700 mb-1">
+                  面接要約
+                </h4>
                 <p className="text-sm text-gray-600 line-clamp-3">
                   {log.audioSummary.slice(0, 200)}...
                 </p>
@@ -89,7 +94,9 @@ export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: Inter
             )}
             {log.textNote && (
               <div className="mb-3">
-                <h4 className="font-medium text-sm text-gray-700 mb-1">面接メモ</h4>
+                <h4 className="font-medium text-sm text-gray-700 mb-1">
+                  面接メモ
+                </h4>
                 <p className="text-sm text-gray-600 line-clamp-2">
                   {log.textNote.slice(0, 150)}...
                 </p>
@@ -99,5 +106,5 @@ export function InterviewLogList({ interviewLogs, onDelete, onCreateNew }: Inter
         </Card>
       ))}
     </div>
-  )
+  );
 }

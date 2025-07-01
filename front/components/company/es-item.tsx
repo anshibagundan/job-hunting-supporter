@@ -1,12 +1,18 @@
-import { Eye, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { type ESEntry } from "@/lib/supabase"
+import { Eye, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { ESEntry } from "@/lib/supabase";
 
 interface ESItemProps {
-  es: ESEntry
-  onViewDetail: (esId: string) => void
-  onDelete: (esId: string) => void
+  es: ESEntry;
+  onViewDetail: (esId: string) => void;
+  onDelete: (esId: string) => void;
 }
 
 export function ESItem({ es, onViewDetail, onDelete }: ESItemProps) {
@@ -41,9 +47,7 @@ export function ESItem({ es, onViewDetail, onDelete }: ESItemProps) {
         </div>
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600 line-clamp-2">
-          {es.content}
-        </p>
+        <p className="text-sm text-gray-600 line-clamp-2">{es.content}</p>
         {es.summary && (
           <div className="mt-2">
             <p className="text-xs text-gray-500">
@@ -53,5 +57,5 @@ export function ESItem({ es, onViewDetail, onDelete }: ESItemProps) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

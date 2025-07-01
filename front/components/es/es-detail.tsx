@@ -1,13 +1,16 @@
-import type React from "react";
+import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import type { ESEntry } from "@/lib/supabase";
-import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
+import type { ESEntry } from "@/lib/supabase";
 
 interface ESDetailProps {
   entry: ESEntry;
@@ -100,31 +103,43 @@ function AdviceItemCard({ item }: AdviceItemCardProps) {
           <h4 className="font-medium text-base mb-2">{item.category}</h4>
         </div>
         <div className="flex items-center gap-4">
-          <SemiCircleProgress value={item.achievement} size={100} strokeWidth={6} />
+          <SemiCircleProgress
+            value={item.achievement}
+            size={100}
+            strokeWidth={6}
+          />
         </div>
       </div>
 
       {/* 詳細情報（クリックで表示/非表示） */}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <Button 
-            variant="ghost" 
+        <CollapsibleTrigger asChild={true}>
+          <Button
+            variant="ghost"
             className="w-full flex items-center justify-between p-2 hover:bg-gray-50"
           >
             <span className="text-sm text-gray-600">
               {isOpen ? "詳細を閉じる" : "詳細を表示"}
             </span>
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-3 pt-2">
           <div className="p-4 bg-gray-50 rounded-lg space-y-3">
             <div>
-              <h5 className="font-medium text-sm text-gray-700 mb-1">評価理由</h5>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                評価理由
+              </h5>
               <p className="text-sm text-gray-600">{item.reason}</p>
             </div>
             <div>
-              <h5 className="font-medium text-sm text-gray-700 mb-1">改善提案</h5>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                改善提案
+              </h5>
               <p className="text-sm text-gray-600">{item.suggestion}</p>
             </div>
           </div>

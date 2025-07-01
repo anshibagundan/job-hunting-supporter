@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 interface SignInButtonProps {
-  onSignIn: () => void
+  onSignIn: () => void;
 }
 
 export function SignInButton({ onSignIn }: SignInButtonProps) {
@@ -11,5 +11,5 @@ export function SignInButton({ onSignIn }: SignInButtonProps) {
     <Button onClick={onSignIn} className="bg-blue-600 hover:bg-blue-700">
       Googleでサインイン
     </Button>
-  )
+  );
 }

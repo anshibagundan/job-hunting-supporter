@@ -1,17 +1,32 @@
 "use client";
 
-import { useUserProfile } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, User, Mail, Calendar, FileText, Brain, BarChart3, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  Brain,
+  Calendar,
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Loader2,
+  Mail,
+  User,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { updateUserProfile } from "@/components/user/api";
-import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { Input } from "@/components/ui/input";
 import { MarkdownRenderer } from "@/components/ui/markdown-renderer";
+import { SemiCircleProgress } from "@/components/ui/semi-circle-progress";
+import { Textarea } from "@/components/ui/textarea";
+import { updateUserProfile } from "@/components/user/api";
+import { useUserProfile } from "@/hooks/useAuth";
 
 interface AdviceItem {
   category: string;
@@ -35,13 +50,17 @@ function AdviceItemCard({ item }: AdviceItemCardProps) {
           <h4 className="font-medium text-base mb-2">{item.category}</h4>
         </div>
         <div className="flex items-center gap-4">
-          <SemiCircleProgress value={item.achievement} size={100} strokeWidth={6} />
+          <SemiCircleProgress
+            value={item.achievement}
+            size={100}
+            strokeWidth={6}
+          />
         </div>
       </div>
 
       {/* 詳細情報（クリックで表示/非表示） */}
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
+        <CollapsibleTrigger asChild={true}>
           <Button
             variant="ghost"
             className="w-full flex items-center justify-between p-2 hover:bg-gray-50"
@@ -49,17 +68,25 @@ function AdviceItemCard({ item }: AdviceItemCardProps) {
             <span className="text-sm text-gray-600">
               {isOpen ? "詳細を閉じる" : "詳細を表示"}
             </span>
-            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            {isOpen ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
           </Button>
         </CollapsibleTrigger>
         <CollapsibleContent className="space-y-3 pt-2">
           <div className="p-4 bg-gray-50 rounded-lg space-y-3">
             <div>
-              <h5 className="font-medium text-sm text-gray-700 mb-1">評価理由</h5>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                評価理由
+              </h5>
               <p className="text-sm text-gray-600">{item.reason}</p>
             </div>
             <div>
-              <h5 className="font-medium text-sm text-gray-700 mb-1">改善提案</h5>
+              <h5 className="font-medium text-sm text-gray-700 mb-1">
+                改善提案
+              </h5>
               <p className="text-sm text-gray-600">{item.suggestion}</p>
             </div>
           </div>
@@ -285,22 +312,26 @@ export default function ProfilePage() {
                     </div>
 
                     {/* 項目別達成度評価 */}
-                    {userProfile.advice_items && userProfile.advice_items.length > 0 && (
-                      <div>
-                        <h5 className="font-medium text-base mb-4 flex items-center gap-2">
-                          <BarChart3 className="h-5 w-5" />
-                          項目別達成度評価
-                        </h5>
-                        <div className="space-y-8">
-                          {userProfile.advice_items.map((item, index) => (
-                            <AdviceItemCard key={index} item={item} />
-                          ))}
+                    {userProfile.advice_items &&
+                      userProfile.advice_items.length > 0 && (
+                        <div>
+                          <h5 className="font-medium text-base mb-4 flex items-center gap-2">
+                            <BarChart3 className="h-5 w-5" />
+                            項目別達成度評価
+                          </h5>
+                          <div className="space-y-8">
+                            {userProfile.advice_items.map((item, index) => (
+                              <AdviceItemCard key={index} item={item} />
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded-lg">
-                      <p>💡 「分析して保存」ボタンを押すと、最新の基本ES内容で分析結果が更新されます。</p>
+                      <p>
+                        💡
+                        「分析して保存」ボタンを押すと、最新の基本ES内容で分析結果が更新されます。
+                      </p>
                     </div>
                   </div>
                 )}
@@ -322,40 +353,44 @@ export default function ProfilePage() {
         </Card>
 
         {/* 基本ES分析セクション */}
-        {!isEditing && userProfile.basic_es && userProfile.summary && userProfile.advice_items && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Brain className="h-5 w-5" />
-                基本ES分析結果
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* 分析要約 */}
-              <div>
-                <h4 className="font-medium text-lg mb-3">分析要約</h4>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <MarkdownRenderer content={userProfile.summary} />
-                </div>
-              </div>
-
-              {/* 項目別達成度評価 */}
-              {userProfile.advice_items && userProfile.advice_items.length > 0 && (
+        {!isEditing &&
+          userProfile.basic_es &&
+          userProfile.summary &&
+          userProfile.advice_items && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Brain className="h-5 w-5" />
+                  基本ES分析結果
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* 分析要約 */}
                 <div>
-                  <h4 className="font-medium text-lg mb-4 flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5" />
-                    項目別達成度評価
-                  </h4>
-                  <div className="space-y-8">
-                    {userProfile.advice_items.map((item, index) => (
-                      <AdviceItemCard key={index} item={item} />
-                    ))}
+                  <h4 className="font-medium text-lg mb-3">分析要約</h4>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <MarkdownRenderer content={userProfile.summary} />
                   </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+
+                {/* 項目別達成度評価 */}
+                {userProfile.advice_items &&
+                  userProfile.advice_items.length > 0 && (
+                    <div>
+                      <h4 className="font-medium text-lg mb-4 flex items-center gap-2">
+                        <BarChart3 className="h-5 w-5" />
+                        項目別達成度評価
+                      </h4>
+                      <div className="space-y-8">
+                        {userProfile.advice_items.map((item, index) => (
+                          <AdviceItemCard key={index} item={item} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+              </CardContent>
+            </Card>
+          )}
 
         {isEditing && (
           <div className="space-y-4">

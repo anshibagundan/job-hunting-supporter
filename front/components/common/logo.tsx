@@ -26,7 +26,7 @@ export function Logo({ size = "md", showText = true, className }: LogoProps) {
         width={logoSize}
         height={logoSize}
         className="rounded-full shadow-sm"
-        priority
+        priority={true}
       />
       {showText && (
         <span
@@ -44,7 +44,7 @@ export function Logo({ size = "md", showText = true, className }: LogoProps) {
             width={textSize}
             height={0}
             className="shadow-sm h-auto"
-            priority
+            priority={true}
           />
         </span>
       )}

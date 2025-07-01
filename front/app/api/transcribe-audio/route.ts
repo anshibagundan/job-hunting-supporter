@@ -1,15 +1,17 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { generateText } from "ai"
-import { openai } from "@ai-sdk/openai"
-import apiClient from '../../../lib/api-client';
+import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData()
-    const audioFile = formData.get("audio") as File
+    const formData = await request.formData();
+    const audioFile = formData.get("audio") as File;
 
     if (!audioFile) {
-      return NextResponse.json({ error: "Audio file is required" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Audio file is required" },
+        { status: 400 }
+      );
     }
 
     // 実際のWhisper APIを使用する場合のコード例
@@ -30,7 +32,7 @@ export async function POST(request: NextRequest) {
 
 面接官: 弊社を志望される理由を教えてください。
 
-応募者: 御社の「技術で社会課題を解決する」という理念に強く共感しました。特に教育分野でのDX推進に取り組まれている点が、私の将来やりたいことと一致しています。`
+応募者: 御社の「技術で社会課題を解決する」という理念に強く共感しました。特に教育分野でのDX推進に取り組まれている点が、私の将来やりたいことと一致しています。`;
 
     // GPTで面接内容を分析
     const { text } = await generateText({
@@ -52,24 +54,28 @@ export async function POST(request: NextRequest) {
 
 日本語で回答し、建設的で実用的なアドバイスを心がけてください。`,
       prompt: `以下の面接の文字起こしを分析してください：\n\n${mockTranscript}`,
-    })
+    });
 
     try {
-      const analysis = JSON.parse(text)
+      const analysis = JSON.parse(text);
       return NextResponse.json({
         transcript: mockTranscript,
         summary: analysis.summary,
         feedback: analysis.feedback,
-      })
-    } catch (parseError) {
+      });
+    } catch (_parseError) {
       return NextResponse.json({
         transcript: mockTranscript,
         summary: "面接内容を確認しました。全体的に良い回答ができていました。",
-        feedback: "具体的なエピソードを交えることで、より説得力のある回答になります。",
-      })
+        feedback:
+          "具体的なエピソードを交えることで、より説得力のある回答になります。",
+      });
     }
   } catch (error) {
-    console.error("Error processing audio:", error)
-    return NextResponse.json({ error: "Failed to process audio" }, { status: 500 })
+    console.error("Error processing audio:", error);
+    return NextResponse.json(
+      { error: "Failed to process audio" },
+      { status: 500 }
+    );
   }
 }

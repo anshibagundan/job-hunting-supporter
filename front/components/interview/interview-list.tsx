@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useMemo, useCallback } from "react"
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { InterviewItem } from "./interview-item"
-import type { InterviewLog } from "@/lib/supabase"
+import { Search } from "lucide-react";
+import type React from "react";
+import { useCallback, useMemo, useState } from "react";
+import { Input } from "@/components/ui/input";
+import type { InterviewLog } from "@/lib/supabase";
+import { InterviewItem } from "./interview-item";
 
 interface InterviewListProps {
-  logs: InterviewLog[]
-  selectedLog: InterviewLog | null
-  onSelectLog: (log: InterviewLog) => void
-  onDeleteLog: (id: string) => Promise<void>
-  onNewLog: () => void
+  logs: InterviewLog[];
+  selectedLog: InterviewLog | null;
+  onSelectLog: (log: InterviewLog) => void;
+  onDeleteLog: (id: string) => Promise<void>;
+  onNewLog: () => void;
 }
 
 export function InterviewList({
@@ -22,30 +22,37 @@ export function InterviewList({
   onDeleteLog,
   onNewLog,
 }: InterviewListProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredLogs = useMemo(() => {
-    if (!searchTerm.trim()) return logs
+    if (!searchTerm.trim()) return logs;
 
-    return logs.filter(log =>
-      log.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.textNote?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.audioSummary?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.transcript?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [logs, searchTerm])
+    return logs.filter(
+      (log) =>
+        log.company?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.textNote?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.audioSummary?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.transcript?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [logs, searchTerm]);
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
-  }, [])
+  const handleSearchChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchTerm(e.target.value);
+    },
+    []
+  );
 
-  const handleDeleteLog = useCallback(async (id: string) => {
-    try {
-      await onDeleteLog(id)
-    } catch (error) {
-      console.error("Failed to delete log:", error)
-    }
-  }, [onDeleteLog])
+  const handleDeleteLog = useCallback(
+    async (id: string) => {
+      try {
+        await onDeleteLog(id);
+      } catch (error) {
+        console.error("Failed to delete log:", error);
+      }
+    },
+    [onDeleteLog]
+  );
 
   return (
     <div>
@@ -88,5 +95,5 @@ export function InterviewList({
         </div>
       )}
     </div>
-  )
+  );
 }

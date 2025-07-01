@@ -1,19 +1,19 @@
-import { FileText, Mic, Calendar } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { type ESEntry, type InterviewLog, type Event } from "@/lib/supabase"
-import { ESList } from "./es-list"
-import { InterviewLogList } from "./interview-log-list"
-import { EventList } from "./event-list"
+import { Calendar, FileText, Mic } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { ESEntry, Event, InterviewLog } from "@/lib/supabase";
+import { ESList } from "./es-list";
+import { EventList } from "./event-list";
+import { InterviewLogList } from "./interview-log-list";
 
 interface CompanyRelatedDataTabsProps {
-  esEntries: ESEntry[]
-  interviewLogs: InterviewLog[]
-  events: Event[]
-  companyId: string // 企業IDを追加
-  onDeleteES: (esId: string) => void
-  onDeleteInterviewLog: (logId: string) => void
-  onNavigateToInterview: () => void
-  onNavigateToCalendar: () => void
+  esEntries: ESEntry[];
+  interviewLogs: InterviewLog[];
+  events: Event[];
+  companyId: string; // 企業IDを追加
+  onDeleteES: (esId: string) => void;
+  onDeleteInterviewLog: (logId: string) => void;
+  onNavigateToInterview: () => void;
+  onNavigateToCalendar: () => void;
 }
 
 export function CompanyRelatedDataTabs({
@@ -24,7 +24,7 @@ export function CompanyRelatedDataTabs({
   onDeleteES,
   onDeleteInterviewLog,
   onNavigateToInterview,
-  onNavigateToCalendar
+  onNavigateToCalendar,
 }: CompanyRelatedDataTabsProps) {
   return (
     <Tabs defaultValue="es" className="space-y-4">
@@ -67,5 +67,5 @@ export function CompanyRelatedDataTabs({
         />
       </TabsContent>
     </Tabs>
-  )
+  );
 }

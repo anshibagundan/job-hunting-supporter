@@ -1,58 +1,57 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { useParams } from "next/navigation"
-import { fetchES } from "@/components/es/api"
-import { ESDetail } from "@/components/es/es-detail"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, Edit } from "lucide-react"
-import { type ESEntry } from "@/lib/supabase"
+import { ArrowLeft, Edit } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { fetchES } from "@/components/es/api";
+import { ESDetail } from "@/components/es/es-detail";
+import { Button } from "@/components/ui/button";
+import type { ESEntry } from "@/lib/supabase";
 
 export default function ESDetailPage() {
-  const router = useRouter()
-  const params = useParams()
-  const [entry, setEntry] = useState<ESEntry | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const params = useParams();
+  const [entry, setEntry] = useState<ESEntry | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const id = params.id as string
+  const id = params.id as string;
 
   useEffect(() => {
     const fetchESEntry = async () => {
       try {
-        setIsLoading(true)
-        const esEntry = await fetchES(id)
-        setEntry(esEntry)
+        setIsLoading(true);
+        const esEntry = await fetchES(id);
+        setEntry(esEntry);
       } catch (error) {
-        console.error('Failed to fetch ES entry:', error)
-        setError('ESの取得に失敗しました')
+        console.error("Failed to fetch ES entry:", error);
+        setError("ESの取得に失敗しました");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (id) {
-      fetchESEntry()
+      fetchESEntry();
     }
-  }, [id])
+  }, [id]);
 
   const handleBack = () => {
-    router.push("/es")
-  }
+    router.push("/es");
+  };
 
   const handleEdit = () => {
-    router.push(`/es/${id}/edit`)
-  }
+    router.push(`/es/${id}/edit`);
+  };
 
-  const handleDelete = async (entryId: string) => {
+  const handleDelete = async (_entryId: string) => {
     try {
       // deleteEntry logic here if needed
-      router.push("/es")
+      router.push("/es");
     } catch (error) {
-      console.error('Failed to delete ES entry:', error)
+      console.error("Failed to delete ES entry:", error);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -64,7 +63,7 @@ export default function ESDetailPage() {
           <div>読み込み中...</div>
         </main>
       </div>
-    )
+    );
   }
 
   if (error || !entry) {
@@ -79,10 +78,10 @@ export default function ESDetailPage() {
           </div>
         </header>
         <main className="flex-1 p-6 flex items-center justify-center">
-          <div className="text-red-500">{error || 'ESが見つかりません'}</div>
+          <div className="text-red-500">{error || "ESが見つかりません"}</div>
         </main>
       </div>
-    )
+    );
   }
 
   return (
@@ -104,10 +103,7 @@ export default function ESDetailPage() {
             </h2>
           </div>
 
-          <Button
-            onClick={handleEdit}
-            className="flex items-center gap-2"
-          >
+          <Button onClick={handleEdit} className="flex items-center gap-2">
             <Edit className="h-4 w-4" />
             編集
           </Button>
@@ -115,11 +111,8 @@ export default function ESDetailPage() {
       </header>
 
       <main className="flex-1 p-6 overflow-auto">
-        <ESDetail
-          entry={entry}
-          onDelete={handleDelete}
-        />
+        <ESDetail entry={entry} onDelete={handleDelete} />
       </main>
     </div>
-  )
+  );
 }

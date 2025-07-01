@@ -1,22 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from "next/server";
 
-const protectedRoutes = ['/dashboard', '/api']
+const protectedRoutes = ["/dashboard", "/api"];
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-  
+  const { pathname } = request.nextUrl;
+
   // Check if the route is protected
-  const isProtectedRoute = protectedRoutes.some(route => 
+  const isProtectedRoute = protectedRoutes.some((route) =>
     pathname.startsWith(route)
-  )
-  
+  );
+
   if (isProtectedRoute) {
     // For now, just pass through - client-side auth will handle redirects
     // In production, you would verify Firebase token here
-    return NextResponse.next()
+    return NextResponse.next();
   }
-  
-  return NextResponse.next()
+
+  return NextResponse.next();
 }
 
 export const config = {

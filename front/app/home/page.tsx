@@ -1,15 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import {
+  ArrowRight,
   Building2,
-  FileText,
   Calendar,
+  FileText,
   Mic,
   User,
-  ArrowRight,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { JobEventResponse } from "@/components/job-events/api";
 import {
   Card,
   CardContent,
@@ -18,10 +18,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useUserProfile } from "@/hooks/useAuth";
-import { fetchAllCompanies } from "@/components/company/api";
-import { fetchESByUserID } from "@/components/es/api";
-import { fetchJobEventsByUserID, type JobEventResponse } from "@/components/job-events/api";
-import { storage } from "@/lib/supabase";
 
 interface DashboardStats {
   companiesCount: number;
@@ -62,7 +58,7 @@ export default function HomePage() {
       icon: Building2,
       path: "/company",
       color: "bg-blue-50 hover:bg-blue-100 border-blue-200",
-      iconColor: "text-blue-600"
+      iconColor: "text-blue-600",
     },
     {
       title: "ES管理",
@@ -70,7 +66,7 @@ export default function HomePage() {
       icon: FileText,
       path: "/es",
       color: "bg-green-50 hover:bg-green-100 border-green-200",
-      iconColor: "text-green-600"
+      iconColor: "text-green-600",
     },
     {
       title: "カレンダー",
@@ -78,7 +74,7 @@ export default function HomePage() {
       icon: Calendar,
       path: "/calendar",
       color: "bg-purple-50 hover:bg-purple-100 border-purple-200",
-      iconColor: "text-purple-600"
+      iconColor: "text-purple-600",
     },
     {
       title: "面接ログ",
@@ -86,7 +82,7 @@ export default function HomePage() {
       icon: Mic,
       path: "/interview",
       color: "bg-orange-50 hover:bg-orange-100 border-orange-200",
-      iconColor: "text-orange-600"
+      iconColor: "text-orange-600",
     },
     {
       title: "プロフィール",
@@ -94,8 +90,8 @@ export default function HomePage() {
       icon: User,
       path: "/profile",
       color: "bg-gray-50 hover:bg-gray-100 border-gray-200",
-      iconColor: "text-gray-600"
-    }
+      iconColor: "text-gray-600",
+    },
   ];
 
   const handleNavigate = (path: string) => {
@@ -126,7 +122,7 @@ export default function HomePage() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg bg-white shadow-sm`}>
+                    <div className={"p-2 rounded-lg bg-white shadow-sm"}>
                       <card.icon className={`h-6 w-6 ${card.iconColor}`} />
                     </div>
                     <div>
@@ -147,8 +143,6 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-
-
-          </div>
+    </div>
   );
 }

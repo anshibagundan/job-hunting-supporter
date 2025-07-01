@@ -1,28 +1,30 @@
-"use client"
+"use client";
 
-import { useRouter } from "next/navigation"
-import { useESEntries } from "@/components/es/hooks/useEsEntries"
-import { ESList } from "@/components/es/es-list"
-import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { useUserProfile } from "@/hooks/useAuth"
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ESList } from "@/components/es/es-list";
+import { useESEntries } from "@/components/es/hooks/useEsEntries";
+import { Button } from "@/components/ui/button";
+import { useUserProfile } from "@/hooks/useAuth";
 
 export default function ESPage() {
-  const router = useRouter()
-  const { user, userProfile, isLoading: authLoading } = useUserProfile()
-  const { entries, deleteEntry, isLoading } = useESEntries(userProfile?.id?.toString() || "")
+  const router = useRouter();
+  const { user, userProfile, isLoading: authLoading } = useUserProfile();
+  const { entries, deleteEntry, isLoading } = useESEntries(
+    userProfile?.id?.toString() || ""
+  );
 
   const handleSelectEntry = (id: string) => {
-    router.push(`/es/${id}`)
-  }
+    router.push(`/es/${id}`);
+  };
 
   const handleCreateNew = () => {
-    router.push("/es/new")
-  }
+    router.push("/es/new");
+  };
 
   const handleDeleteEntry = (id: string) => {
-    deleteEntry(id)
-  }
+    deleteEntry(id);
+  };
 
   if (authLoading || isLoading) {
     return (
@@ -31,17 +33,19 @@ export default function ESPage() {
           <div className="text-muted-foreground">読み込み中...</div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!user || !userProfile) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="flex justify-center items-center h-64">
-          <div className="text-muted-foreground">ユーザー情報を取得できませんでした</div>
+          <div className="text-muted-foreground">
+            ユーザー情報を取得できませんでした
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (isLoading) {
@@ -51,7 +55,7 @@ export default function ESPage() {
           <div>読み込み中...</div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -72,5 +76,5 @@ export default function ESPage() {
         />
       </main>
     </div>
-  )
+  );
 }

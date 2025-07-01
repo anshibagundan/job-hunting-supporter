@@ -1,117 +1,121 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { ArrowLeft, Edit2, Trash2, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { JobEventEditForm } from "@/components/job-events/job-event-edit-form"
-import { LoadingSpinner, NotFoundMessage } from "@/components/common/loading-states"
-import { storage } from "@/lib/supabase"
-import { fetchJobEvent, deleteJobEvent, type JobEventResponse } from "@/components/job-events/api"
+import { ArrowLeft, Edit2, ExternalLink, Trash2 } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  LoadingSpinner,
+  NotFoundMessage,
+} from "@/components/common/loading-states";
+import {
+  deleteJobEvent,
+  fetchJobEvent,
+  type JobEventResponse,
+} from "@/components/job-events/api";
+import { JobEventEditForm } from "@/components/job-events/job-event-edit-form";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { storage } from "@/lib/supabase";
 
 export default function JobEventDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const eventId = params.id as string
+  const params = useParams();
+  const router = useRouter();
+  const eventId = params.id as string;
 
-  const [jobEvent, setJobEvent] = useState<JobEventResponse | null>(null)
-  const [companyName, setCompanyName] = useState<string>("")
-  const [isEditing, setIsEditing] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [jobEvent, setJobEvent] = useState<JobEventResponse | null>(null);
+  const [companyName, setCompanyName] = useState<string>("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadJobEventData()
-  }, [eventId])
+    loadJobEventData();
+  }, [loadJobEventData]);
 
   const loadJobEventData = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
 
       // IDからjob-event-プレフィックスを削除
-      const jobEventId = eventId.replace('job-event-', '')
+      const jobEventId = eventId.replace("job-event-", "");
 
       // 個別のJobEventを取得
-      const found = await fetchJobEvent(jobEventId)
+      const found = await fetchJobEvent(jobEventId);
 
       if (!found) {
-        router.push('/calendar')
-        return
+        router.push("/calendar");
+        return;
       }
 
-      setJobEvent(found)
+      setJobEvent(found);
 
       // 企業名を取得
-      const companies = await storage.getCompanies()
-      const company = companies.find(c => parseInt(c.id) === found.company_id)
-      setCompanyName(company?.name || "不明な企業")
-
+      const companies = await storage.getCompanies();
+      const company = companies.find(
+        (c) => Number.parseInt(c.id) === found.company_id
+      );
+      setCompanyName(company?.name || "不明な企業");
     } catch (error) {
-      console.error('Failed to load job event:', error)
-      router.push('/calendar')
+      console.error("Failed to load job event:", error);
+      router.push("/calendar");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEdit = () => {
-    setIsEditing(true)
-  }
+    setIsEditing(true);
+  };
 
   const handleDelete = async () => {
-    if (!jobEvent) return
+    if (!jobEvent) return;
 
-    if (confirm('このJobEventを削除してもよろしいですか？')) {
+    if (confirm("このJobEventを削除してもよろしいですか？")) {
       try {
-        await deleteJobEvent(jobEvent.id.toString())
-        router.push('/calendar')
+        await deleteJobEvent(jobEvent.id.toString());
+        router.push("/calendar");
       } catch (error) {
-        console.error('Failed to delete job event:', error)
-        alert('削除に失敗しました')
+        console.error("Failed to delete job event:", error);
+        alert("削除に失敗しました");
       }
     }
-  }
+  };
 
   const handleEditComplete = () => {
-    setIsEditing(false)
-    loadJobEventData() // データを再読み込み
-  }
+    setIsEditing(false);
+    loadJobEventData(); // データを再読み込み
+  };
 
   const handleEditCancel = () => {
-    setIsEditing(false)
-  }
+    setIsEditing(false);
+  };
 
   const getEventTypeColor = (type: string) => {
     switch (type) {
       case "面接":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       case "説明会":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-100 text-blue-800";
       case "ES締切":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   if (loading) {
-    return <LoadingSpinner message="JobEvent情報を読み込み中..." />
+    return <LoadingSpinner message="JobEvent情報を読み込み中..." />;
   }
 
   if (!jobEvent) {
-    return <NotFoundMessage message="JobEventが見つかりません" />
+    return <NotFoundMessage message="JobEventが見つかりません" />;
   }
 
   if (isEditing) {
     return (
       <div className="container mx-auto px-4 py-6">
         <div className="flex items-center mb-6">
-          <Button
-            variant="ghost"
-            onClick={handleEditCancel}
-            className="mr-4"
-          >
+          <Button variant="ghost" onClick={handleEditCancel} className="mr-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             戻る
           </Button>
@@ -125,7 +129,7 @@ export default function JobEventDetailPage() {
           onCancel={handleEditCancel}
         />
       </div>
-    )
+    );
   }
 
   return (
@@ -134,7 +138,7 @@ export default function JobEventDetailPage() {
         <div className="flex items-center">
           <Button
             variant="ghost"
-            onClick={() => router.push('/calendar')}
+            onClick={() => router.push("/calendar")}
             className="mr-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -170,7 +174,9 @@ export default function JobEventDetailPage() {
           <CardContent className="space-y-4">
             <div>
               <h3 className="font-semibold text-lg mb-2">詳細情報</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{jobEvent.job_description}</p>
+              <p className="text-gray-700 whitespace-pre-wrap">
+                {jobEvent.job_description}
+              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,7 +188,7 @@ export default function JobEventDetailPage() {
                     month: "long",
                     day: "numeric",
                     hour: "2-digit",
-                    minute: "2-digit"
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -195,7 +201,7 @@ export default function JobEventDetailPage() {
                     month: "long",
                     day: "numeric",
                     hour: "2-digit",
-                    minute: "2-digit"
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -206,7 +212,7 @@ export default function JobEventDetailPage() {
                 <h4 className="font-medium text-gray-900 mb-2">関連リンク</h4>
                 <Button
                   variant="outline"
-                  onClick={() => window.open(jobEvent.event_url, '_blank')}
+                  onClick={() => window.open(jobEvent.event_url, "_blank")}
                   className="w-full justify-start"
                 >
                   <ExternalLink className="h-4 w-4 mr-2" />
@@ -224,7 +230,7 @@ export default function JobEventDetailPage() {
                     month: "long",
                     day: "numeric",
                     hour: "2-digit",
-                    minute: "2-digit"
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -237,7 +243,7 @@ export default function JobEventDetailPage() {
                     month: "long",
                     day: "numeric",
                     hour: "2-digit",
-                    minute: "2-digit"
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -246,5 +252,5 @@ export default function JobEventDetailPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Calendar, FileText, Mic } from "lucide-react"
-import { useAuth } from "@/contexts/auth-context"
-import { Logo } from "@/components/common/logo"
+import { Calendar, FileText, Mic } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Logo } from "@/components/common/logo";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function Home() {
-  const router = useRouter()
-  const { user, loading } = useAuth()
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/home')
+      router.push("/home");
     }
-  }, [loading, user, router])
+  }, [loading, user, router]);
 
   return (
     <div>
@@ -24,7 +24,9 @@ export default function Home() {
             <div className="flex justify-center mb-6">
               <Logo size="xl" showText={false} />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">就活ダッシュボード</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              就活ダッシュボード
+            </h1>
             <p className="text-gray-600 mb-8">
               ES管理・面接予定・振り返りを一元管理して、効率的な就職活動をサポートします。
             </p>
@@ -51,11 +53,11 @@ export default function Home() {
       {!loading && user && (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto" />
             <p className="mt-4 text-gray-600">ホームページに移動中...</p>
           </div>
         </div>
       )}
     </div>
-  )
+  );
 }

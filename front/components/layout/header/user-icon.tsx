@@ -1,7 +1,7 @@
 "use client";
 
-import { User } from "firebase/auth";
-import { UserProfile } from "@/components/user/api";
+import type { User } from "firebase/auth";
+import type { UserProfile } from "@/components/user/api";
 
 interface UserIconProps {
   user: User;

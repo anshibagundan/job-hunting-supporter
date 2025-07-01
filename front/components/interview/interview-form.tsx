@@ -1,77 +1,101 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { Mic, Upload, Calendar, MapPin, Video, Building, FileText, Brain } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import AudioUploader from "@/components/interview/recorder/media-recorder"
-import { fetchAllCompanies, convertCompanyToFrontend } from "@/components/company/api"
-import type { InterviewLog, Company } from "@/lib/supabase"
+import {
+  Brain,
+  Building,
+  FileText,
+  MapPin,
+  Mic,
+  Upload,
+  Video,
+} from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  convertCompanyToFrontend,
+  fetchAllCompanies,
+} from "@/components/company/api";
+import AudioUploader from "@/components/interview/recorder/media-recorder";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import type { Company, InterviewLog } from "@/lib/supabase";
 
 interface InterviewFormProps {
-  onSubmit: (data: {
-    InterviewLog: InterviewLog
-  }) => Promise<void>
-  onCancel: () => void
-  initialData?: Partial<InterviewLog>
-  title?: string
+  onSubmit: (data: { InterviewLog: InterviewLog }) => Promise<void>;
+  onCancel: () => void;
+  initialData?: Partial<InterviewLog>;
+  title?: string;
 }
 
-export function InterviewForm({ onSubmit, onCancel, initialData, title }: InterviewFormProps) {
+export function InterviewForm({
+  onSubmit,
+  onCancel,
+  initialData,
+  title,
+}: InterviewFormProps) {
   const [formData, setFormData] = useState({
     company: initialData?.company || null,
-    interviewAt: initialData?.interviewAt ? 
-      new Date(initialData.interviewAt).toISOString().slice(0, 16) : "",
+    interviewAt: initialData?.interviewAt
+      ? new Date(initialData.interviewAt).toISOString().slice(0, 16)
+      : "",
     stage: initialData?.stage || "一次面接",
     location: initialData?.location || "",
     meetingUrl: initialData?.meetingUrl || "",
     textNote: initialData?.textNote || "",
     audioSummary: initialData?.audioSummary || "",
-  })
-  
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [companiesLoading, setCompaniesLoading] = useState(true)
-  const [audioFile, setAudioFile] = useState<File | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
+  });
+
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(true);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // 企業リストを取得（APIから直接）
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const backendCompanies = await fetchAllCompanies()
-        const companiesData = backendCompanies.map(convertCompanyToFrontend)
-        console.log("Loaded companies:", companiesData)
-        setCompanies(companiesData)
+        const backendCompanies = await fetchAllCompanies();
+        const companiesData = backendCompanies.map(convertCompanyToFrontend);
+        console.log("Loaded companies:", companiesData);
+        setCompanies(companiesData);
       } catch (error) {
-        console.error('Failed to load companies:', error)
+        console.error("Failed to load companies:", error);
       } finally {
-        setCompaniesLoading(false)
+        setCompaniesLoading(false);
       }
-    }
-    loadCompanies()
-  }, [])
+    };
+    loadCompanies();
+  }, []);
 
-  const handleCompanyChange = useCallback((companyId: string) => {
-    const selectedCompany = companies.find(c => c.id === companyId)
-    if (selectedCompany) {
-      setFormData(prev => ({ ...prev, company: selectedCompany }))
-    }
-  }, [companies])
+  const handleCompanyChange = useCallback(
+    (companyId: string) => {
+      const selectedCompany = companies.find((c) => c.id === companyId);
+      if (selectedCompany) {
+        setFormData((prev) => ({ ...prev, company: selectedCompany }));
+      }
+    },
+    [companies]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!formData.company) {
-      console.error("Company is required")
-      return
+      console.error("Company is required");
+      return;
     }
-    setIsProcessing(true)
-    
+    setIsProcessing(true);
+
     try {
       await onSubmit({
         InterviewLog: {
@@ -79,7 +103,9 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
           userId: initialData?.userId || "1", // 固定値（JWTミドルウェアで上書きされる）
           company: formData.company,
           jobEventId: initialData?.jobEventId || "1", // 固定値
-          interviewAt: formData.interviewAt ? new Date(formData.interviewAt).toISOString() : new Date().toISOString(),
+          interviewAt: formData.interviewAt
+            ? new Date(formData.interviewAt).toISOString()
+            : new Date().toISOString(),
           stage: formData.stage,
           location: formData.location,
           meetingUrl: formData.meetingUrl,
@@ -88,14 +114,14 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
           audioFile: audioFile || null, // 音声ファイルはオプション
           createdAt: initialData?.createdAt || new Date().toISOString(),
           updatedAt: new Date().toISOString(),
-        }
-      })
+        },
+      });
     } catch (error) {
-      console.error("Form submission error:", error)
+      console.error("Form submission error:", error);
     } finally {
-      setIsProcessing(false)
+      setIsProcessing(false);
     }
-  }
+  };
 
   return (
     <Card>
@@ -113,18 +139,24 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
               <Building className="h-4 w-4" />
               <h3 className="text-sm font-semibold">基本情報</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="company">企業名 *</Label>
                 <Select
                   value={formData.company?.id || ""}
                   onValueChange={handleCompanyChange}
-                  required
+                  required={true}
                   disabled={companiesLoading}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder={companiesLoading ? "企業情報を読み込み中..." : "企業を選択してください"} />
+                    <SelectValue
+                      placeholder={
+                        companiesLoading
+                          ? "企業情報を読み込み中..."
+                          : "企業を選択してください"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {companies.map((company) => (
@@ -135,7 +167,7 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <Label htmlFor="stage">選考段階 *</Label>
                 <Select
@@ -148,7 +180,9 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                     <SelectValue placeholder="選考段階を選択" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="カジュアル面談">カジュアル面談</SelectItem>
+                    <SelectItem value="カジュアル面談">
+                      カジュアル面談
+                    </SelectItem>
                     <SelectItem value="一次面接">一次面接</SelectItem>
                     <SelectItem value="二次面接">二次面接</SelectItem>
                     <SelectItem value="三次面接">三次面接</SelectItem>
@@ -158,7 +192,7 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                 </Select>
               </div>
             </div>
-            
+
             <div>
               <Label htmlFor="interviewAt">面接日時 *</Label>
               <Input
@@ -166,9 +200,12 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                 type="datetime-local"
                 value={formData.interviewAt}
                 onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, interviewAt: e.target.value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    interviewAt: e.target.value,
+                  }))
                 }
-                required
+                required={true}
               />
             </div>
           </div>
@@ -181,7 +218,7 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
               <MapPin className="h-4 w-4" />
               <h3 className="text-sm font-semibold">面接場所</h3>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="location">
@@ -192,12 +229,15 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                   id="location"
                   value={formData.location}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, location: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      location: e.target.value,
+                    }))
                   }
                   placeholder="例: 東京オフィス 2F会議室"
                 />
               </div>
-              
+
               <div>
                 <Label htmlFor="meetingUrl">
                   <Video className="h-3 w-3 inline mr-1" />
@@ -208,7 +248,10 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                   type="url"
                   value={formData.meetingUrl}
                   onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, meetingUrl: e.target.value }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      meetingUrl: e.target.value,
+                    }))
                   }
                   placeholder="https://meet.google.com/..."
                 />
@@ -224,19 +267,19 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
               <Mic className="h-4 w-4" />
               <h3 className="text-sm font-semibold">面接内容</h3>
             </div>
-            
+
             {/* Audio Upload */}
             <div>
               <Label>音声ファイル（オプション）</Label>
               <p className="text-xs text-gray-500 mb-2">
                 音声をアップロードすると、AIが自動で文字起こしと要約を生成します
               </p>
-              <AudioUploader 
+              <AudioUploader
                 audioFile={audioFile}
                 onFileChange={setAudioFile}
               />
             </div>
-            
+
             {/* Manual Notes */}
             <div>
               <Label htmlFor="textNote">
@@ -262,9 +305,11 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Brain className="h-4 w-4" />
-                  <h3 className="text-sm font-semibold">AI生成要約（編集可能）</h3>
+                  <h3 className="text-sm font-semibold">
+                    AI生成要約（編集可能）
+                  </h3>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="audioSummary">
                     <Brain className="h-3 w-3 inline mr-1" />
@@ -274,13 +319,17 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
                     id="audioSummary"
                     value={formData.audioSummary || ""}
                     onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, audioSummary: e.target.value }))
+                      setFormData((prev) => ({
+                        ...prev,
+                        audioSummary: e.target.value,
+                      }))
                     }
                     rows={6}
                     placeholder="AI生成された要約を編集できます。Markdown記法が使用できます。"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    **太字**、*斜体*、- リスト、## 見出し などのMarkdown記法が使用できます
+                    **太字**、*斜体*、- リスト、## 見出し
+                    などのMarkdown記法が使用できます
                   </p>
                 </div>
               </div>
@@ -311,5 +360,5 @@ export function InterviewForm({ onSubmit, onCancel, initialData, title }: Interv
         </form>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,52 +1,60 @@
-import { useState, useMemo, useCallback, useEffect } from "react"
-import { storage, type ESEntry, type Company } from "@/lib/supabase"
-import { createES, updateES, deleteES } from '@/components/es/api';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { createES, deleteES, updateES } from "@/components/es/api";
+import { type Company, type ESEntry, storage } from "@/lib/supabase";
 
-export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string | null) {
+export function useESForm(
+  entry?: ESEntry | null,
+  preSelectedCompanyId?: string | null
+) {
   // useMemoで初期データを計算
-  const initialData = useMemo((): ESEntry => ({
-    id: entry?.id || "",
-    company: entry?.company || {} as Company,
-    title: entry?.title || "",
-    content: entry?.content || "",
-    summary: entry?.summary || "",
-    advice: entry?.advice || "",
-    adviceItems: entry?.adviceItems || [],
-    created_at: entry?.created_at || "",
-  }), [entry])
+  const initialData = useMemo(
+    (): ESEntry => ({
+      id: entry?.id || "",
+      company: entry?.company || ({} as Company),
+      title: entry?.title || "",
+      content: entry?.content || "",
+      summary: entry?.summary || "",
+      advice: entry?.advice || "",
+      adviceItems: entry?.adviceItems || [],
+      created_at: entry?.created_at || "",
+    }),
+    [entry]
+  );
 
-  const [formData, setFormData] = useState<ESEntry>(initialData)
+  const [formData, setFormData] = useState<ESEntry>(initialData);
 
   // 事前選択された企業IDがある場合、該当する企業を設定
   useEffect(() => {
     if (preSelectedCompanyId && !entry) {
       const loadCompanyData = async () => {
         try {
-          const companies = await storage.getCompanies()
-          const preSelectedCompany = companies.find(company => company.id.toString() === preSelectedCompanyId)
+          const companies = await storage.getCompanies();
+          const preSelectedCompany = companies.find(
+            (company) => company.id.toString() === preSelectedCompanyId
+          );
           if (preSelectedCompany) {
-            setFormData(prev => ({ ...prev, company: preSelectedCompany }))
+            setFormData((prev) => ({ ...prev, company: preSelectedCompany }));
           }
         } catch (error) {
-          console.error('Failed to load companies:', error)
+          console.error("Failed to load companies:", error);
         }
-      }
-      loadCompanyData()
+      };
+      loadCompanyData();
     }
-  }, [preSelectedCompanyId, entry])
+  }, [preSelectedCompanyId, entry]);
 
   // entryが変更された場合にフォームデータを更新
   useMemo(() => {
-    setFormData(initialData)
-  }, [initialData])
+    setFormData(initialData);
+  }, [initialData]);
 
   const updateField = useCallback((field: keyof ESEntry, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
-  }, [])
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  }, []);
 
   const updateCompany = useCallback((company: Company) => {
-    setFormData(prev => ({ ...prev, company }))
-  }, [])
+    setFormData((prev) => ({ ...prev, company }));
+  }, []);
 
   const resetForm = useCallback(() => {
     setFormData({
@@ -58,14 +66,16 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
       advice: "",
       adviceItems: [],
       created_at: "",
-    })
-  }, [])
+    });
+  }, []);
 
   const isFormValid = useCallback(() => {
-    return formData.company?.id &&
-           formData.title.trim() !== "" &&
-           formData.content.trim() !== ""
-  }, [formData])
+    return (
+      formData.company?.id &&
+      formData.title.trim() !== "" &&
+      formData.content.trim() !== ""
+    );
+  }, [formData]);
 
   const saveES = useCallback(async () => {
     if (formData.id) {
@@ -90,5 +100,5 @@ export function useESForm(entry?: ESEntry | null, preSelectedCompanyId?: string 
     isFormValid,
     saveES,
     removeES,
-  }
+  };
 }

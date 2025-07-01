@@ -1,68 +1,75 @@
-import { useState, useEffect, useCallback } from "react"
-import type { InterviewLog } from "@/lib/supabase"
-import { fetchAllInterviews, fetchInterviewsByUserID, saveInterview, removeInterview } from "@/components/interview/api"
+import { useCallback, useEffect, useState } from "react";
+import {
+  fetchAllInterviews,
+  removeInterview,
+  saveInterview,
+} from "@/components/interview/api";
+import type { InterviewLog } from "@/lib/supabase";
 
 export function useInterviewLogs() {
-  const [logs, setLogs] = useState<InterviewLog[]>([])
-  const [selectedLog, setSelectedLog] = useState<InterviewLog | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  const [logs, setLogs] = useState<InterviewLog[]>([]);
+  const [selectedLog, setSelectedLog] = useState<InterviewLog | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadLogs = async () => {
       try {
-        setIsLoading(true)
-        const fetchedLogs = await fetchAllInterviews()
-        setLogs(fetchedLogs)
+        setIsLoading(true);
+        const fetchedLogs = await fetchAllInterviews();
+        setLogs(fetchedLogs);
       } catch (error) {
-        console.error("Failed to load interview logs:", error)
-        setLogs([])
+        console.error("Failed to load interview logs:", error);
+        setLogs([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
-    
-    loadLogs()
-  }, [])
+    };
+
+    loadLogs();
+  }, []);
 
   const addLog = useCallback(async (newLog: InterviewLog) => {
     try {
-      const savedLog = await saveInterview(newLog)
-      setLogs(prev => [...prev, savedLog])
+      const savedLog = await saveInterview(newLog);
+      setLogs((prev) => [...prev, savedLog]);
     } catch (error) {
-      console.error("Failed to add interview log:", error)
-      throw error
+      console.error("Failed to add interview log:", error);
+      throw error;
     }
-  }, [])
+  }, []);
 
   const updateLog = useCallback(async (updatedLog: InterviewLog) => {
     try {
-      const updated = await saveInterview(updatedLog)
-      setLogs(prev => prev.map((log) =>
-        log.id === updatedLog.id ? updated : log
-      ))
+      const updated = await saveInterview(updatedLog);
+      setLogs((prev) =>
+        prev.map((log) => (log.id === updatedLog.id ? updated : log))
+      );
     } catch (error) {
-      console.error("Failed to update interview log:", error)
-      throw error
+      console.error("Failed to update interview log:", error);
+      throw error;
     }
-  }, [])
+  }, []);
 
-  const deleteLog = useCallback(async (id: string) => {
-    try {
-      await removeInterview(id)
-      setLogs(prev => prev.filter((log) => log.id !== id))
-      
-      if (selectedLog?.id === id) {
-        setSelectedLog(null)
+  const deleteLog = useCallback(
+    async (id: string) => {
+      try {
+        await removeInterview(id);
+        setLogs((prev) => prev.filter((log) => log.id !== id));
+
+        if (selectedLog?.id === id) {
+          setSelectedLog(null);
+        }
+      } catch (error) {
+        console.error("Failed to delete interview log:", error);
+        throw error;
       }
-    } catch (error) {
-      console.error("Failed to delete interview log:", error)
-      throw error
-    }
-  }, [selectedLog])
+    },
+    [selectedLog]
+  );
 
   const selectLog = useCallback((log: InterviewLog) => {
-    setSelectedLog(log)
-  }, [])
+    setSelectedLog(log);
+  }, []);
 
   return {
     logs,
@@ -72,5 +79,5 @@ export function useInterviewLogs() {
     updateLog,
     deleteLog,
     selectLog,
-  }
+  };
 }

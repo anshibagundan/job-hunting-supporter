@@ -1,17 +1,20 @@
-"use client"
+"use client";
 
-import React, { useRef, useState } from "react";
+import { FileAudio } from "lucide-react";
+import type React from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileAudio } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input";
 
 interface AudioUploaderProps {
-  audioFile: File | null
-  onFileChange: (file: File | null) => void
+  audioFile: File | null;
+  onFileChange: (file: File | null) => void;
 }
 
-export default function AudioUploader({ audioFile, onFileChange }: AudioUploaderProps) {
+export default function AudioUploader({
+  audioFile,
+  onFileChange,
+}: AudioUploaderProps) {
   const audioDataRef = useRef<Float32Array[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
@@ -28,9 +31,13 @@ export default function AudioUploader({ audioFile, onFileChange }: AudioUploader
         view.setUint8(offset + i, str.charCodeAt(i));
       }
     }
-    function floatTo16BitPCM(output: DataView, offset: number, input: Float32Array) {
+    function floatTo16BitPCM(
+      output: DataView,
+      offset: number,
+      input: Float32Array
+    ) {
       for (let i = 0; i < input.length; i++, offset += 2) {
-        let s = Math.max(-1, Math.min(1, input[i]));
+        const s = Math.max(-1, Math.min(1, input[i]));
         output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
       }
     }
@@ -40,11 +47,11 @@ export default function AudioUploader({ audioFile, onFileChange }: AudioUploader
     writeString(view, 8, "WAVE");
     writeString(view, 12, "fmt ");
     view.setUint32(16, 16, true); // PCM chunk size
-    view.setUint16(20, 1, true);  // PCM format
-    view.setUint16(22, 1, true);  // channels
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, 1, true); // channels
     view.setUint32(24, sampleRate, true);
     view.setUint32(28, sampleRate * 2, true); // byte rate
-    view.setUint16(32, 2, true);  // block align
+    view.setUint16(32, 2, true); // block align
     view.setUint16(34, 16, true); // bits per sample
     writeString(view, 36, "data");
     view.setUint32(40, samples.length * 2, true);
@@ -78,17 +85,22 @@ export default function AudioUploader({ audioFile, onFileChange }: AudioUploader
   };
 
   const stopRecording = async () => {
-    if (!audioContextRef.current || !scriptProcessorRef.current || !mediaStreamSourceRef.current) return;
+    if (
+      !audioContextRef.current ||
+      !scriptProcessorRef.current ||
+      !mediaStreamSourceRef.current
+    )
+      return;
 
     scriptProcessorRef.current.disconnect();
     mediaStreamSourceRef.current.disconnect();
     await audioContextRef.current.close();
 
     let totalLength = 0;
-    audioDataRef.current.forEach(arr => totalLength += arr.length);
+    audioDataRef.current.forEach((arr) => (totalLength += arr.length));
     const mergedSamples = new Float32Array(totalLength);
     let offset = 0;
-    audioDataRef.current.forEach(arr => {
+    audioDataRef.current.forEach((arr) => {
       mergedSamples.set(arr, offset);
       offset += arr.length;
     });
@@ -104,7 +116,7 @@ export default function AudioUploader({ audioFile, onFileChange }: AudioUploader
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files[0]) {
+    if (files?.[0]) {
       onFileChange(files[0]);
     }
   };

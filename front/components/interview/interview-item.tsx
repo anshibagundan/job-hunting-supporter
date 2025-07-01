@@ -1,17 +1,16 @@
-"use client"
+"use client";
 
-import type React from "react"
-import {Calendar, Trash2} from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import type { InterviewLog } from "@/lib/supabase"
+import { Calendar, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import type { InterviewLog } from "@/lib/supabase";
 
 interface InterviewItemProps {
-  log: InterviewLog
-  isSelected: boolean
-  onSelect: () => void
-  onDelete: () => Promise<void>
+  log: InterviewLog;
+  isSelected: boolean;
+  onSelect: () => void;
+  onDelete: () => Promise<void>;
 }
 
 export function InterviewItem({
@@ -26,9 +25,9 @@ export function InterviewItem({
       month: "long",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
-    })
-  }
+      minute: "2-digit",
+    });
+  };
 
   return (
     <Card
@@ -44,27 +43,23 @@ export function InterviewItem({
             variant="ghost"
             size="sm"
             onClick={async (e) => {
-              e.stopPropagation()
+              e.stopPropagation();
               try {
-                await onDelete()
+                await onDelete();
               } catch (error) {
-                console.error("Failed to delete:", error)
+                console.error("Failed to delete:", error);
               }
             }}
           >
-            <Trash2 className="h-4 w-4"/>
+            <Trash2 className="h-4 w-4" />
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="flex items-center gap-1">
-            <Calendar className="h-3 w-3"/>
+            <Calendar className="h-3 w-3" />
             {formatDate(log.interviewAt)}
           </Badge>
-          {log.stage && (
-            <Badge variant="outline">
-              {log.stage}
-            </Badge>
-          )}
+          {log.stage && <Badge variant="outline">{log.stage}</Badge>}
         </div>
         <p className="text-xs text-gray-600 line-clamp-2">
           {log.audioSummary?.slice(0, 100) || "要約がありません"}
@@ -74,5 +69,5 @@ export function InterviewItem({
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }
